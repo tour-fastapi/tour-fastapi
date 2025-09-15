@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}{{ city }} • Operators{% endblock %}
+{% block content %}
+<style>
+  :root{
+    --bg:#f6f8fb; --card:#fff; --text:#1f2937; --muted:#6b7280;
+    --border:#e5e7eb; --radius:14px; --shadow:0 8px 24px rgba(17,24,39,.08);
+    --link:#2563eb;
+  }
+  body{background:var(--bg);}
+  .wrap{max-width:1100px;margin:28px auto;padding:0 16px}
+  .head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+  .head h1{margin:0;font-size:1.5rem;color:var(--text);font-weight:800}
+  .badge{background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;border-radius:999px;padding:6px 10px;font-size:.8rem;font-weight:700}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow)}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;padding:14px}
+  @media (max-width: 980px){ .grid{grid-template-columns:repeat(2,1fr);} }
+  @media (max-width: 680px){ .grid{grid-template-columns:1fr;} }
+  .agency{border:1px solid var(--border);border-radius:12px;padding:14px;background:#fff}
+  .agency h3{margin:0 0 6px 0;font-size:1.15rem}
+  .agency h3 a{text-decoration:none;color:var(--text)}
+  .agency h3 a:hover{color:var(--link)}
+  .meta{color:var(--muted);font-size:.92rem}
+  .desc{margin-top:8px;color:var(--text);font-size:.95rem}
+  .chip{display:inline-block;margin-top:8px;padding:6px 10px;border:1px solid var(--border);border-radius:999px;font-size:.78rem;color:#374151;background:#fff;text-decoration:none}
+  .empty{padding:36px;text-align:center;color:var(--muted)}
+</style>
+
+<div class="wrap">
+  <div class="head">
+    <h1>Operators in {{ city }}</h1>
+    <div class="badge">{{ total }} found</div>
+  </div>
+
+  <div class="card">
+    {% if agencies %}
+      <div class="grid">
+        {% for a in agencies %}
+          <div class="agency">
+            <h3><a href="/operators/{{ a.registration_id }}">{{ a.agencies_name }}</a></h3>
+            <div class="meta">{{ a.city or '-' }}, {{ a.country or '-' }}</div>
+            {% if a.description %}
+              <div class="desc">{{ a.description }}</div>
+            {% endif %}
+            <a class="chip" href="/operators/{{ a.registration_id }}">View details →</a>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty">No operators found in {{ city }}.</div>
+    {% endif %}
+  </div>
+
+  <div style="margin-top:12px">
+    <a href="/operators" style="text-decoration:none;color:#2563eb">Browse all operators →</a>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container py-4" style="max-width: 720px;">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h4 mb-0">Choose an Agency</h1>
+    <a href="/agency/new" class="btn btn-outline-primary btn-sm">+ New Agency</a>
+  </div>
+
+  {% if flashes %}
+    {% for f in flashes %}
+      <div class="alert alert-{{ 'danger' if f.type == 'error' else f.type }} alert-dismissible fade show" role="alert">
+        {{ f.text }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <div class="list-group">
+    {% for a in agencies %}
+      <form class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+            method="post" action="/select-agency">
+        <div>
+          <div class="fw-semibold">{{ a.agencies_name }}</div>
+          <div class="small text-muted">
+            {{ a.city }}{% if a.country %}, {{ a.country }}{% endif %}
+          </div>
+          {% if a.description %}
+            <div class="small mt-1">{{ a.description }}</div>
+          {% endif %}
+        </div>
+        <div class="ms-3">
+          <input type="hidden" name="agency_id" value="{{ a.registration_id }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+          <button class="btn btn-primary btn-sm">Use</button>
+        </div>
+      </form>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

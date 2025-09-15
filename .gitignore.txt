@@ -1,0 +1,33 @@
+# OS/editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+
+# Env & secrets
+.env
+.env.*
+*.secret
+*.key
+
+# Build/coverage
+build/
+dist/
+*.egg-info/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Logs
+*.log
+
+# Node (if any frontend later)
+node_modules/

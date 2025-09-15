@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}Inquiries • {{ agency.agencies_name }}{% endblock %}
+{% block content %}
+<style>
+  .wrap{max-width:900px;margin:28px auto;padding:0 16px;}
+  .head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+  h1{margin:0;font-size:1.6rem;font-weight:800;}
+  .list{border:1px solid #e5e7eb;border-radius:14px;background:#fff;overflow:hidden}
+  .row{display:flex;justify-content:space-between;gap:12px;padding:14px 16px;border-bottom:1px solid #e5e7eb;align-items:center}
+  .row:last-child{border-bottom:none}
+  .name a{color:#111827;text-decoration:none}
+  .name a:hover{color:#2563eb}
+  .unseen{font-weight:800;}   /* bold for new (unseen) */
+  .seen{font-weight:600;}     /* normal/semi for seen */
+  .meta{color:#6b7280;font-size:.9rem}
+  .badge{background:#eef2ff;color:#3730a3;border-radius:999px;padding:4px 10px;font-weight:700;font-size:.8rem}
+  .empty{padding:36px;text-align:center;color:#6b7280}
+  .toolbar{display:flex;gap:10px;align-items:center;margin:10px 0 16px 0}
+  .search{flex:1}
+  .search input{width:100%;padding:10px 12px;border:1px solid #e5e7eb;border-radius:10px}
+  .btn{display:inline-block;padding:8px 12px;border:1px solid #e5e7eb;border-radius:10px;text-decoration:none}
+</style>
+
+<div class="wrap">
+  <div class="head">
+    <h1>Inquiries • {{ agency.agencies_name }}</h1>
+    <a class="btn" href="/agency/{{ agency.registration_id }}/dashboard">← Back</a>
+  </div>
+
+  {% if flashes %}
+    {% for f in flashes %}
+      <div class="meta" style="margin:6px 0">{{ f.message }}</div>
+    {% endfor %}
+  {% endif %}
+
+  <div class="toolbar">
+    <div class="search"><input id="q" placeholder="Search names…"></div>
+    <div class="meta">{{ inquiries|length }} total</div>
+  </div>
+
+  <div class="list" id="list">
+    {% if inquiries %}
+      {% for i in inquiries %}
+        <div class="row" data-row data-name="{{ i.name|lower|e }}">
+          <div class="name">
+            <a href="/inquiries/{{ i.inquiry_id }}" class="{{ 'unseen' if not i.viewed_at else 'seen' }}">
+              {{ i.name }}
+            </a>
+            <div class="meta">#{{ i.inquiry_id }} • {{ i.created_at }}</div>
+          </div>
+          <div>
+            <span class="badge">{{ i.source or "–" }}</span>
+          </div>
+        </div>
+      {% endfor %}
+    {% else %}
+      <div class="empty">No inquiries yet.</div>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+  const q = document.getElementById('q');
+  q?.addEventListener('input', ()=>{
+    const term = (q.value||'').toLowerCase().trim();
+    document.querySelectorAll('[data-row]').forEach(r=>{
+      const name = r.getAttribute('data-name') || '';
+      r.style.display = (!term || name.includes(term)) ? '' : 'none';
+    });
+  });
+</script>
+{% endblock %}

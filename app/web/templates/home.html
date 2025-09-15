@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="py-4">
+  <h1 class="h4 mb-3">Welcome to the Tour App</h1>
+  <p class="text-muted">Browse public listings below:</p>
+
+  <div class="d-flex gap-3">
+    <a class="btn btn-primary" href="/operators">List Operators (Agencies)</a>
+    <a class="btn btn-outline-primary" href="/packages">List Packages</a>
+  </div>
+
+  {% if user %}
+    <hr class="my-4">
+    <p class="mb-0">
+      Signed in as <strong>{{ user.email }}</strong>.
+      Go to your <a href="/agency/{{ agency.registration_id }}/dashboard">Dashboard</a>.
+    </p>
+  {% endif %}
+
+  {% if popular_cities %}
+  <section style="margin:28px 0">
+    <style>
+      .loc-wrap{max-width:1100px;margin:0 auto;padding:0 16px}
+      .loc-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+      .loc-head h2{margin:0;font-size:1.4rem;font-weight:800}
+      .loc-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+      @media (max-width: 980px){ .loc-grid{grid-template-columns:repeat(3,1fr);} }
+      @media (max-width: 680px){ .loc-grid{grid-template-columns:repeat(2,1fr);} }
+      .loc-card{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:16px;text-decoration:none;display:block;transition:box-shadow .2s,border-color .2s,transform .08s}
+      .loc-card:hover{border-color:#c7d2fe;box-shadow:0 8px 24px rgba(37,99,235,.12);transform:translateY(-1px)}
+      .loc-name{font-weight:800;color:#111827;margin:0 0 6px 0}
+      .loc-meta{color:#6b7280;font-size:.92rem}
+      .loc-more{text-decoration:none;color:#2563eb}
+    </style>
+    <div class="loc-wrap">
+      <div class="loc-head">
+        <h2>Browse by location</h2>
+        <a href="/operators" class="loc-more">View all operators →</a>
+      </div>
+      <div class="loc-grid">
+          {% for c in popular_cities %}
+            <a class="loc-card" href="/city/{{ c.name | urlencode }}">
+              <div class="loc-name">{{ c.name }}</div>
+              <div class="loc-meta">{{ c.count }} operator{{ 's' if c.count != 1 else '' }}</div>
+            </a>
+
+          {% endfor %}
+      </div>
+    </div>
+  </section>
+  {% endif %}
+  {% if agency is defined and agency %}
+  Go to your <a href="/agency/{{ agency.registration_id }}/dashboard">Dashboard</a>.
+{% endif %}
+</div>
+{% endblock %}

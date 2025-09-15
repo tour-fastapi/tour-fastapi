@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h5 mb-0">Itinerary • {{ pkg.package_name }}</h1>
+  <a href="/agency/{{ agency.registration_id }}/dashboard" class="btn btn-outline-secondary btn-sm">Dashboard</a>
+</div>
+
+{% if flashes %}
+  {% for f in flashes %}
+    <div class="alert alert-{{ 'danger' if f.type == 'error' else f.type }} alert-dismissible fade show" role="alert">
+      {{ f.text }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+  {% endfor %}
+{% endif %}
+
+<div class="card">
+  <div class="card-body">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <div class="fw-semibold">Day {{ current_day }} of {{ total_days }}</div>
+      <div class="text-muted small">
+        {% set pct = (current_day / total_days * 100)|round(0, 'floor') %}
+        {{ pct }}% complete
+      </div>
+    </div>
+
+    <div class="progress mb-3" role="progressbar" aria-valuenow="{{ pct }}" aria-valuemin="0" aria-valuemax="100" style="height:8px;">
+      <div class="progress-bar" style="width: {{ pct }}%;"></div>
+    </div>
+
+    <form method="post" action="/package/{{ pkg.package_id }}/itinerary/wizard">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <input type="hidden" name="day_number" value="{{ current_day }}">
+
+      <div class="mb-3">
+        <label class="form-label">Day {{ current_day }} notes</label>
+        <textarea class="form-control" name="notes" rows="8"
+          placeholder="Example: Arrival at JED, transfer to hotel, rest. After Asr, group briefing. Dinner included. Ziyarat next day.">{{ notes }}</textarea>
+        <div class="form-text">Tip: Include activities, transfers, approximate times, meals, reminders.</div>
+      </div>
+
+      <div class="d-flex gap-2">
+        <button class="btn btn-outline-secondary" type="submit" name="nav" value="back" {% if current_day == 1 %}disabled{% endif %}>
+          ← Back
+        </button>
+
+        {% if current_day < total_days %}
+          <button class="btn btn-outline-secondary" type="submit" name="nav" value="skip">Skip</button>
+          <button class="btn btn-primary" type="submit" name="nav" value="next">Save &amp; Next →</button>
+        {% else %}
+          <button class="btn btn-primary" type="submit" name="nav" value="finish">Save &amp; Finish ✓</button>
+        {% endif %}
+      </div>
+    </form>
+  </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1 class="h4 mb-3">Edit Agency</h1>
+
+<form method="post" action="/agency/{{ agency.registration_id }}/edit">
+  {# CSRF partial should output: <input type="hidden" name="csrf_token" value="..."> #}
+  {% include "partials/_csrf_input.html" %}
+
+  <!-- Core agency -->
+  <div class="row">
+    <div class="col-md-6 mb-3">
+      <label class="form-label">Agency name</label>
+      <input name="agencies_name" class="form-control" required value="{{ agency.agencies_name }}">
+    </div>
+    <div class="col-md-3 mb-3">
+      <label class="form-label">Country</label>
+      <input name="country" class="form-control" required value="{{ agency.country }}">
+    </div>
+    <div class="col-md-3 mb-3">
+      <label class="form-label">City</label>
+      <input name="city" class="form-control" required value="{{ agency.city }}">
+    </div>
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label">Description (optional)</label>
+    <textarea name="description" class="form-control" rows="3">{{ agency.description or "" }}</textarea>
+  </div>
+
+  <hr class="my-3">
+  <h2 class="h6 mb-3">Agency details</h2>
+
+  <!-- Address -->
+  <div class="row">
+    <div class="col-md-6 mb-3">
+      <label class="form-label">Address line 1 *</label>
+      <input name="address_line1" class="form-control" required value="{{ (detail.address_line1 if detail else '') }}">
+    </div>
+    <div class="col-md-6 mb-3">
+      <label class="form-label">Address line 2</label>
+      <input name="address_line2" class="form-control" value="{{ (detail.address_line2 if detail else '') }}">
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-4 mb-3">
+      <label class="form-label">State</label>
+      <input name="state" class="form-control" value="{{ (detail.state if detail else '') }}">
+    </div>
+    <div class="col-md-4 mb-3">
+      <label class="form-label">Postal code</label>
+      <input name="postal_code" class="form-control" value="{{ (detail.postal_code if detail else '') }}">
+    </div>
+    <div class="col-md-4 mb-3">
+      <label class="form-label">Website</label>
+      <input name="website" class="form-control" value="{{ (detail.website if detail else '') }}" placeholder="https://example.com">
+    </div>
+  </div>
+
+  <!-- Contacts -->
+  <div class="row">
+    <div class="col-md-6 mb-3">
+      <label class="form-label">Primary contact name *</label>
+      <input name="contact1_name" class="form-control" required value="{{ (detail.contact1_name if detail else '') }}">
+    </div>
+    <div class="col-md-6 mb-3">
+      <label class="form-label">Primary contact phone *</label>
+      <input name="contact1_phone" class="form-control" required value="{{ (detail.contact1_phone if detail else '') }}">
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-6 mb-3">
+      <label class="form-label">Secondary contact name</label>
+      <input name="contact2_name" class="form-control" value="{{ (detail.contact2_name if detail else '') }}">
+    </div>
+    <div class="col-md-6 mb-3">
+      <label class="form-label">Secondary contact phone</label>
+      <input name="contact2_phone" class="form-control" value="{{ (detail.contact2_phone if detail else '') }}">
+    </div>
+  </div>
+
+  <button class="btn btn-primary">Save Changes</button>
+  <a href="/agency/{{ agency.registration_id }}/dashboard" class="btn btn-link">Cancel</a>
+</form>
+{% endblock %}

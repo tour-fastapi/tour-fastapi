@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}Packages in {{ city }}{% endblock %}
+{% block content %}
+<style>
+  :root{
+    --bg:#f6f8fb; --card:#fff; --text:#0f172a; --muted:#64748b;
+    --primary:#2563eb; --primary-600:#1d4ed8; --border:#e5e7eb;
+    --radius:16px; --shadow:0 12px 32px rgba(2,6,23,.08);
+  }
+  body{background:var(--bg);}
+  .page{max-width:1100px;margin:28px auto;padding:0 16px}
+
+  .head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+  .head h1{margin:0;font-size:1.6rem;font-weight:900;color:var(--text)}
+  .pill{display:inline-block;background:linear-gradient(135deg,var(--primary),var(--primary-600));color:#fff;
+        border-radius:999px;padding:6px 12px;font-size:.8rem;font-weight:700}
+
+  .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow)}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;padding:14px}
+  @media (max-width: 980px){ .grid{grid-template-columns:repeat(2,1fr);} }
+  @media (max-width: 680px){ .grid{grid-template-columns:1fr;} }
+
+  .pkg{display:block;text-decoration:none;background:#fff;border:1px solid var(--border);border-radius:14px;overflow:hidden;
+       transition:box-shadow .2s,border-color .2s,transform .08s}
+  .pkg:hover{border-color:#c7d2fe;box-shadow:0 16px 42px rgba(37,99,235,.12);transform:translateY(-1px)}
+  .pkg-media{height:140px;background:linear-gradient(135deg,#e2e8f0,#dbeafe)}
+  .pkg-body{padding:14px}
+  .pkg-name{margin:0 0 6px 0;font-size:1.05rem;font-weight:800;color:var(--text);line-height:1.3}
+  .pkg-sub{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px}
+  .chip{display:inline-block;padding:4px 10px;border:1px solid var(--border);border-radius:999px;font-size:.8rem;color:#334155;background:#fff}
+  .pkg-desc{color:#0f172a;font-size:.95rem;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+  .pkg-foot{display:flex;justify-content:space-between;align-items:center;margin-top:10px;color:var(--muted);font-size:.92rem}
+  .cta{color:var(--primary);font-weight:700}
+  .empty{padding:36px;text-align:center;color:var(--muted)}
+  .back{display:inline-block;margin:8px 0 18px 0;text-decoration:none;color:var(--primary)}
+</style>
+
+<div class="page">
+  <a class="back" href="/packages">← Back to Discover Packages</a>
+
+  <div class="head">
+    <h1>Packages in {{ city }}</h1>
+    <div class="pill">{{ count }} package{{ 's' if count != 1 else '' }}</div>
+  </div>
+
+  <div class="card">
+    {% if packages and packages|length > 0 %}
+      <div class="grid">
+        {% for p in packages %}
+          {% set ag = agency_by_id.get(p.registration_id) %}
+          {% set href = "/packages/" ~ p.package_id %}
+          <a class="pkg" href="{{ href }}">
+            <div class="pkg-media"></div>
+            <div class="pkg-body">
+              <h3 class="pkg-name">{{ p.package_name }}</h3>
+              <div class="pkg-sub">
+                {% if p.days %}<span class="chip">{{ p.days }} day{{ 's' if p.days != 1 else '' }}</span>{% endif %}
+                {% if p.price is not none %}<span class="chip">₹ {{ '%0.2f'|format(p.price) }}</span>{% endif %}
+                {% if ag and ag.agencies_name %}<span class="chip">{{ ag.agencies_name }}</span>{% endif %}
+                {% if ag and ag.country %}<span class="chip">{{ ag.country }}</span>{% endif %}
+              </div>
+              {% if p.description %}
+              <div class="pkg-desc">{{ p.description }}</div>
+              {% endif %}
+              <div class="pkg-foot">
+                <div>{{ ag.city if ag and ag.city else '—' }}, {{ ag.country if ag and ag.country else '—' }}</div>
+                <div class="cta">View details →</div>
+              </div>
+            </div>
+          </a>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty">No packages found in {{ city }}.</div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

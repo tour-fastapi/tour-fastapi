@@ -1,0 +1,276 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="py-3">
+  <a href="/packages" class="btn btn-link p-0 mb-3">← Back to Packages</a>
+
+  <!-- Header -->
+  <div class="card mb-3">
+    <div class="card-body">
+      <h1 class="h4 mb-1">{{ pkg.package_name }}</h1>
+      <div class="text-muted mb-2">
+        {{ pkg.days }} day{{ pkg.days == 1 and '' or 's' }} • ₹{{ '%.2f'|format(pkg.price) }}
+      </div>
+
+      {% if agency %}
+        <div class="mb-2">
+          <span class="text-muted">Operator:</span>
+          <a href="/operators/{{ agency.registration_id }}">{{ agency.agencies_name }}</a>
+          <span class="text-muted">— {{ agency.city }}{% if agency.country %}, {{ agency.country }}{% endif %}</span>
+        </div>
+      {% endif %}
+
+      {% if pkg.description %}
+        <p class="mb-0">{{ pkg.description }}</p>
+      {% else %}
+        <p class="mb-0 text-muted">No description provided (tip for operators: mention meals, laundry, transport, add-ons, etc.).</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Details grid -->
+  <div class="row g-3">
+
+    <!-- Flights -->
+    <div class="col-lg-6">
+      <div class="card h-100">
+        <div class="card-body">
+          <h2 class="h6 mb-3">Flights</h2>
+
+          <div class="row g-3">
+            <div class="col-sm-6">
+              <div class="border rounded p-3 h-100">
+                <div class="fw-semibold mb-2">Onward</div>
+                {% if onward %}
+                  <div class="small">
+                    {% if onward.flight_date %}<div>Date: {{ onward.flight_date.strftime('%d %b %Y') }}</div>{% endif %}
+                    {% if onward.flight_type %}<div>Type: {{ onward.flight_type|capitalize }}</div>{% endif %}
+                    {% if onward.flight_type == 'via' and onward.via_city %}<div>Via: {{ onward.via_city }}</div>{% endif %}
+                    {% if onward.airline_name %}<div>Airline: {{ onward.airline_name }}</div>{% endif %}
+                  </div>
+                {% else %}
+                  <div class="text-muted small">Not specified.</div>
+                {% endif %}
+              </div>
+            </div>
+
+            <div class="col-sm-6">
+              <div class="border rounded p-3 h-100">
+                <div class="fw-semibold mb-2">Return</div>
+                {% if ret %}
+                  <div class="small">
+                    {% if ret.flight_date %}<div>Date: {{ ret.flight_date.strftime('%d %b %Y') }}</div>{% endif %}
+                    {% if ret.flight_type %}<div>Type: {{ ret.flight_type|capitalize }}</div>{% endif %}
+                    {% if ret.flight_type == 'via' and ret.via_city %}<div>Via: {{ ret.via_city }}</div>{% endif %}
+                    {% if ret.airline_name %}<div>Airline: {{ ret.airline_name }}</div>{% endif %}
+                  </div>
+                {% else %}
+                  <div class="text-muted small">Not specified.</div>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Stays -->
+    <div class="col-lg-6">
+      <div class="card h-100">
+        <div class="card-body">
+          <h2 class="h6 mb-3">Stay</h2>
+
+          <div class="row g-3">
+            <div class="col-sm-6">
+              <div class="border rounded p-3 h-100">
+                <div class="fw-semibold mb-2">Mecca</div>
+                {% if mecca %}
+                  <div class="small">
+                    {% if mecca.check_in or mecca.check_out %}
+                      <div>
+                        Dates:
+                        {% if mecca.check_in %}{{ mecca.check_in.strftime('%d %b %Y') }}{% endif %}
+                        {% if mecca.check_in and mecca.check_out %} – {% endif %}
+                        {% if mecca.check_out %}{{ mecca.check_out.strftime('%d %b %Y') }}{% endif %}
+                      </div>
+                    {% endif %}
+                    {% if mecca.hotel_name %}
+                      <div>
+                        Hotel:
+                        {% if mecca.hotel_link %}
+                          <a href="{{ mecca.hotel_link if mecca.hotel_link.startswith('http') else 'https://' ~ mecca.hotel_link }}" target="_blank" rel="noopener">
+                            {{ mecca.hotel_name }}
+                          </a>
+                        {% else %}
+                          {{ mecca.hotel_name }}
+                        {% endif %}
+                      </div>
+                    {% endif %}
+                    {% if mecca.distance_text or mecca.distance_m is not none %}
+                      <div>
+                        Distance:
+                        {% if mecca.distance_text %}{{ mecca.distance_text }}{% endif %}
+                        {% if mecca.distance_text and mecca.distance_m is not none %} ({{ mecca.distance_m }} m){% elif mecca.distance_m is not none %}{{ mecca.distance_m }} m{% endif %}
+                      </div>
+                    {% endif %}
+                  </div>
+                {% else %}
+                  <div class="text-muted small">Not specified.</div>
+                {% endif %}
+              </div>
+            </div>
+
+            <div class="col-sm-6">
+              <div class="border rounded p-3 h-100">
+                <div class="fw-semibold mb-2">Medinah</div>
+                {% if med %}
+                  <div class="small">
+                    {% if med.check_in or med.check_out %}
+                      <div>
+                        Dates:
+                        {% if med.check_in %}{{ med.check_in.strftime('%d %b %Y') }}{% endif %}
+                        {% if med.check_in and med.check_out %} – {% endif %}
+                        {% if med.check_out %}{{ med.check_out.strftime('%d %b %Y') }}{% endif %}
+                      </div>
+                    {% endif %}
+                    {% if med.hotel_name %}
+                      <div>
+                        Hotel:
+                        {% if med.hotel_link %}
+                          <a href="{{ med.hotel_link if med.hotel_link.startswith('http') else 'https://' ~ med.hotel_link }}" target="_blank" rel="noopener">
+                            {{ med.hotel_name }}
+                          </a>
+                        {% else %}
+                          {{ med.hotel_name }}
+                        {% endif %}
+                      </div>
+                    {% endif %}
+                    {% if med.distance_text or med.distance_m is not none %}
+                      <div>
+                        Distance:
+                        {% if med.distance_text %}{{ med.distance_text }}{% endif %}
+                        {% if med.distance_text and med.distance_m is not none %} ({{ med.distance_m }} m){% elif med.distance_m is not none %}{{ med.distance_m }} m{% endif %}
+                      </div>
+                    {% endif %}
+                  </div>
+                {% else %}
+                  <div class="text-muted small">Not specified.</div>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Inclusions -->
+    <div class="col-12">
+      <div class="card">
+        <div class="card-body">
+          <h2 class="h6 mb-2">Inclusions</h2>
+          {% if incl or pkg.description %}
+            <ul class="mb-0">
+              {% if incl and incl.meals %}<li><strong>Meals:</strong> {{ incl.meals }}</li>{% endif %}
+              {% if incl and incl.laundry %}<li><strong>Laundry:</strong> {{ incl.laundry }}</li>{% endif %}
+              {% if incl and incl.transport %}<li><strong>Transport:</strong> {{ incl.transport }}</li>{% endif %}
+              {% if incl and incl.other_notes %}<li><strong>Notes:</strong> {{ incl.other_notes }}</li>{% endif %}
+              {% if not incl %}
+                <li class="text-muted">No dedicated inclusions were added for this package.</li>
+              {% endif %}
+            </ul>
+          {% else %}
+            <p class="text-muted mb-0">No inclusions specified.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Inquiry -->
+  <div class="card mt-4" id="inquire">
+  <div class="card-body">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <h2 class="h6 mb-0">Send Inquiry</h2>
+      <a class="btn btn-sm btn-outline-primary" href="#inquire" onclick="document.getElementById('inq-form').style.display='block'">Open form</a>
+    </div>
+
+    <form id="inq-form" method="post" action="/packages/{{ pkg.package_id }}/inquire" style="display:none;">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+      <!-- spam honeypot (leave empty) -->
+      <input type="text" name="website" style="display:none" tabindex="-1" autocomplete="off">
+
+      <div class="row">
+        <div class="col-md-6 mb-2">
+          <label class="form-label">Your name</label>
+          <input class="form-control" name="name" required maxlength="100" autocomplete="name">
+        </div>
+        <div class="col-md-6 mb-2">
+          <label class="form-label">Phone number</label>
+          <input
+            class="form-control"
+            name="phone_number"
+            type="tel"
+            inputmode="tel"
+            required
+            maxlength="20"
+            autocomplete="tel"
+            placeholder="+91XXXXXXXXXX or 98XXXXXXXX"
+            pattern="(\+[1-9]\d{7,14}|[6-9]\d{9})"
+            title="Use +countrycode (e.g., +9198xxxxxx) or a 10-digit Indian mobile starting 6–9"
+          >
+        </div>
+      </div>
+
+      <div class="mb-2">
+        <label class="form-label">Your message</label>
+        <textarea class="form-control" name="inquiry" rows="3" required></textarea>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">How did you find us? (optional)</label>
+        <input class="form-control" name="source" maxlength="20" placeholder="instagram / google / friend">
+      </div>
+
+      <!-- Simple math CAPTCHA -->
+      <div class="mb-3">
+        <label class="form-label">CAPTCHA: {{ captcha_q }}</label>
+        <input class="form-control" type="text" name="captcha_answer" required inputmode="numeric" pattern="\d+">
+        <div class="form-text">Enter the result to prove you’re human.</div>
+      </div>
+
+      <button class="btn btn-primary" type="submit">Send</button>
+    </form>
+  </div>
+</div>
+
+</div>
+
+
+<!-- Itinerary (one note per day) -->
+<div class="card mt-3">
+  <div class="card-body">
+    <h2 class="h6 mb-3">Itinerary</h2>
+    {% if pkg.itineraries %}
+      <ol class="mb-0">
+        {% for e in pkg.itineraries %}
+          <li class="mb-2">
+            <div class="fw-semibold">Day {{ e.day_number }}</div>
+            {% if e.notes %}
+              <div class="small">{{ e.notes | replace('\n', '<br>') | safe }}</div>
+            {% else %}
+              <div class="text-muted small">No details added.</div>
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ol>
+    {% else %}
+      <p class="text-muted mb-0">No itinerary added.</p>
+    {% endif %}
+  </div>
+</div>
+
+{% endblock %}

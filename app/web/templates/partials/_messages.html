@@ -1,0 +1,9 @@
+{% if flashes %}
+  {% for m in flashes %}
+    {% set cls = "alert-success" if m.type == "success" else "alert-danger" if m.type == "error" else "alert-info" %}
+    <div class="alert {{ cls }} alert-dismissible fade show" role="alert">
+      {{ m.text }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+  {% endfor %}
+{% endif %}

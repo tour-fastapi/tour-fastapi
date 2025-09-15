@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="py-3">
+  <a href="/city/{{ agency.city|urlencode }}/operators" class="btn btn-link p-0 mb-3">
+    ← Back to Operators in {{ agency.city }}
+  </a>
+
+  <!-- Header -->
+  <div class="card mb-3">
+    <div class="card-body">
+      <h1 class="h4 mb-1">{{ agency.agencies_name }}</h1>
+      <div class="text-muted mb-2">
+        {{ agency.city }}{% if agency.country %}, {{ agency.country }}{% endif %}
+      </div>
+      {% if agency.description %}
+        <p class="mb-0">{{ agency.description }}</p>
+      {% else %}
+        <p class="mb-0 text-muted">No description provided.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Details: Address / Contacts / Website & Socials -->
+  {% if detail %}
+  <div class="row g-3 mb-3">
+    <!-- Address -->
+    {% set has_address = detail.address_line1 or detail.address_line2 or detail.city or detail.state or detail.country or detail.postal_code %}
+    {% if has_address %}
+    <div class="col-md-6">
+      <div class="card h-100">
+        <div class="card-header"><strong>Address</strong></div>
+        <div class="card-body small">
+          {% if detail.address_line1 %}<div>{{ detail.address_line1 }}</div>{% endif %}
+          {% if detail.address_line2 %}<div>{{ detail.address_line2 }}</div>{% endif %}
+          {% if detail.city or detail.state or detail.country %}
+            <div>
+              {{ detail.city or '' }}{% if detail.state %}{% if detail.city %}, {% endif %}{{ detail.state }}{% endif %}
+              {% if detail.country %}{% if detail.city or detail.state %}, {% endif %}{{ detail.country }}{% endif %}
+              {% if detail.postal_code %} {{ detail.postal_code }}{% endif %}
+            </div>
+          {% endif %}
+          {% if not has_address %}
+            <div class="text-muted">No address provided.</div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Contacts -->
+    {% set has_contacts = detail.contact1_name or detail.contact1_phone or detail.contact2_name or detail.contact2_phone %}
+    {% if has_contacts %}
+    <div class="col-md-6">
+      <div class="card h-100">
+        <div class="card-header"><strong>Contacts</strong></div>
+        <div class="card-body small">
+          {% if detail.contact1_name or detail.contact1_phone %}
+            <div class="mb-2">
+              <div class="text-muted">Primary</div>
+              <div>
+                {% if detail.contact1_name %}<strong>{{ detail.contact1_name }}</strong>{% endif %}
+                {% if detail.contact1_phone %}<span class="ms-2">{{ detail.contact1_phone }}</span>{% endif %}
+              </div>
+            </div>
+          {% endif %}
+          {% if detail.contact2_name or detail.contact2_phone %}
+            <div>
+              <div class="text-muted">Secondary</div>
+              <div>
+                {% if detail.contact2_name %}<strong>{{ detail.contact2_name }}</strong>{% endif %}
+                {% if detail.contact2_phone %}<span class="ms-2">{{ detail.contact2_phone }}</span>{% endif %}
+              </div>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Website & Socials (optional columns) -->
+    {% set has_links =
+        (detail.website is defined and detail.website) or
+        (detail.instagram is defined and detail.instagram) or
+        (detail.facebook is defined and detail.facebook) or
+        (detail.twitter is defined and detail.twitter) %}
+    {% if has_links %}
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header"><strong>Online</strong></div>
+        <div class="card-body small">
+          <div class="d-flex flex-wrap gap-3">
+            {% if detail.website is defined and detail.website %}
+              <a href="{{ detail.website }}" target="_blank" rel="noopener" class="link-primary">Website</a>
+            {% endif %}
+            {% if detail.instagram is defined and detail.instagram %}
+              <a href="{{ detail.instagram }}" target="_blank" rel="noopener" class="link-primary">Instagram</a>
+            {% endif %}
+            {% if detail.facebook is defined and detail.facebook %}
+              <a href="{{ detail.facebook }}" target="_blank" rel="noopener" class="link-primary">Facebook</a>
+            {% endif %}
+            {% if detail.twitter is defined and detail.twitter %}
+              <a href="{{ detail.twitter }}" target="_blank" rel="noopener" class="link-primary">Twitter</a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  <!-- Packages -->
+  <h2 class="h5 mb-2">Packages</h2>
+  {% if packages and packages|length > 0 %}
+    <div class="list-group">
+      {% for p in packages %}
+        <a class="list-group-item list-group-item-action" href="/packages/{{ p.package_id }}">
+          <div class="d-flex w-100 justify-content-between">
+            <strong>{{ p.package_name }}</strong>
+            <small class="text-muted">
+              {% if p.days %}{{ p.days }} day{{ 's' if p.days != 1 else '' }}{% endif %}
+              {% if p.days and p.price is not none %} • {% endif %}
+              {% if p.price is not none %}₹{{ '%.2f'|format(p.price) }}{% endif %}
+            </small>
+          </div>
+          {% if p.description %}
+            <div class="small text-muted mt-1">{{ p.description }}</div>
+          {% endif %}
+        </a>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="alert alert-light border">This operator has no packages yet.</div>
+  {% endif %}
+</div>
+{% endblock %}
