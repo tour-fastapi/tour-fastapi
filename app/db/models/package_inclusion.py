@@ -1,27 +1,67 @@
-from __future__ import annotations
-from typing import Optional
-from sqlalchemy import String, Text, ForeignKey, DateTime, UniqueConstraint
-from sqlalchemy.dialects.mysql import INTEGER as MYSQL_INTEGER
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.sql import func
-from app.db.base import Base
+# app/db/models/package_inclusion.py
+
+from sqlalchemy import (
+    Column,
+    Integer,
+    ForeignKey,
+    Boolean,
+    Text,
+    DateTime,
+    func,
+    UniqueConstraint,
+)
+from sqlalchemy.orm import relationship
+
+# ---- Robust Base import (works with either base.py or base_class.py) ----
+try:
+    from app.db.base import Base  # type: ignore
+except ModuleNotFoundError:
+    try:
+        from app.db.base_class import Base  # type: ignore
+    except ModuleNotFoundError:
+        from sqlalchemy.orm import declarative_base
+        Base = declarative_base()  # type: ignore
+
 
 class PackageInclusion(Base):
     __tablename__ = "package_inclusions"
-    __table_args__ = (UniqueConstraint("package_id", name="ux_inclusion_pkg"),)
 
-    id: Mapped[int] = mapped_column(MYSQL_INTEGER(unsigned=True), primary_key=True, autoincrement=True)
-    package_id: Mapped[int] = mapped_column(
-        MYSQL_INTEGER(unsigned=True),
+    id = Column(Integer, primary_key=True, index=True)
+
+    # FK to packages
+    package_id = Column(
+        Integer,
         ForeignKey("packages.package_id", ondelete="CASCADE"),
         nullable=False,
-        unique=True
+        index=True,
     )
 
-    meals: Mapped[Optional[str]] = mapped_column(String(200))
-    laundry: Mapped[Optional[str]] = mapped_column(String(200))
-    transport: Mapped[Optional[str]] = mapped_column(String(200))
-    other_notes: Mapped[Optional[str]] = mapped_column(Text)
-    created_at: Mapped[Optional["DateTime"]] = mapped_column(DateTime(timezone=True), server_default=func.now())
-
+    # ✅ Add the matching relationship expected by Package.inclusion.back_populates="package"
     package = relationship("Package", back_populates="inclusion")
+
+    # New checkbox + description fields
+    meals_enabled        = Column(Boolean, nullable=False, default=False)
+    meals_desc           = Column(Text, nullable=True)
+
+    laundry_enabled      = Column(Boolean, nullable=False, default=False)
+    laundry_desc         = Column(Text, nullable=True)
+
+    transport_enabled    = Column(Boolean, nullable=False, default=False)
+    transport_desc       = Column(Text, nullable=True)
+
+    zamzam_enabled       = Column(Boolean, nullable=False, default=False)
+    zamzam_desc          = Column(Text, nullable=True)
+
+    welcome_kit_enabled  = Column(Boolean, nullable=False, default=False)
+    welcome_kit_desc     = Column(Text, nullable=True)
+
+    insurance_enabled    = Column(Boolean, nullable=False, default=False)
+    insurance_desc       = Column(Text, nullable=True)
+
+    other_notes          = Column(Text, nullable=True)
+
+    created_at           = Column(DateTime, server_default=func.now(), nullable=False)
+
+    __table_args__ = (
+        UniqueConstraint("package_id", name="uq_package_inclusions_package_id"),
+    )

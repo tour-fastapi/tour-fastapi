@@ -2,105 +2,123 @@
 
 {% block content %}
 <div class="py-3">
-  <a href="/city/{{ agency.city|urlencode }}/operators" class="btn btn-link p-0 mb-3">
-    ← Back to Operators in {{ agency.city }}
+
+  <!-- Back link -->
+  <a href="{{ back_href }}" class="btn btn-link p-0 mb-3">
+    ← Back to Operators in {{ display_city if display_city != 'Unknown' else 'All Cities' }}
   </a>
 
   <!-- Header -->
+<!-- Header -->
+<div class="card mb-3">
+  <div class="card-body d-flex flex-column align-items-center gap-2">
+
+    {% if agency.logo_path %}
+      <img
+        src="/media/agency/{{ agency.registration_id }}/logo?v={{ agency.logo_uploaded_at or 0 }}"
+        alt="{{ agency.agencies_name }} logo"
+        style="max-height:100px; max-width:280px; object-fit:contain; border:1px solid #eee; background:#fff; padding:8px; border-radius:8px;">
+    {% endif %}
+
+    <h1 class="h4 mb-1 text-center w-100">{{ agency.agencies_name }}</h1>
+    <div class="text-muted mb-2 text-center w-100">
+      {{ display_city }}{% if agency.country %}, {{ agency.country }}{% endif %}
+    </div>
+
+    {% if agency.description %}
+      <p class="mb-0 text-center">{{ agency.description }}</p>
+    {% else %}
+      <p class="mb-0 text-muted text-center">No description provided.</p>
+    {% endif %}
+  </div>
+</div>
+
+
+  {# ---------- At a glance (agency stats + registration) ---------- #}
+  {% set has_any_stat = (
+      agency.public_registration_code or
+      agency.operating_since is not none or
+      agency.num_umrah_tours is not none or
+      agency.num_hajj_tours is not none or
+      agency.num_pilgrims_sent is not none
+  ) %}
+  {% if has_any_stat %}
   <div class="card mb-3">
+    <div class="card-header"><strong>At a glance</strong></div>
     <div class="card-body">
-      <h1 class="h4 mb-1">{{ agency.agencies_name }}</h1>
-      <div class="text-muted mb-2">
-        {{ agency.city }}{% if agency.country %}, {{ agency.country }}{% endif %}
+      <div class="row gy-3">
+        {% if agency.public_registration_code %}
+          <div class="col-12 col-sm-6 col-lg-4">
+            <div class="small text-muted">Registration Code</div>
+            <div class="fw-semibold">{{ agency.public_registration_code }}</div>
+          </div>
+        {% endif %}
+
+        <div class="col-12 col-sm-6 col-lg-4">
+          <div class="small text-muted">Operating Since</div>
+          <div class="fw-semibold">
+            {{ agency.operating_since if agency.operating_since is not none else "—" }}
+          </div>
+        </div>
+
+        <div class="col-12 col-sm-6 col-lg-4">
+          <div class="small text-muted">Umrah Tours Conducted</div>
+          <div class="fw-semibold">
+            {{ agency.num_umrah_tours if agency.num_umrah_tours is not none else "—" }}
+          </div>
+        </div>
+
+        <div class="col-12 col-sm-6 col-lg-4">
+          <div class="small text-muted">Hajj Tours Conducted</div>
+          <div class="fw-semibold">
+            {{ agency.num_hajj_tours if agency.num_hajj_tours is not none else "—" }}
+          </div>
+        </div>
+
+        <div class="col-12 col-sm-6 col-lg-4">
+          <div class="small text-muted">Pilgrims Served</div>
+          <div class="fw-semibold">
+            {{ agency.num_pilgrims_sent if agency.num_pilgrims_sent is not none else "—" }}
+          </div>
+        </div>
       </div>
-      {% if agency.description %}
-        <p class="mb-0">{{ agency.description }}</p>
-      {% else %}
-        <p class="mb-0 text-muted">No description provided.</p>
-      {% endif %}
     </div>
   </div>
+  {% endif %}
 
-  <!-- Details: Address / Contacts / Website & Socials -->
-  {% if detail %}
+  {# ---------- Contacts & Online presence ---------- #}
+  {% set has_email = agency.agency_email %}
+  {% set has_links = agency.website_url or agency.instagram_url or agency.facebook_url %}
+  {% if has_email or has_links %}
   <div class="row g-3 mb-3">
-    <!-- Address -->
-    {% set has_address = detail.address_line1 or detail.address_line2 or detail.city or detail.state or detail.country or detail.postal_code %}
-    {% if has_address %}
+    {% if has_email %}
     <div class="col-md-6">
       <div class="card h-100">
-        <div class="card-header"><strong>Address</strong></div>
-        <div class="card-body small">
-          {% if detail.address_line1 %}<div>{{ detail.address_line1 }}</div>{% endif %}
-          {% if detail.address_line2 %}<div>{{ detail.address_line2 }}</div>{% endif %}
-          {% if detail.city or detail.state or detail.country %}
-            <div>
-              {{ detail.city or '' }}{% if detail.state %}{% if detail.city %}, {% endif %}{{ detail.state }}{% endif %}
-              {% if detail.country %}{% if detail.city or detail.state %}, {% endif %}{{ detail.country }}{% endif %}
-              {% if detail.postal_code %} {{ detail.postal_code }}{% endif %}
-            </div>
-          {% endif %}
-          {% if not has_address %}
-            <div class="text-muted">No address provided.</div>
-          {% endif %}
+        <div class="card-header"><strong>Contact</strong></div>
+        <div class="card-body">
+          <div class="mb-2">
+            <div class="small text-muted">Email</div>
+            <a href="mailto:{{ agency.agency_email }}">{{ agency.agency_email }}</a>
+          </div>
         </div>
       </div>
     </div>
     {% endif %}
 
-    <!-- Contacts -->
-    {% set has_contacts = detail.contact1_name or detail.contact1_phone or detail.contact2_name or detail.contact2_phone %}
-    {% if has_contacts %}
-    <div class="col-md-6">
-      <div class="card h-100">
-        <div class="card-header"><strong>Contacts</strong></div>
-        <div class="card-body small">
-          {% if detail.contact1_name or detail.contact1_phone %}
-            <div class="mb-2">
-              <div class="text-muted">Primary</div>
-              <div>
-                {% if detail.contact1_name %}<strong>{{ detail.contact1_name }}</strong>{% endif %}
-                {% if detail.contact1_phone %}<span class="ms-2">{{ detail.contact1_phone }}</span>{% endif %}
-              </div>
-            </div>
-          {% endif %}
-          {% if detail.contact2_name or detail.contact2_phone %}
-            <div>
-              <div class="text-muted">Secondary</div>
-              <div>
-                {% if detail.contact2_name %}<strong>{{ detail.contact2_name }}</strong>{% endif %}
-                {% if detail.contact2_phone %}<span class="ms-2">{{ detail.contact2_phone }}</span>{% endif %}
-              </div>
-            </div>
-          {% endif %}
-        </div>
-      </div>
-    </div>
-    {% endif %}
-
-    <!-- Website & Socials (optional columns) -->
-    {% set has_links =
-        (detail.website is defined and detail.website) or
-        (detail.instagram is defined and detail.instagram) or
-        (detail.facebook is defined and detail.facebook) or
-        (detail.twitter is defined and detail.twitter) %}
     {% if has_links %}
-    <div class="col-12">
-      <div class="card">
+    <div class="col-md-6">
+      <div class="card h-100">
         <div class="card-header"><strong>Online</strong></div>
-        <div class="card-body small">
+        <div class="card-body">
           <div class="d-flex flex-wrap gap-3">
-            {% if detail.website is defined and detail.website %}
-              <a href="{{ detail.website }}" target="_blank" rel="noopener" class="link-primary">Website</a>
+            {% if agency.website_url %}
+              <a href="{{ agency.website_url }}" target="_blank" rel="noopener" class="link-primary">Website</a>
             {% endif %}
-            {% if detail.instagram is defined and detail.instagram %}
-              <a href="{{ detail.instagram }}" target="_blank" rel="noopener" class="link-primary">Instagram</a>
+            {% if agency.instagram_url %}
+              <a href="{{ agency.instagram_url }}" target="_blank" rel="noopener" class="link-primary">Instagram</a>
             {% endif %}
-            {% if detail.facebook is defined and detail.facebook %}
-              <a href="{{ detail.facebook }}" target="_blank" rel="noopener" class="link-primary">Facebook</a>
-            {% endif %}
-            {% if detail.twitter is defined and detail.twitter %}
-              <a href="{{ detail.twitter }}" target="_blank" rel="noopener" class="link-primary">Twitter</a>
+            {% if agency.facebook_url %}
+              <a href="{{ agency.facebook_url }}" target="_blank" rel="noopener" class="link-primary">Facebook</a>
             {% endif %}
           </div>
         </div>
@@ -110,12 +128,64 @@
   </div>
   {% endif %}
 
+  {# ---------- Main Branch (address / contact person / number / location) ---------- #}
+  {% if branch %}
+  <div class="card mb-3">
+    <div class="card-header"><strong>Main Branch</strong></div>
+    <div class="card-body">
+      <div class="row gy-3">
+        <div class="col-12 col-md-4">
+          <div class="small text-muted">Branch Name</div>
+          <div class="fw-semibold">{{ branch.name or "—" }}</div>
+        </div>
+
+        <div class="col-12 col-md-4">
+          <div class="small text-muted">Contact</div>
+          <div class="fw-semibold">
+            {% if branch.contact_person or branch.contact_number %}
+              {{ branch.contact_person or "—" }}
+              {% if branch.contact_number %} • {{ branch.contact_number }}{% endif %}
+            {% else %}
+              —
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="col-12 col-md-4">
+          <div class="small text-muted">Location</div>
+          <div class="fw-semibold">
+            {% set loc_city = branch.city or agency.city %}
+            {% set loc_country = branch.country or agency.country %}
+            {% if loc_city or loc_country %}
+              {{ loc_city }}{% if loc_country %}, {{ loc_country }}{% endif %}
+            {% else %}
+              —
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="col-12">
+          <div class="small text-muted">Address</div>
+          <div class="fw-semibold">
+            {% if branch.address_line1 or branch.address_line2 %}
+              {% if branch.address_line1 %}{{ branch.address_line1 }}{% endif %}
+              {% if branch.address_line2 %}<br>{{ branch.address_line2 }}{% endif %}
+            {% else %}
+              —
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
   <!-- Packages -->
   <h2 class="h5 mb-2">Packages</h2>
   {% if packages and packages|length > 0 %}
     <div class="list-group">
       {% for p in packages %}
-        <a class="list-group-item list-group-item-action" href="/packages/{{ p.package_id }}">
+        <a class="list-group-item list-group-item-action" href="/umrah_packages/{{ p.package_id }}">
           <div class="d-flex w-100 justify-content-between">
             <strong>{{ p.package_name }}</strong>
             <small class="text-muted">

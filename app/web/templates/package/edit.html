@@ -1,215 +1,337 @@
 {% extends "base.html" %}
-
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-3">
-  <h1 class="h4 mb-0">Edit Package</h1>
-  <a href="/agency/{{ agency.registration_id }}/dashboard" class="btn btn-outline-secondary btn-sm">Back</a>
-  <a href="/package/{{ pkg.package_id }}/itinerary/wizard?day=1" class="btn btn-outline-secondary btn-sm">
-    Edit Itineraries
-  </a>
-</div>
+<div class="container py-4" style="max-width: 860px;">
+  <h1 class="h4 mb-3">Edit Package</h1>
 
-{% if flashes %}
-  {% for f in flashes %}
-    <div class="alert alert-{{ 'danger' if f.type == 'error' else f.type }} alert-dismissible fade show" role="alert">
-      {{ f.text }}
-      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  {% if flashes %}
+    {% for f in flashes %}
+      <div class="alert alert-{{ 'danger' if f.type == 'error' else f.type }} alert-dismissible fade show" role="alert">
+        {{ f.text }}
+        <button type="button" class="btn btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <form method="post" action="/package/{{ pkg.package_id }}/edit" class="card p-3">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+    <!-- Basics -->
+    <div class="mb-3">
+      <label class="form-label">Package name *</label>
+      <input class="form-control" type="text" name="package_name" required value="{{ pkg.package_name }}">
     </div>
-  {% endfor %}
-{% endif %}
 
-<div class="card">
-  <div class="card-body">
-    <form method="post" action="/package/{{ pkg.package_id }}/edit">
-      {% include "partials/_csrf_input.html" %}
-
-      <!-- Basics -->
-      <div class="mb-3">
-        <label class="form-label">Package Name</label>
-        <input type="text" name="package_name" class="form-control" value="{{ pkg.package_name }}" required>
+    <div class="mb-3">
+      <label class="form-label d-block">Package Type *</label>
+      <div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio" name="package_type" id="type_haj" value="haj" required>
+        <label class="form-check-label" for="type_haj">Haj</label>
       </div>
-
-      <div class="row">
-        <div class="col-md-4 mb-3">
-          <label class="form-label">Days</label>
-          <input type="number" name="days" class="form-control" value="{{ pkg.days }}" min="1" required>
-        </div>
-        <div class="col-md-8 mb-3">
-          <label class="form-label">Price (₹)</label>
-          <input type="number" name="price" step="0.01" class="form-control" value="{{ pkg.price }}" required>
-        </div>
+      <div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio" name="package_type" id="type_umrah" value="umrah" required>
+        <label class="form-check-label" for="type_umrah">Umrah</label>
       </div>
+      <div class="form-text">Choose exactly one.</div>
+    </div>
 
-      <div class="mb-3">
-        <label class="form-label">Other Notes</label>
-        <textarea class="form-control" name="incl_other" rows="2" placeholder="Anything else operators want to highlight">{{ incl.other_notes if incl else '' }}</textarea>
+
+    <div class="mb-3">
+      <label class="form-label">Package Class</label>
+      <select class="form-select" name="package_class">
+        <option value="">-- select class (optional) --</option>
+        <option value="economy">Economy</option>
+        <option value="business">Business</option>
+        <option value="first">First Class</option>
+      </select>
+      <div class="form-text">Choose the cabin/service class for this package.</div>
+    </div>
+
+
+    <div class="row g-3">
+      <div class="col-md-4">
+        <label class="form-label">Number of Days *</label>
+        <input class="form-control" type="number" name="days" min="1" required value="{{ pkg.days }}">
       </div>
-
-      <hr class="my-4">
-
-      <!-- Flights -->
-      <h2 class="h6 mb-3">Flights</h2>
-      <div class="row">
-        <div class="col-md-6">
-          <div class="card mb-3">
-            <div class="card-body">
-              <h3 class="h6">Onward</h3>
-              <div class="mb-2">
-                <label class="form-label">Date</label>
-                <input class="form-control" type="date" name="onward_date" value="{{ onward.flight_date if onward and onward.flight_date }}">
-              </div>
-              <div class="mb-2">
-                <label class="form-label">Type</label>
-                <select class="form-select" name="onward_type">
-                  <option value="" {{ (not onward or not onward.flight_type) and 'selected' or '' }}>-- select --</option>
-                  <option value="direct" {{ onward and onward.flight_type=='direct' and 'selected' or '' }}>Direct</option>
-                  <option value="via"    {{ onward and onward.flight_type=='via' and 'selected' or '' }}>Via</option>
-                </select>
-              </div>
-              <div class="mb-2">
-                <label class="form-label">Via (if any)</label>
-                <input class="form-control" type="text" name="onward_via" value="{{ onward.via_city if onward else '' }}">
-              </div>
-              <div class="mb-2">
-                <label class="form-label">Airline</label>
-                <input class="form-control" type="text" name="onward_airline" value="{{ onward.airline_name if onward else '' }}">
-              </div>
-            </div>
+      <div class="col-md-4">
+        <label class="form-label">Price (₹) *</label>
+        <input class="form-control" type="number" step="0.01" name="price" min="0" required value="{{ pkg.price }}">
+      </div>
+      <div class="col-md-12">
+        <label class="form-label">Variant prices</label>
+        <div class="row g-2">
+          <div class="col-md-4">
+            <input class="form-control" type="number" step="0.01" name="price_double" placeholder="Double / Couple price" value="{{ (price_row.price_double if price_row else '') }}">
+          </div>
+          <div class="col-md-4">
+            <input class="form-control" type="number" step="0.01" name="price_triple" placeholder="Triple price" value="{{ (price_row.price_triple if price_row else '') }}">
+          </div>
+          <div class="col-md-4">
+            <input class="form-control" type="number" step="0.01" name="price_quad" placeholder="Quad/Quint price" value="{{ (price_row.price_quad if price_row else '') }}">
           </div>
         </div>
-
-        <div class="col-md-6">
-          <div class="card mb-3">
-            <div class="card-body">
-              <h3 class="h6">Return</h3>
-              <div class="mb-2">
-                <label class="form-label">Date</label>
-                <input class="form-control" type="date" name="return_date" value="{{ ret.flight_date if ret and ret.flight_date }}">
-              </div>
-              <div class="mb-2">
-                <label class="form-label">Type</label>
-                <select class="form-select" name="return_type">
-                  <option value="" {{ (not ret or not ret.flight_type) and 'selected' or '' }}>-- select --</option>
-                  <option value="direct" {{ ret and ret.flight_type=='direct' and 'selected' or '' }}>Direct</option>
-                  <option value="via"    {{ ret and ret.flight_type=='via' and 'selected' or '' }}>Via</option>
-                </select>
-              </div>
-              <div class="mb-2">
-                <label class="form-label">Via (if any)</label>
-                <input class="form-control" type="text" name="return_via" value="{{ ret.via_city if ret else '' }}">
-              </div>
-              <div class="mb-2">
-                <label class="form-label">Airline</label>
-                <input class="form-control" type="text" name="return_airline" value="{{ ret.airline_name if ret else '' }}">
-              </div>
-            </div>
-          </div>
-        </div>
+        <input class="form-control mt-2" type="text" name="price_note" placeholder="Note / label (optional)" value="{{ (price_row.note if price_row and price_row.note else '') }}">
       </div>
+    </div>
 
-      <!-- Stays -->
-      <h2 class="h6 mb-3">Stay</h2>
-      <div class="row">
-        <div class="col-md-6">
-          <div class="card mb-3">
-            <div class="card-body">
-              <h3 class="h6">Mecca</h3>
-              <div class="row">
-                <div class="col-md-6 mb-2">
-                  <label class="form-label">Check-in</label>
-                  <input class="form-control" type="date" name="mecca_check_in" value="{{ mecca.check_in if mecca and mecca.check_in }}">
-                </div>
-                <div class="col-md-6 mb-2">
-                  <label class="form-label">Check-out</label>
-                  <input class="form-control" type="date" name="mecca_check_out" value="{{ mecca.check_out if mecca and mecca.check_out }}">
-                </div>
-              </div>
-              <div class="mb-2">
-                <label class="form-label">Hotel name</label>
-                <input class="form-control" type="text" name="mecca_hotel" value="{{ mecca.hotel_name if mecca else '' }}">
-              </div>
-              <div class="mb-2">
-                <label class="form-label">Hotel link</label>
-                <input class="form-control" type="url" name="mecca_link" value="{{ mecca.hotel_link if mecca else '' }}" placeholder="https://">
-              </div>
-              <div class="row">
-                <div class="col-md-6 mb-2">
-                  <label class="form-label">Distance (meters)</label>
-                  <input class="form-control" type="number" name="mecca_distance_m" min="0" value="{{ mecca.distance_m if mecca and mecca.distance_m }}">
-                </div>
-                <div class="col-md-6 mb-2">
-                  <label class="form-label">Distance label</label>
-                  <input class="form-control" type="text" name="mecca_distance_text" value="{{ mecca.distance_text if mecca else '' }}" placeholder="e.g., 300 m from Haram">
-                </div>
-              </div>
+    <!-- Description -->
+    <div class="mb-3 mt-3">
+      <label class="form-label">Description</label>
+      <textarea class="form-control" name="description" rows="3" placeholder="Add additional notes or conditions">{{ pkg.description or '' }}</textarea>
+    </div>
+
+    <!-- NEW: Travel Month & Year -->
+    <div class="row g-3 mb-3">
+      <div class="col-md-6">
+        <label class="form-label">Travel Month</label>
+        <select class="form-select" name="travel_month">
+          <option value="">-- select month --</option>
+          {% set month_names = ['January','February','March','April','May','June','July','August','September','October','November','December'] %}
+          {% for i in range(1, 13) %}
+            <option value="{{ i }}" {{ 'selected' if pkg.travel_month == i else '' }}>{{ month_names[i-1] }}</option>
+          {% endfor %}
+        </select>
+        <div class="form-text">Pick the month pilgrims will travel.</div>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Travel Year</label>
+        <select class="form-select" name="travel_year">
+          <option value="">-- select year --</option>
+          {% for y in years %}
+            <option value="{{ y }}" {{ 'selected' if pkg.travel_year == y else '' }}>{{ y }}</option>
+          {% endfor %}
+        </select>
+        <div class="form-text">Only years ≥ 2026 are listed.</div>
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Airlines (you can select multiple)</label>
+      <select class="form-select" name="airline_ids" multiple size="6">
+        {% for a in airlines %}
+          <option value="{{ a.airline_id }}" {{ 'selected' if a.airline_id in selected_airline_ids else '' }}>
+            {{ a.name }}
+          </option>
+        {% endfor %}
+      </select>
+      <div class="form-text">Hold Ctrl/Cmd to multi-select (desktop).</div>
+    </div>
+
+    <hr class="my-4">
+
+    <!-- Flights -->
+    <h2 class="h6 mb-3">Flights</h2>
+    <div class="row">
+      <div class="col-md-6">
+        <div class="card mb-3">
+          <div class="card-body">
+            <h3 class="h6">Onward</h3>
+            <div class="mb-2">
+              <label class="form-label">Date</label>
+              <input class="form-control" type="date" name="onward_date" value="{{ onward.flight_date if onward and onward.flight_date }}">
             </div>
-          </div>
-        </div>
-
-        <div class="col-md-6">
-          <div class="card mb-3">
-            <div class="card-body">
-              <h3 class="h6">Medinah</h3>
-              <div class="row">
-                <div class="col-md-6 mb-2">
-                  <label class="form-label">Check-in</label>
-                  <input class="form-control" type="date" name="med_check_in" value="{{ med.check_in if med and med.check_in }}">
-                </div>
-                <div class="col-md-6 mb-2">
-                  <label class="form-label">Check-out</label>
-                  <input class="form-control" type="date" name="med_check_out" value="{{ med.check_out if med and med.check_out }}">
-                </div>
-              </div>
-              <div class="mb-2">
-                <label class="form-label">Hotel name</label>
-                <input class="form-control" type="text" name="med_hotel" value="{{ med.hotel_name if med else '' }}">
-              </div>
-              <div class="mb-2">
-                <label class="form-label">Hotel link</label>
-                <input class="form-control" type="url" name="med_link" value="{{ med.hotel_link if med else '' }}" placeholder="https://">
-              </div>
-              <div class="row">
-                <div class="col-md-6 mb-2">
-                  <label class="form-label">Distance (meters)</label>
-                  <input class="form-control" type="number" name="med_distance_m" min="0" value="{{ med.distance_m if med and med.distance_m }}">
-                </div>
-                <div class="col-md-6 mb-2">
-                  <label class="form-label">Distance label</label>
-                  <input class="form-control" type="text" name="med_distance_text" value="{{ med.distance_text if med else '' }}" placeholder="e.g., 500 m from Masjid an-Nabawi">
-                </div>
-              </div>
+            <div class="mb-2">
+              <label class="form-label">Type</label>
+              <select class="form-select" name="onward_type">
+                <option value="">-- select --</option>
+                <option value="direct" {{ 'selected' if onward and onward.flight_type == 'direct' else '' }}>Direct</option>
+                <option value="via" {{ 'selected' if onward and onward.flight_type == 'via' else '' }}>Via</option>
+              </select>
+            </div>
+            <div class="mb-2">
+              <label class="form-label">Via (if any)</label>
+              <input class="form-control" type="text" name="onward_via" placeholder="e.g., Doha" value="{{ onward.via_city if onward and onward.via_city }}">
+            </div>
+            <div class="mb-2">
+              <label class="form-label">Airline</label>
+              <input class="form-control" type="text" name="onward_airline" placeholder="e.g., Qatar Airways" value="{{ onward.airline_name if onward and onward.airline_name }}">
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Inclusions -->
-      <h2 class="h6 mb-3">Inclusions (optional)</h2>
-      <div class="row">
-        <div class="col-md-4 mb-2">
-          <label class="form-label">Meals</label>
-          <input class="form-control" type="text" name="incl_meals" value="{{ incl.meals if incl else '' }}" placeholder="e.g., Breakfast &amp; Dinner">
-        </div>
-        <div class="col-md-4 mb-2">
-          <label class="form-label">Laundry</label>
-          <input class="form-control" type="text" name="incl_laundry" value="{{ incl.laundry if incl else '' }}" placeholder="e.g., Alternate days">
-        </div>
-        <div class="col-md-4 mb-2">
-          <label class="form-label">Transport</label>
-          <input class="form-control" type="text" name="incl_transport" value="{{ incl.transport if incl else '' }}" placeholder="e.g., Airport transfers + Ziyarat">
+      <div class="col-md-6">
+        <div class="card mb-3">
+          <div class="card-body">
+            <h3 class="h6">Return</h3>
+            <div class="mb-2">
+              <label class="form-label">Date</label>
+              <input class="form-control" type="date" name="return_date" value="{{ ret.flight_date if ret and ret.flight_date }}">
+            </div>
+            <div class="mb-2">
+              <label class="form-label">Type</label>
+              <select class="form-select" name="return_type">
+                <option value="">-- select --</option>
+                <option value="direct" {{ 'selected' if ret and ret.flight_type == 'direct' else '' }}>Direct</option>
+                <option value="via" {{ 'selected' if ret and ret.flight_type == 'via' else '' }}>Via</option>
+              </select>
+            </div>
+            <div class="mb-2">
+              <label class="form-label">Via (if any)</label>
+              <input class="form-control" type="text" name="return_via" placeholder="e.g., Muscat" value="{{ ret.via_city if ret and ret.via_city }}">
+            </div>
+            <div class="mb-2">
+              <label class="form-label">Airline</label>
+              <input class="form-control" type="text" name="return_airline" placeholder="e.g., Oman Air" value="{{ ret.airline_name if ret and ret.airline_name }}">
+            </div>
+          </div>
         </div>
       </div>
-      <div class="mb-3">
-        <label class="form-label">Description <span class="text-muted">(optional — suggest meals, laundry, transport, add-ons)</span></label>
-        <textarea name="description" class="form-control" rows="4" placeholder="e.g., Breakfast &amp; Dinner included; laundry alternate days; Ziyarat bus on day 3">{{ pkg.description or '' }}</textarea>
-      
+    </div>
+
+    <!-- Stay -->
+    <h2 class="h6 mb-3">Stay</h2>
+    <div class="row">
+      <!-- Mecca -->
+      <div class="col-md-6">
+        <div class="card mb-3">
+          <div class="card-body">
+            <h3 class="h6">Mecca</h3>
+            <div class="row">
+              <div class="col-md-6 mb-2">
+                <label class="form-label">Check-in</label>
+                <input class="form-control" type="date" name="mecca_check_in" value="{{ mecca.check_in if mecca and mecca.check_in }}">
+              </div>
+              <div class="col-md-6 mb-2">
+                <label class="form-label">Check-out</label>
+                <input class="form-control" type="date" name="mecca_check_out" value="{{ mecca.check_out if mecca and mecca.check_out }}">
+              </div>
+            </div>
+
+            <div class="mb-2">
+              <label class="form-label">Hotel name</label>
+              <input class="form-control" type="text" name="mecca_hotel" list="hotels_list" placeholder="Start typing…" value="{{ mecca.hotel_name if mecca and mecca.hotel_name }}">
+            </div>
+            <div class="mb-2">
+              <label class="form-label">Hotel link (optional)</label>
+              <input class="form-control" type="url" name="mecca_link" placeholder="https://" value="{{ mecca.hotel_link if mecca and mecca.hotel_link }}">
+            </div>
+
+            <div class="row">
+              <div class="col-md-6 mb-2">
+                <label class="form-label">Distance (meters)</label>
+                <input class="form-control" type="number" name="mecca_distance_m" min="0" placeholder="e.g., 300" value="{{ mecca.distance_m if mecca and mecca.distance_m }}">
+              </div>
+              <div class="col-md-6 mb-2">
+                <label class="form-label">Distance label</label>
+                <input class="form-control" type="text" name="mecca_distance_text" placeholder="e.g., 300 m from Haram" value="{{ mecca.distance_text if mecca and mecca.distance_text }}">
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div class="d-flex gap-2">
-        <button class="btn btn-primary" type="submit">Save Changes</button>
-        <a class="btn btn-outline-secondary" href="/agency/{{ agency.registration_id }}/dashboard">Cancel</a>
+      <!-- Medinah -->
+      <div class="col-md-6">
+        <div class="card mb-3">
+          <div class="card-body">
+            <h3 class="h6">Medinah</h3>
+            <div class="row">
+              <div class="col-md-6 mb-2">
+                <label class="form-label">Check-in</label>
+                <input class="form-control" type="date" name="med_check_in" value="{{ med.check_in if med and med.check_in }}">
+              </div>
+              <div class="col-md-6 mb-2">
+                <label class="form-label">Check-out</label>
+                <input class="form-control" type="date" name="med_check_out" value="{{ med.check_out if med and med.check_out }}">
+              </div>
+            </div>
+
+            <div class="mb-2">
+              <label class="form-label">Hotel name</label>
+              <input class="form-control" type="text" name="med_hotel" list="hotels_list" placeholder="Start typing…" value="{{ med.hotel_name if med and med.hotel_name }}">
+            </div>
+            <div class="mb-2">
+              <label class="form-label">Hotel link (optional)</label>
+              <input class="form-control" type="url" name="med_link" placeholder="https://" value="{{ med.hotel_link if med and med.hotel_link }}">
+            </div>
+
+            <div class="row">
+              <div class="col-md-6 mb-2">
+                <label class="form-label">Distance (meters)</label>
+                <input class="form-control" type="number" name="med_distance_m" min="0" placeholder="e.g., 500" value="{{ med.distance_m if med and med.distance_m }}">
+              </div>
+              <div class="col-md-6 mb-2">
+                <label class="form-label">Distance label</label>
+                <input class="form-control" type="text" name="med_distance_text" placeholder="e.g., 500 m from Masjid an-Nabawi" value="{{ med.distance_text if med and med.distance_text }}">
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-    </form>
-  </div>
+    </div>
+
+    <!-- Shared datalist for hotel suggestions -->
+    <datalist id="hotels_list">
+      {% for h in hotels %}
+        <option value="{{ h.name }}">{{ h.link or '' }}</option>
+      {% endfor %}
+    </datalist>
+
+    <!-- Inclusions -->
+    <h2 class="h6 mb-3">Inclusions</h2>
+    <div class="card mb-3">
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-12">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="incl_meals_enabled" name="incl_meals_enabled" {{ 'checked' if incl and incl.meals_enabled else '' }}>
+              <label class="form-check-label fw-semibold" for="incl_meals_enabled">Meals</label>
+            </div>
+            <input class="form-control mt-2" type="text" name="incl_meals_desc" placeholder="e.g., Breakfast & Dinner" value="{{ incl.meals_desc if incl and incl.meals_desc }}">
+          </div>
+
+          <div class="col-12">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="incl_laundry_enabled" name="incl_laundry_enabled" {{ 'checked' if incl and incl.laundry_enabled else '' }}>
+              <label class="form-check-label fw-semibold" for="incl_laundry_enabled">Laundry</label>
+            </div>
+            <input class="form-control mt-2" type="text" name="incl_laundry_desc" placeholder="e.g., Alternate days" value="{{ incl.laundry_desc if incl and incl.laundry_desc }}">
+          </div>
+
+          <div class="col-12">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="incl_transport_enabled" name="incl_transport_enabled" {{ 'checked' if incl and incl.transport_enabled else '' }}>
+              <label class="form-check-label fw-semibold" for="incl_transport_enabled">Transport</label>
+            </div>
+            <input class="form-control mt-2" type="text" name="incl_transport_desc" placeholder="e.g., Airport transfers + Ziyarat" value="{{ incl.transport_desc if incl and incl.transport_desc }}">
+          </div>
+
+          <div class="col-12">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="incl_zamzam_enabled" name="incl_zamzam_enabled" {{ 'checked' if incl and incl.zamzam_enabled else '' }}>
+              <label class="form-check-label fw-semibold" for="incl_zamzam_enabled">Zam Zam</label>
+            </div>
+            <input class="form-control mt-2" type="text" name="incl_zamzam_desc" placeholder="e.g., 5 liters per pilgrim" value="{{ incl.zamzam_desc if incl and incl.zamzam_desc }}">
+          </div>
+
+          <div class="col-12">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="incl_welcome_kit_enabled" name="incl_welcome_kit_enabled" {{ 'checked' if incl and incl.welcome_kit_enabled else '' }}>
+              <label class="form-check-label fw-semibold" for="incl_welcome_kit_enabled">Welcome Kit</label>
+            </div>
+            <input class="form-control mt-2" type="text" name="incl_welcome_kit_desc" placeholder="e.g., Backpack, ID card, prayer mat" value="{{ incl.welcome_kit_desc if incl and incl.welcome_kit_desc }}">
+          </div>
+
+          <div class="col-12">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="incl_insurance_enabled" name="incl_insurance_enabled" {{ 'checked' if incl and incl.insurance_enabled else '' }}>
+              <label class="form-check-label fw-semibold" for="incl_insurance_enabled">Insurance</label>
+            </div>
+            <input class="form-control mt-2" type="text" name="incl_insurance_desc" placeholder="e.g., Travel medical insurance included" value="{{ incl.insurance_desc if incl and incl.insurance_desc }}">
+          </div>
+
+          <div class="col-12">
+            <label class="form-label mt-2">Other notes (optional)</label>
+            <textarea class="form-control" name="incl_other" rows="2" placeholder="(optional — add any other inclusions or notes)">{{ incl.other_notes if incl and incl.other_notes }}</textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="d-flex gap-2">
+      <button class="btn btn-primary" type="submit">Save Changes</button>
+      <a href="/agency/{{ agency.registration_id }}/dashboard" class="btn btn-outline-secondary">Cancel</a>
+    </div>
+  </form>
 </div>
 {% endblock %}

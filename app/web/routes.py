@@ -1,63 +1,65 @@
-from datetime import timedelta, datetime, timezone
-from collections import defaultdict
+from __future__ import annotations
+
+import hashlib
+import random
+import re
+import secrets
 import urllib.parse
-import re, random
-from fastapi import APIRouter, Request, Depends, Form, Query, HTTPException
+from collections import defaultdict
+from datetime import date, datetime, timedelta, timezone
+from typing import List, Optional
+
+from fastapi import APIRouter, Depends, Form, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
-from sqlalchemy.orm import Session
-from sqlalchemy.orm import joinedload
 from sqlalchemy import func
+from sqlalchemy.orm import Session, joinedload, selectinload
 
 from app.core.config import settings
 from app.core.deps import get_db
-from app.core.security import hash_password, verify_password, create_token
-from app.db.models.agency_detail import AgencyDetail
-from app.db.models.agency_testimonial import AgencyTestimonial
-from app.db.models.user import User
+from app.core.security import create_token, hash_password, verify_password
 from app.db.models.agency import Agency
-from app.db.models.package import Package
-from app.db.models.package_flight import PackageFlight
-from app.db.models.package_stay import PackageStay
-from app.db.models.package_inclusion import PackageInclusion
-from app.db.models.package_itinerary import PackageItinerary
+from app.db.models.agency_testimonial import AgencyTestimonial  # (kept if used in templates)
 from app.db.models.city import City
 from app.db.models.inquiry import Inquiry
-from app.db.models.agency_detail import AgencyDetail 
+from app.db.models.package import Package
+from app.db.models.package_flight import PackageFlight
+from app.db.models.package_inclusion import PackageInclusion
+from app.db.models.package_itinerary import PackageItinerary
+from app.db.models.package_price import PackagePrice
+from app.db.models.user import User
+from app.services.email_brevo import send_email_brevo
+from app.services.otp_session import check_code_and_update, get_otp_ctx, new_otp_ctx
 from app.web.deps import (
     COOKIE_NAME,
-    get_current_user_from_cookie,
-    require_user,
     flash,
-    pop_flashes,
     get_csrf_token,
+    get_current_user_from_cookie,
+    pop_flashes,
     require_csrf,
+    require_user,
 )
-
-# OTP in session + Brevo email sender
-from app.services.otp_session import new_otp_ctx, check_code_and_update, get_otp_ctx
-from app.services.email_brevo import send_email_brevo
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/web/templates")
 
-from datetime import datetime, date
+
+# ----------------- Small helpers -----------------
 
 def _norm(s: str | None) -> str | None:
     s = (s or "").strip()
     return s or None
 
+
 def _to_date(s: str | None) -> date | None:
     s = (s or "").strip()
     if not s:
         return None
-    # Expecting HTML <input type="date"> → "YYYY-MM-DD"
     try:
         return datetime.strptime(s, "%Y-%m-%d").date()
     except ValueError:
         return None
 
-# ----------------- Helpers -----------------
 
 def set_access_cookie(resp: Response, token: str):
     resp.set_cookie(
@@ -70,8 +72,10 @@ def set_access_cookie(resp: Response, token: str):
         max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
     )
 
+
 def clear_access_cookie(resp: Response):
     resp.delete_cookie(COOKIE_NAME, path="/")
+
 
 def set_active_agency(request: Request, registration_id: int | None):
     if registration_id is None:
@@ -79,8 +83,10 @@ def set_active_agency(request: Request, registration_id: int | None):
     else:
         request.session["active_agency_id"] = int(registration_id)
 
+
 def get_active_agency_id(request: Request) -> int | None:
     return request.session.get("active_agency_id")
+
 
 def redirect_after_login(request: Request, db: Session, user: User) -> RedirectResponse:
     """Send the user to the right place after login/OTP."""
@@ -98,11 +104,10 @@ def redirect_after_login(request: Request, db: Session, user: User) -> RedirectR
     if len(agencies) == 1:
         set_active_agency(request, agencies[0].registration_id)
         return RedirectResponse(
-            url=f"/agency/{agencies[0].registration_id}/dashboard",  # NEW path
+            url=f"/agency/{agencies[0].registration_id}/dashboard",
             status_code=303,
         )
 
-    # multiple → force selection
     set_active_agency(request, None)
     return RedirectResponse(url="/select-agency", status_code=303)
 
@@ -119,6 +124,7 @@ def _send_login_otp(to_email: str, code: str):
     """
     send_email_brevo(to_email, subject, html)
 
+
 def _send_register_otp(to_email: str, code: str):
     subject = "Verify your email to finish sign-up"
     html = f"""
@@ -132,6 +138,10 @@ def _send_register_otp(to_email: str, code: str):
     send_email_brevo(to_email, subject, html)
 
 
+def _decode_city(city_name: str) -> str:
+    return urllib.parse.unquote(city_name).strip()
+
+
 # ----------------- Public: Home -----------------
 
 @router.get("/", response_class=HTMLResponse)
@@ -139,7 +149,6 @@ def home(request: Request, db: Session = Depends(get_db)):
     user = get_current_user_from_cookie(request, db)
     flashes = pop_flashes(request)
 
-    # ---- Popular cities (unchanged) ----
     rows = (
         db.query(Agency.city, func.count(Agency.registration_id).label("n"))
         .filter(Agency.city.isnot(None), Agency.city != "")
@@ -152,51 +161,184 @@ def home(request: Request, db: Session = Depends(get_db)):
         {
             "name": r[0],
             "count": r[1],
-            "operators_href": f"/city/{urllib.parse.quote(r[0])}/operators",
-            "packages_href": f"/city/{urllib.parse.quote(r[0])}/packages",
-            "hub_href":       f"/city/{urllib.parse.quote(r[0])}",
+            "operators_href": f"/city/{urllib.parse.quote(r[0])}/umrah_operators",
+            "packages_href": f"/city/{urllib.parse.quote(r[0])}/umrah_packages",
+            "hub_href": f"/city/{urllib.parse.quote(r[0])}",
         }
         for r in rows
     ]
 
-    # ---- NEW: resolve an agency to pass to the template ----
-    active_agency = None
-    if user:
-        # 1) Prefer the agency selected in session (if any)
-        active_id = get_active_agency_id(request)
-        if active_id:
-            active_agency = (
-                db.query(Agency)
-                .filter(Agency.registration_id == active_id, Agency.user_id == user.id)
-                .first()
-            )
-        # 2) Fallback: if user owns exactly one agency, use it
-        if not active_agency:
-            user_agencies = (
-                db.query(Agency)
-                .filter(Agency.user_id == user.id)
-                .order_by(Agency.registration_id.desc())
-                .all()
-            )
-            if len(user_agencies) == 1:
-                active_agency = user_agencies[0]
-
-    return templates.TemplateResponse(
+    return render(
         "home.html",
+        request,
+        db,
         {
-            "request": request,
             "title": "Home",
-            "user": user,
             "flashes": flashes,
             "popular_cities": popular_cities,
-            # Always define 'agency' for the template to avoid UndefinedError
-            "agency": active_agency,
         },
+        is_public=True,
     )
 
 
+# --- Footer cities + metrics ---
 
-# ----------------- Auth (register/login/verify/logout) -----------------
+_footer_cache = {
+    "expires": datetime.min.replace(tzinfo=timezone.utc),
+    "data": [],
+    "limit": 0,
+}
+
+
+def _display_city(a: Agency | None) -> str:
+    """Prefer agency.city; else related City.name; else 'Unknown'."""
+    if a and a.city and a.city.strip():
+        return a.city.strip()
+    if getattr(a, "city_rel", None) and a.city_rel.name and a.city_rel.name.strip():
+        return a.city_rel.name.strip()
+    return "Unknown"
+
+
+def _get_footer_cities(db: Session, limit: int = 16):
+    rows = (
+        db.query(Agency.city, func.count(Agency.registration_id).label("n"))
+        .filter(Agency.city.isnot(None), Agency.city != "")
+        .group_by(Agency.city)
+        .order_by(func.count(Agency.registration_id).desc(), Agency.city.asc())
+        .limit(limit)
+        .all()
+    )
+    out = []
+    for city, _cnt in rows:
+        q = urllib.parse.quote(city)
+        out.append(
+            {
+                "name": city,
+                "operators_href": f"/city/{q}/umrah_operators",
+                "packages_href": f"/city/{q}/umrah_packages",
+            }
+        )
+    return out
+
+
+def _get_footer_cities_cached(db: Session, *, limit: int = 16, ttl_seconds: int = 600):
+    now = datetime.now(timezone.utc)
+    if (
+        _footer_cache["data"]
+        and _footer_cache["limit"] == limit
+        and now < _footer_cache["expires"]
+    ):
+        return _footer_cache["data"]
+    data = _get_footer_cities(db, limit=limit)
+    _footer_cache["data"] = data
+    _footer_cache["limit"] = limit
+    _footer_cache["expires"] = now + timedelta(seconds=ttl_seconds)
+    return data
+
+
+def _get_public_counts(db: Session) -> dict:
+    """
+    Count:
+      - cities: distinct of coalesce(trim(Agency.city), City.name)
+      - packages: total Package rows
+      - agencies: total Agency rows
+      - inquiries: total Inquiry rows (site-wide)
+    """
+    from app.db.models.package import Package as _Pkg
+    from app.db.models.inquiry import Inquiry as _Inq
+
+    canonical_city = func.lower(
+        func.coalesce(
+            func.nullif(func.trim(Agency.city), ""),
+            func.trim(City.name),
+        )
+    )
+
+    distinct_cities = (
+        db.query(func.count(func.distinct(canonical_city)))
+        .select_from(Agency)
+        .outerjoin(City, City.id == Agency.city_id)
+        .scalar()
+    ) or 0
+
+    packages = db.query(_Pkg.package_id).count()
+    agencies = db.query(Agency.registration_id).count()
+    inquiries = db.query(_Inq.inquiry_id).count()
+
+    return {
+        "cities": distinct_cities,
+        "packages": packages or 0,
+        "agencies": agencies or 0,
+        "inquiries": inquiries or 0,
+    }
+
+
+def _resolve_active_agency_for_nav(request: Request, db: Session):
+    """
+    For navbar 'Dashboard' link:
+      - If session has active agency and it's owned by the user, use it.
+      - Else if the user owns exactly 1 agency, use that one.
+      - Else None (navbar will point to /select-agency).
+    """
+    user = get_current_user_from_cookie(request, db)
+    if not user:
+        return None, None
+
+    active_id = request.session.get("active_agency_id")
+    if active_id:
+        ag = (
+            db.query(Agency)
+            .filter(Agency.registration_id == active_id, Agency.user_id == user.id)
+            .first()
+        )
+        if ag:
+            return user, ag
+
+    user_agencies = (
+        db.query(Agency)
+        .filter(Agency.user_id == user.id)
+        .order_by(Agency.registration_id.desc())
+        .all()
+    )
+    if len(user_agencies) == 1:
+        return user, user_agencies[0]
+    return user, None
+
+
+def render(
+    template_name: str,
+    request: Request,
+    db: Session,
+    context: dict | None = None,
+    *,
+    is_public: bool = False,
+):
+    """
+    Global render wrapper:
+      - injects request + csrf_token + footer_cities (cached)
+      - injects user + nav_agency for navbar
+      - injects 'metrics' only for public pages
+    """
+    from app.web.deps import get_csrf_token
+
+    ctx = dict(context or {})
+    ctx["request"] = request
+    ctx.setdefault("csrf_token", get_csrf_token(request))
+    ctx["footer_cities"] = _get_footer_cities_cached(db, limit=16)
+
+    # navbar context (⚠️ don't clobber page's own `agency`)
+    user, nav_agency = _resolve_active_agency_for_nav(request, db)
+    ctx["user"] = user
+    ctx["nav_agency"] = nav_agency  # <— use a distinct key
+
+    # small stats bar for public pages
+    ctx["metrics"] = _get_public_counts(db) if is_public else None
+
+    return templates.TemplateResponse(template_name, ctx)
+
+
+
+# ----------------- Auth -----------------
 
 @router.get("/register", response_class=HTMLResponse)
 def register_page(request: Request, db: Session = Depends(get_db)):
@@ -206,8 +348,9 @@ def register_page(request: Request, db: Session = Depends(get_db)):
     flashes = pop_flashes(request)
     return templates.TemplateResponse(
         "auth/register.html",
-        {"request": request, "flashes": flashes, "csrf_token": get_csrf_token(request)}
+        {"request": request, "flashes": flashes, "csrf_token": get_csrf_token(request)},
     )
+
 
 @router.post("/register")
 def register_submit(
@@ -223,7 +366,12 @@ def register_submit(
     require_csrf(request, csrf_token)
 
     if db.query(User).filter(User.email == email).first():
-        flash(request, "Email already exists", "error")
+        flash(
+            request,
+            "The email address you are trying to register is already used for another account. "
+            "Try registering with a different email address.",
+            "error",
+        )
         return RedirectResponse(url="/register", status_code=303)
 
     user = User(
@@ -234,6 +382,8 @@ def register_submit(
         password_hash=hash_password(password),
         is_active=True,
         last_login_at=datetime.now(timezone.utc),
+        is_email_verified=False,
+        email_verified_at=None,
     )
     db.add(user)
     db.commit()
@@ -259,8 +409,24 @@ def register_submit(
         ),
     )
 
+    try:
+        admin_email = getattr(settings, "ADMIN_NOTIFICATION_EMAIL", "amavia03@gmail.com")
+        admin_html = f"""
+        <div style="font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height:1.4;">
+          <h3>New user registered</h3>
+          <p><strong>Name:</strong> {(user.first_name or '') + (' ' + user.last_name if user.last_name else '')}</p>
+          <p><strong>Email:</strong> {user.email}</p>
+          <p><strong>Registered at:</strong> {user.last_login_at}</p>
+          <p>Purpose: registration (OTP verification pending)</p>
+        </div>
+        """
+        send_email_brevo(to_email=admin_email, subject="[Site] New user registered", html_content=admin_html)
+    except Exception:
+        pass
+
     flash(request, f"OTP sent to {user.email}. Please verify.", "info")
     return RedirectResponse(url="/verify", status_code=303)
+
 
 @router.get("/login", response_class=HTMLResponse)
 def login_page(request: Request, db: Session = Depends(get_db)):
@@ -270,8 +436,9 @@ def login_page(request: Request, db: Session = Depends(get_db)):
     flashes = pop_flashes(request)
     return templates.TemplateResponse(
         "auth/login.html",
-        {"request": request, "flashes": flashes, "csrf_token": get_csrf_token(request)}
+        {"request": request, "flashes": flashes, "csrf_token": get_csrf_token(request)},
     )
+
 
 @router.post("/login")
 def login_submit(
@@ -285,52 +452,62 @@ def login_submit(
 
     user = db.query(User).filter(User.email == email).first()
     if not user or not user.password_hash or not verify_password(password, user.password_hash):
-        flash(request, "Invalid email or password", "error")
+        flash(request, "Email not found or incorrect password", "error")
         return RedirectResponse(url="/login", status_code=303)
+
+    if not getattr(user, "is_email_verified", False):
+        ctx = new_otp_ctx(
+            request,
+            email=user.email,
+            user_id=user.id,
+            purpose="login",
+            minutes=settings.OTP_EXP_MINUTES,
+        )
+        _send_login_otp(user.email, ctx["code"])
+        flash(request, f"Verify your email to continue. We sent a code to {user.email}.", "info")
+        return RedirectResponse(url="/verify", status_code=303)
 
     user.last_login_at = datetime.now(timezone.utc)
     db.commit()
 
-    ctx = new_otp_ctx(
-        request,
-        email=user.email,
-        user_id=user.id,
-        purpose="login",
-        minutes=settings.OTP_EXP_MINUTES,
-    )
-    request.session["otp_ctx"] = ctx
-    request.session["post_otp_user_id"] = user.id
+    access = create_token(user.id, timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES), "access")
 
-    send_email_brevo(
-        to_email=user.email,
-        subject="Your OTP code",
-        html_content=(
-            f"<p>Your one-time code is:</p>"
-            f"<h2 style='letter-spacing:3px;'>{ctx['code']}</h2>"
-            f"<p>This code expires in {settings.OTP_EXP_MINUTES} minutes.</p>"
-        ),
-    )
-    return RedirectResponse(url="/verify", status_code=303)
+    resp = redirect_after_login(request, db, user)
+    set_access_cookie(resp, access)
+    flash(request, "Login successful. Welcome back!", "success")
+    return resp
+
 
 @router.post("/logout")
-def logout(request: Request, csrf_token: str | None = Form(None)):
+def logout(request: Request, csrf_token: str = Form(...)):
+    require_csrf(request, csrf_token)
     resp = RedirectResponse(url="/", status_code=303)
     clear_access_cookie(resp)
     request.session.pop("otp_ctx", None)
     return resp
 
+
 @router.get("/verify", response_class=HTMLResponse)
 def verify_page(request: Request, db: Session = Depends(get_db)):
-    flashes = pop_flashes(request)
+    _ = pop_flashes(request)
+
+    ctx = get_otp_ctx(request)
+    otp_email = ctx.get("email") if ctx else None
+    if not otp_email:
+        u = get_current_user_from_cookie(request, db)
+        if u:
+            otp_email = u.email
+
     return templates.TemplateResponse(
         "auth/verify.html",
         {
             "request": request,
-            "flashes": flashes,
             "csrf_token": get_csrf_token(request),
             "otp_exp_minutes": settings.OTP_EXP_MINUTES,
+            "otp_email": otp_email,
         },
     )
+
 
 @router.post("/verify")
 def verify_submit(
@@ -356,11 +533,16 @@ def verify_submit(
         flash(request, "User not found. Please log in again.", "error")
         return RedirectResponse(url="/login", status_code=303)
 
+    user.is_email_verified = True
+    user.email_verified_at = datetime.now(timezone.utc)
+    db.commit()
+
     access = create_token(user.id, timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES), "access")
     resp = redirect_after_login(request, db, user)
     set_access_cookie(resp, access)
     flash(request, "OTP verified. Welcome!", "success")
     return resp
+
 
 @router.post("/verify/resend")
 def verify_resend(request: Request, csrf_token: str = Form(...), db: Session = Depends(get_db)):
@@ -463,6 +645,7 @@ def inquiries_list(request: Request, db: Session = Depends(get_db)):
         },
     )
 
+
 @router.get("/inquiries/{inquiry_id}", response_class=HTMLResponse)
 def inquiries_detail(inquiry_id: int, request: Request, db: Session = Depends(get_db)):
     user = require_user(request, db)
@@ -505,6 +688,7 @@ def inquiries_detail(inquiry_id: int, request: Request, db: Session = Depends(ge
         },
     )
 
+
 @router.post("/inquiries/mark-all-seen")
 def inquiries_mark_all_seen(request: Request, csrf_token: str = Form(...), db: Session = Depends(get_db)):
     require_csrf(request, csrf_token)
@@ -538,7 +722,11 @@ def select_agency_page(request: Request, db: Session = Depends(get_db)):
         .all()
     )
     if not agencies:
-        flash(request, "You don’t have any agencies yet. Create one to continue.", "info")
+        flash(
+            request,
+            "You don’t have any agencies yet. Create one to continue.",
+            "info",
+        )
         return RedirectResponse(url="/agency/new", status_code=303)
 
     return templates.TemplateResponse(
@@ -552,6 +740,7 @@ def select_agency_page(request: Request, db: Session = Depends(get_db)):
             "csrf_token": get_csrf_token(request),
         },
     )
+
 
 @router.post("/select-agency")
 def select_agency_submit(
@@ -583,58 +772,106 @@ def select_agency_submit(
 # ----------------- Agency CRUD (protected) -----------------
 
 @router.get("/agency/new", response_class=HTMLResponse)
-def agency_new_page(request: Request, db: Session = Depends(get_db)):
+def agency_new_page(
+    request: Request,
+    db: Session = Depends(get_db),
+):
     user = require_user(request, db)
+
+    existing = db.query(Agency).filter(Agency.user_id == user.id).count()
+    if existing >= 1:
+        flash(
+            request,
+            "You can only create one agency. Branches are supported.",
+            "info",
+        )
+        return RedirectResponse(url="/upgrade-subscription", status_code=303)
+
+    cities = db.query(City).order_by(City.name.asc()).all()
+    current_year = date.today().year
     flashes = pop_flashes(request)
+
+    agency_stub = {}
+    branch_stub = {}
+
     return templates.TemplateResponse(
         "agency/new.html",
-        {"request": request, "user": user, "flashes": flashes, "csrf_token": get_csrf_token(request)}
+        {
+            "request": request,
+            "title": "Create Agency",
+            "user": user,
+            "flashes": flashes,
+            "csrf_token": get_csrf_token(request),
+            "cities": cities,
+            "current_year": current_year,
+            "agency": agency_stub,
+            "branch": branch_stub,
+        },
     )
+
 
 @router.post("/agency/new")
 def agency_new_submit(
     request: Request,
     agencies_name: str = Form(...),
-    country: str = Form(...),
     city: str = Form(...),
+    country: str = Form(...),
+    agency_email: str = Form(...),
     description: str = Form(""),
-
-    # details (no duplicate city/country asked)
-    address_line1: str = Form(...),
-    address_line2: str = Form(""),
-    state:         str = Form(""),
-    postal_code:   str = Form(""),
-    contact1_name: str = Form(...),
-    contact1_phone:str = Form(...),
-    contact2_name: str = Form(""),
-    contact2_phone:str = Form(""),
-    website:       str = Form(""),
-
+    public_registration_code: str = Form(""),
+    website_url: str = Form(""),
+    facebook_url: str = Form(""),
+    instagram_url: str = Form(""),
+    operating_since: str = Form(""),
+    num_umrah_tours: str = Form(""),
+    num_hajj_tours: str = Form(""),
+    num_pilgrims_sent: str = Form(""),
+    branch_name: str = Form(...),
+    branch_address_line1: str = Form(""),
+    branch_address_line2: str = Form(""),
+    branch_contact_person: str = Form(""),
+    branch_contact_number: str = Form(""),
+    branch_is_main: Optional[str] = Form(None),
     csrf_token: str = Form(...),
     db: Session = Depends(get_db),
 ):
     require_csrf(request, csrf_token)
     user = require_user(request, db)
 
-    # Validate core fields
-    if not agencies_name.strip() or not country.strip() or not city.strip():
-        flash(request, "All required fields must be filled", "error")
+    def _to_int_or_none(s: str) -> Optional[int]:
+        s = (s or "").strip()
+        return int(s) if s.isdigit() else None
+
+    if (not agencies_name.strip() or not city.strip()
+            or not country.strip() or not agency_email.strip()):
+        flash(request, "Agency name, city, country, and email are required.", "error")
+        return RedirectResponse(url="/agency/new", status_code=303)
+    if not branch_name.strip():
+        flash(request, "Branch name is required.", "error")
         return RedirectResponse(url="/agency/new", status_code=303)
 
-    # Ensure city row
-    city_row = db.query(City).filter(City.name == city.strip()).first()
+    city_name = city.strip()
+    city_row = db.query(City).filter(City.name == city_name).first()
     if not city_row:
-        city_row = City(name=city.strip())
+        city_row = City(name=city_name)
         db.add(city_row)
         db.commit()
         db.refresh(city_row)
 
-    # Create Agency
     agency = Agency(
         agencies_name=agencies_name.strip(),
+        city=city_name,
         country=country.strip(),
-        city=city.strip(),
-        description=(description or None),
+        description=_norm(description),
+        public_registration_code=_norm(public_registration_code),
+        website_url=_norm(website_url),
+        facebook_url=_norm(facebook_url),
+        instagram_url=_norm(instagram_url),
+        agency_email=agency_email.strip(),
+        operating_since=_to_int_or_none(operating_since),
+        num_umrah_tours=_to_int_or_none(num_umrah_tours),
+        num_hajj_tours=_to_int_or_none(num_hajj_tours),
+        num_pilgrims_sent=_to_int_or_none(num_pilgrims_sent),
         city_id=city_row.id,
         user_id=user.id,
     )
@@ -642,30 +879,28 @@ def agency_new_submit(
     db.commit()
     db.refresh(agency)
 
-    def norm(s: str) -> str | None:
-        s = (s or "").strip()
-        return s or None
-
-    # Create AgencyDetail — use agency.city/country directly (no duplicate inputs)
-    detail = AgencyDetail(
+    from app.db.models.agency_branch import AgencyBranch
+    branch = AgencyBranch(
         agency_id=agency.registration_id,
-        address_line1=norm(address_line1),
-        address_line2=norm(address_line2),
+        name=branch_name.strip(),
+        address_line1=_norm(branch_address_line1),
+        address_line2=_norm(branch_address_line2),
         city=agency.city,
-        state=norm(state),
         country=agency.country,
-        postal_code=norm(postal_code),
-        website=norm(website),
-
-        contact1_name=norm(contact1_name),
-        contact1_phone=norm(contact1_phone),
-        contact2_name=norm(contact2_name),
-        contact2_phone=norm(contact2_phone),
+        contact_person=_norm(branch_contact_person),
+        contact_number=_norm(branch_contact_number),
+        is_main=True,
     )
-    db.add(detail)
+    db.add(branch)
+
+    if branch.city:
+        agency.city = branch.city
+    if branch.country:
+        agency.country = branch.country
+
     db.commit()
 
-    flash(request, "Agency created!", "success")
+    flash(request, "Agency and branch created!", "success")
     return RedirectResponse(
         url=f"/agency/{agency.registration_id}/dashboard",
         status_code=303,
@@ -673,17 +908,32 @@ def agency_new_submit(
 
 
 @router.get("/agency/{registration_id}/edit", response_class=HTMLResponse)
-def agency_edit_page(request: Request, registration_id: int, db: Session = Depends(get_db)):
+def agency_edit_page(
+    request: Request,
+    registration_id: int,
+    db: Session = Depends(get_db),
+):
     user = require_user(request, db)
-    agency = db.query(Agency).filter(
-        Agency.registration_id == registration_id,
-        Agency.user_id == user.id
-    ).first()
+
+    agency = (
+        db.query(Agency)
+        .filter(Agency.registration_id == registration_id, Agency.user_id == user.id)
+        .first()
+    )
     if not agency:
-        flash(request, "Agency not found or not yours", "error")
+        flash(request, "Agency not found or not yours.", "error")
         return RedirectResponse(url="/select-agency", status_code=303)
 
-    detail = db.query(AgencyDetail).filter(AgencyDetail.agency_id == registration_id).first()
+    cities = db.query(City).order_by(City.name.asc()).all()
+
+    from app.db.models.agency_branch import AgencyBranch
+    main_branch = (
+        db.query(AgencyBranch)
+        .filter(AgencyBranch.agency_id == agency.registration_id, AgencyBranch.is_main.is_(True))
+        .first()
+    )
+
+    current_year = date.today().year
 
     flashes = pop_flashes(request)
     return templates.TemplateResponse(
@@ -691,10 +941,12 @@ def agency_edit_page(request: Request, registration_id: int, db: Session = Depen
         {
             "request": request,
             "user": user,
-            "flashes": flashes,
             "agency": agency,
-            "detail": detail,  # <—
+            "branch": main_branch,
+            "cities": cities,
+            "flashes": flashes,
             "csrf_token": get_csrf_token(request),
+            "current_year": current_year,
         },
     )
 
@@ -704,73 +956,98 @@ def agency_edit_submit(
     request: Request,
     registration_id: int,
     agencies_name: str = Form(...),
-    country: str = Form(...),
     city: str = Form(...),
-    description: str = Form(None),
-
-    address_line1: str = Form(...),
-    address_line2: str = Form(""),
-    state:         str = Form(""),
-    postal_code:   str = Form(""),
-    contact1_name: str = Form(...),
-    contact1_phone:str = Form(...),
-    contact2_name: str = Form(""),
-    contact2_phone:str = Form(""),
-    website:       str = Form(""),
-
+    country: str = Form(...),
+    agency_email: str = Form(...),
+    description: str = Form(""),
+    public_registration_code: str = Form(""),
+    website_url: str = Form(""),
+    facebook_url: str = Form(""),
+    instagram_url: str = Form(""),
+    operating_since: str = Form(""),
+    num_umrah_tours: str = Form(""),
+    num_hajj_tours: str = Form(""),
+    num_pilgrims_sent: str = Form(""),
+    branch_name: str = Form(...),
+    branch_address_line1: str = Form(""),
+    branch_address_line2: str = Form(""),
+    branch_contact_person: str = Form(""),
+    branch_contact_number: str = Form(""),
+    branch_is_main: Optional[str] = Form(None),
     csrf_token: str = Form(...),
     db: Session = Depends(get_db),
 ):
     require_csrf(request, csrf_token)
     user = require_user(request, db)
 
+    def _to_int_or_none(s: str) -> Optional[int]:
+        s = (s or "").strip()
+        return int(s) if s.isdigit() else None
+
     agency = db.query(Agency).filter(
         Agency.registration_id == registration_id,
-        Agency.user_id == user.id
+        Agency.user_id == user.id,
     ).first()
     if not agency:
-        flash(request, "Agency not found or not yours", "error")
+        flash(request, "Agency not found or not yours.", "error")
         return RedirectResponse(url="/select-agency", status_code=303)
 
-    # Update Agency
-    city_row = db.query(City).filter(City.name == city.strip()).first()
+    if not agencies_name.strip() or not city.strip() or not country.strip() or not agency_email.strip():
+        flash(request, "Agency name, city, country, and email are required.", "error")
+        return RedirectResponse(url=f"/agency/{registration_id}/edit", status_code=303)
+    if not branch_name.strip():
+        flash(request, "Branch name is required.", "error")
+        return RedirectResponse(url=f"/agency/{registration_id}/edit", status_code=303)
+
+    city_name = city.strip()
+    city_row = db.query(City).filter(City.name == city_name).first()
     if not city_row:
-        city_row = City(name=city.strip())
+        city_row = City(name=city_name)
         db.add(city_row)
         db.commit()
         db.refresh(city_row)
 
     agency.agencies_name = agencies_name.strip()
+    agency.city = city_name
     agency.country = country.strip()
-    agency.city = city.strip()
-    agency.description = (description or "").strip() or None
+    agency.agency_email = agency_email.strip()
+    agency.description = _norm(description)
+    agency.public_registration_code = _norm(public_registration_code)
+    agency.website_url = _norm(website_url)
+    agency.facebook_url = _norm(facebook_url)
+    agency.instagram_url = _norm(instagram_url)
+    agency.operating_since = _to_int_or_none(operating_since)
+    agency.num_umrah_tours = _to_int_or_none(num_umrah_tours)
+    agency.num_hajj_tours = _to_int_or_none(num_hajj_tours)
+    agency.num_pilgrims_sent = _to_int_or_none(num_pilgrims_sent)
     agency.city_id = city_row.id
 
-    def norm(s: str) -> str | None:
-        s = (s or "").strip()
-        return s or None
+    from app.db.models.agency_branch import AgencyBranch
+    main_branch = db.query(AgencyBranch).filter(
+        AgencyBranch.agency_id == agency.registration_id,
+        AgencyBranch.is_main.is_(True),
+    ).first()
+    if not main_branch:
+        main_branch = AgencyBranch(agency_id=agency.registration_id, is_main=True)
+        db.add(main_branch)
 
-    # Upsert AgencyDetail (use agency.city/country to keep single source of truth)
-    detail = db.query(AgencyDetail).filter(AgencyDetail.agency_id == registration_id).first()
-    if not detail:
-        detail = AgencyDetail(agency_id=registration_id)
-        db.add(detail)
+    main_branch.name = branch_name.strip()
+    main_branch.address_line1 = _norm(branch_address_line1)
+    main_branch.address_line2 = _norm(branch_address_line2)
+    main_branch.city = agency.city
+    main_branch.country = agency.country
+    main_branch.contact_person = _norm(branch_contact_person)
+    main_branch.contact_number = _norm(branch_contact_number)
+    main_branch.is_main = True
 
-    detail.address_line1 = norm(address_line1)
-    detail.address_line2 = norm(address_line2)
-    detail.city          = agency.city
-    detail.state         = norm(state)
-    detail.country       = agency.country
-    detail.postal_code   = norm(postal_code)
-    detail.website       = norm(website)
-
-    detail.contact1_name  = norm(contact1_name)
-    detail.contact1_phone = norm(contact1_phone)
-    detail.contact2_name  = norm(contact2_name)
-    detail.contact2_phone = norm(contact2_phone)
+    if main_branch.city:
+        agency.city = main_branch.city
+    if main_branch.country:
+        agency.country = main_branch.country
 
     db.commit()
-    flash(request, "Agency updated", "success")
+
+    flash(request, "Agency updated.", "success")
     return RedirectResponse(
         url=f"/agency/{agency.registration_id}/dashboard",
         status_code=303,
@@ -786,12 +1063,15 @@ def agency_delete_submit(
 ):
     require_csrf(request, csrf_token)
     user = require_user(request, db)
-    agency = db.query(Agency).filter(Agency.registration_id == registration_id, Agency.user_id == user.id).first()
+    agency = (
+        db.query(Agency)
+        .filter(Agency.registration_id == registration_id, Agency.user_id == user.id)
+        .first()
+    )
     if not agency:
         flash(request, "Agency not found or not yours", "error")
         return RedirectResponse(url="/select-agency", status_code=303)
 
-    # If your FK doesn't cascade, delete packages manually:
     db.query(Package).filter(Package.registration_id == registration_id).delete()
     db.delete(agency)
     db.commit()
@@ -801,39 +1081,49 @@ def agency_delete_submit(
 
 # ----------------- Packages (public + owner CRUD) -----------------
 
-@router.get("/packages", response_class=HTMLResponse)
+@router.get("/umrah_packages", response_class=HTMLResponse)
 def packages_list(request: Request, db: Session = Depends(get_db)):
     packages = db.query(Package).order_by(Package.package_id.desc()).all()
-
     reg_ids = {p.registration_id for p in packages}
-    agencies = (
-        db.query(Agency)
-        .filter(Agency.registration_id.in_(reg_ids) if reg_ids else False)
-        .all()
-    )
+
+    if reg_ids:
+        agencies = (
+            db.query(Agency)
+            .options(selectinload(Agency.city_rel))
+            .filter(Agency.registration_id.in_(reg_ids))
+            .all()
+        )
+    else:
+        agencies = []
+
     agency_by_id = {a.registration_id: a for a in agencies}
 
-    by_city = defaultdict(list)
+    by_city: dict[str, list[Package]] = defaultdict(list)
     for p in packages:
         ag = agency_by_id.get(p.registration_id)
-        city = (ag.city if ag and ag.city else "Unknown").strip()
+        city = _display_city(ag)
         by_city[city].append(p)
 
-    packages_by_city = sorted(by_city.items(), key=lambda t: t[0].lower())
+    def city_sort_key(name: str):
+        return (name == "Unknown", name.casefold())
 
-    return templates.TemplateResponse(
-        "public/package_list.html",  # make sure file name matches exactly
+    packages_by_city = sorted(by_city.items(), key=lambda t: city_sort_key(t[0]))
+
+    return render(
+        "public/package_list.html",
+        request,
+        db,
         {
-            "request": request,
             "title": "Discover Packages",
             "packages_by_city": packages_by_city,
             "agency_by_id": agency_by_id,
         },
+        is_public=True,
     )
 
-@router.get("/packages/{package_id}", response_class=HTMLResponse)
+
+@router.get("/umrah_packages/{package_id}", response_class=HTMLResponse)
 def package_detail(package_id: int, request: Request, db: Session = Depends(get_db)):
-    # Eager-load children to avoid extra queries
     pkg = (
         db.query(Package)
         .options(
@@ -849,33 +1139,38 @@ def package_detail(package_id: int, request: Request, db: Session = Depends(get_
 
     agency = db.query(Agency).filter(Agency.registration_id == pkg.registration_id).first()
 
-    # Organize children for easy template use
     flights_by_leg = {f.leg: f for f in (pkg.flights or [])}
     onward = flights_by_leg.get("onward")
     ret = flights_by_leg.get("return")
-
     mecca = next((s for s in (pkg.stays or []) if s.city == "Mecca"), None)
-    med   = next((s for s in (pkg.stays or []) if s.city == "Medinah"), None)
-    incl  = pkg.inclusion  # 1:1 or None
-    captcha_q = new_captcha(request, tag=f"inq:{package_id}")
+    med = next((s for s in (pkg.stays or []) if s.city == "Medinah"), None)
+    incl = pkg.inclusion
+    price_row = db.query(PackagePrice).filter(PackagePrice.package_id == pkg.package_id).first()
 
-    return templates.TemplateResponse(
+    # unified CAPTCHA tag between detail & submit:
+    captcha_tag = f"pkg-inq:{pkg.package_id}"
+
+    return render(
         "public/package_detail.html",
+        request,
+        db,
         {
-            "request": request,
             "title": pkg.package_name,
             "pkg": pkg,
             "agency": agency,
-            "csrf_token": get_csrf_token(request),
             "onward": onward,
             "ret": ret,
             "mecca": mecca,
             "med": med,
             "incl": incl,
-            "captcha_q": captcha_q,
+            "price_row": price_row,
+            "captcha_q": new_captcha(request, captcha_tag),
         },
+        is_public=True,
     )
-@router.post("/packages/{package_id}/inquire")
+
+
+@router.post("/umrah_packages/{package_id}/inquire")
 def package_inquire_submit(
     request: Request,
     package_id: int,
@@ -883,34 +1178,31 @@ def package_inquire_submit(
     phone_number: str = Form(...),
     inquiry: str = Form(...),
     source: str = Form(""),
-    website: str = Form(""),           # honeypot
-    captcha_answer: str = Form(...),   # NEW
+    website: str = Form(""),  # honeypot
+    captcha_answer: str = Form(...),
     csrf_token: str = Form(...),
     db: Session = Depends(get_db),
 ):
     require_csrf(request, csrf_token)
 
-    # Honeypot: if filled, pretend success
-    if website.strip():
+    if website.strip():  # honeypot
         flash(request, "Thanks! Your inquiry was sent.", "success")
-        return RedirectResponse(url=f"/packages/{package_id}", status_code=303)
+        return RedirectResponse(url=f"/umrah_packages/{package_id}", status_code=303)
 
     pkg = db.query(Package).filter(Package.package_id == package_id).first()
     if not pkg:
         flash(request, "Package not found", "error")
-        return RedirectResponse(url="/packages", status_code=303)
+        return RedirectResponse(url="/umrah_packages", status_code=303)
 
-    # Normalize inputs
     name = (name or "").strip()
-    msg  = (inquiry or "").strip()
-    src  = (source or "").strip()[:20]
+    msg = (inquiry or "").strip()
+    src = (source or "").strip()[:20]
     phone_raw = (phone_number or "").strip()
     phone = normalize_phone(phone_raw)
 
-    # Server-side validation
     if not name or not msg:
         flash(request, "Please fill all required fields.", "error")
-        return RedirectResponse(url=f"/packages/{package_id}", status_code=303)
+        return RedirectResponse(url=f"/umrah_packages/{package_id}", status_code=303)
 
     if not is_valid_phone(phone):
         flash(
@@ -918,175 +1210,303 @@ def package_inquire_submit(
             "Enter a valid phone number (e.g., +9198xxxxxxxx or a 10-digit Indian mobile starting 6–9).",
             "error",
         )
-        return RedirectResponse(url=f"/packages/{package_id}", status_code=303)
+        return RedirectResponse(url=f"/umrah_packages/{package_id}", status_code=303)
 
-    # CAPTCHA check (namespaced per package)
-    if not check_captcha(request, tag=f"inq:{package_id}", user_answer=captcha_answer):
+    # unified tag with detail page
+    if not check_captcha(request, tag=f"pkg-inq:{package_id}", user_answer=captcha_answer):
         flash(request, "CAPTCHA was incorrect. Please try again.", "error")
-        # regenerate a fresh captcha for the next view
-        new_captcha(request, tag=f"inq:{package_id}")
-        return RedirectResponse(url=f"/packages/{package_id}", status_code=303)
+        new_captcha(request, tag=f"pkg-inq:{package_id}")
+        return RedirectResponse(url=f"/umrah_packages/{package_id}", status_code=303)
 
-    # Save
     try:
-        db.add(Inquiry(
-            name=name,
-            phone_number=phone,   # store normalized value
-            inquiry=msg,
-            source=src or None,
-            registration_id=pkg.registration_id,
-        ))
+        db.add(
+            Inquiry(
+                name=name,
+                phone_number=phone,
+                inquiry=msg,
+                source=src or None,
+                registration_id=pkg.registration_id,
+            )
+        )
         db.commit()
     except Exception:
         db.rollback()
         flash(request, "Could not save inquiry. Please try again.", "error")
-        return RedirectResponse(url=f"/packages/{package_id}", status_code=303)
+        return RedirectResponse(url=f"/umrah_packages/{package_id}", status_code=303)
 
     flash(request, "Thanks! Your inquiry was sent.", "success")
-    return RedirectResponse(url=f"/packages/{package_id}", status_code=303)
+    return RedirectResponse(url=f"/umrah_packages/{package_id}", status_code=303)
 
 
 # ---- Owner: Package create/edit/delete (protected) ----
 
 @router.get("/package/new", response_class=HTMLResponse)
-def package_new_page(request: Request, agency_id: int, db: Session = Depends(get_db)):
+def package_new_page(
+    request: Request,
+    agency_id: int = Query(...),
+    db: Session = Depends(get_db),
+):
     user = require_user(request, db)
-    agency = db.query(Agency).filter(Agency.registration_id == agency_id, Agency.user_id == user.id).first()
+
+    agency = (
+        db.query(Agency)
+        .filter(Agency.registration_id == agency_id, Agency.user_id == user.id)
+        .first()
+    )
     if not agency:
         flash(request, "Agency not found or not yours", "error")
         return RedirectResponse(url="/select-agency", status_code=303)
 
+    from app.db.models.hotel import Hotel
+    hotels = db.query(Hotel).order_by(Hotel.name.asc()).all()
+
+    from app.db.models.airline import Airline
+    airlines = db.query(Airline).order_by(Airline.name.asc()).all()
+    start = 2026
+    end = max(date.today().year + 5, start + 5)
+    years = list(range(start, end + 1))
     flashes = pop_flashes(request)
     return templates.TemplateResponse(
         "package/new.html",
-        {"request": request, "user": user, "flashes": flashes, "agency": agency, "csrf_token": get_csrf_token(request)},
+        {
+            "request": request,
+            "title": "Add Package",
+            "agency": agency,
+            "flashes": flashes,
+            "csrf_token": get_csrf_token(request),
+            "hotels": hotels,
+            "airlines": airlines,
+            "years": years,
+        },
     )
+
 
 @router.post("/package/new")
 def package_new_submit(
     request: Request,
     agency_id: int = Form(...),
+    package_type: str = Form(...),
     package_name: str = Form(...),
     days: int = Form(...),
     price: float = Form(...),
     description: str = Form(""),
-
-    # ---- Flights (optional) ----
+    package_class: str = Form(""),
+    travel_month: str = Form(""),
+    travel_year: str = Form(""),
+    airline_ids: Optional[List[int]] = Form(None),
+    price_double: Optional[float] = Form(None),
+    price_triple: Optional[float] = Form(None),
+    price_quad: Optional[float] = Form(None),
+    price_note: str = Form(""),
     onward_date: str = Form(""),
-    onward_type: str = Form(""),      # "direct" | "via"
+    onward_type: str = Form(""),
     onward_via: str = Form(""),
     onward_airline: str = Form(""),
-
     return_date: str = Form(""),
     return_type: str = Form(""),
     return_via: str = Form(""),
     return_airline: str = Form(""),
-
-    # ---- Stays (optional) ----
     mecca_check_in: str = Form(""),
     mecca_check_out: str = Form(""),
     mecca_hotel: str = Form(""),
     mecca_link: str = Form(""),
     mecca_distance_m: str = Form(""),
     mecca_distance_text: str = Form(""),
-
     med_check_in: str = Form(""),
     med_check_out: str = Form(""),
     med_hotel: str = Form(""),
     med_link: str = Form(""),
     med_distance_m: str = Form(""),
     med_distance_text: str = Form(""),
-
-    # ---- Inclusions (optional) ----
-    incl_meals: str = Form(""),
-    incl_laundry: str = Form(""),
-    incl_transport: str = Form(""),
+    incl_meals_enabled: Optional[str] = Form(None),
+    incl_meals_desc: str = Form(""),
+    incl_laundry_enabled: Optional[str] = Form(None),
+    incl_laundry_desc: str = Form(""),
+    incl_transport_enabled: Optional[str] = Form(None),
+    incl_transport_desc: str = Form(""),
+    incl_zamzam_enabled: Optional[str] = Form(None),
+    incl_zamzam_desc: str = Form(""),
+    incl_welcome_kit_enabled: Optional[str] = Form(None),
+    incl_welcome_kit_desc: str = Form(""),
+    incl_insurance_enabled: Optional[str] = Form(None),
+    incl_insurance_desc: str = Form(""),
     incl_other: str = Form(""),
-
     csrf_token: str = Form(...),
     db: Session = Depends(get_db),
 ):
     require_csrf(request, csrf_token)
     user = require_user(request, db)
 
-    agency = db.query(Agency).filter(Agency.registration_id == agency_id, Agency.user_id == user.id).first()
+    agency = (
+        db.query(Agency)
+        .filter(Agency.registration_id == agency_id, Agency.user_id == user.id)
+        .first()
+    )
     if not agency:
         flash(request, "Agency not found or not yours", "error")
         return RedirectResponse(url="/select-agency", status_code=303)
 
+    if not package_name.strip() or int(days) < 1:
+        flash(request, "Please fill required fields correctly.", "error")
+        return RedirectResponse(url=f"/package/new?agency_id={agency_id}", status_code=303)
+
+    t_raw = (package_type or "").strip().lower()
+    if t_raw not in {"haj", "umrah"}:
+        flash(request, "Select package type: Haj or Umrah.", "error")
+        return RedirectResponse(url=f"/package/new?agency_id={agency_id}", status_code=303)
+
+    cls_raw = (package_class or "").strip().lower()
+    allowed_cls = {"economy", "business", "first"}
+    cls_val = cls_raw if cls_raw in allowed_cls else None
+    if cls_raw and not cls_val:
+        flash(request, "Invalid package class. Choose Economy, Business, or First Class.", "error")
+        return RedirectResponse(url=f"/package/new?agency_id={agency_id}", status_code=303)
+
+    def _to_int_or_none(s: str) -> Optional[int]:
+        s = (s or "").strip()
+        return int(s) if s.isdigit() else None
+
+    tm = _to_int_or_none(travel_month)
+    ty = _to_int_or_none(travel_year)
+    if tm is not None and not (1 <= tm <= 12):
+        flash(request, "Travel month must be between 1 and 12.", "error")
+        return RedirectResponse(url=f"/package/new?agency_id={agency_id}", status_code=303)
+    if ty is not None and ty < 2026:
+        flash(request, "Travel year must be 2026 or later.", "error")
+        return RedirectResponse(url=f"/package/new?agency_id={agency_id}", status_code=303)
+
     pkg = Package(
         registration_id=agency.registration_id,
+        package_type=t_raw,
         package_name=package_name.strip(),
-        days=days,
+        package_class=cls_val,
+        days=int(days),
         price=price,
         description=_norm(description),
+        travel_month=tm,
+        travel_year=ty,
     )
     db.add(pkg)
     db.commit()
     db.refresh(pkg)
 
-    # ---- Flights (create if any field present) ----
+    from app.db.models.package_airline import PackageAirline
+    if airline_ids:
+        unique_airline_ids = sorted({int(aid) for aid in airline_ids if str(aid).isdigit()})
+        for aid in unique_airline_ids:
+            db.add(PackageAirline(package_id=pkg.package_id, airline_id=aid))
+
+    if any(v is not None for v in (price_double, price_triple, price_quad)) or (price_note and price_note.strip()):
+        db.add(
+            PackagePrice(
+                package_id=pkg.package_id,
+                price_double=price_double,
+                price_triple=price_triple,
+                price_quad=price_quad,
+                note=(price_note or "").strip() or None,
+            )
+        )
+
     if any([onward_date, onward_type, onward_via, onward_airline]):
-        db.add(PackageFlight(
-            package_id=pkg.package_id,
-            leg="onward",
-            flight_date=_to_date(onward_date),
-            flight_type=_norm(onward_type) if onward_type in ("direct", "via") else None,
-            via_city=_norm(onward_via),
-            airline_name=_norm(onward_airline),
-        ))
-
+        db.add(
+            PackageFlight(
+                package_id=pkg.package_id,
+                leg="onward",
+                flight_date=_to_date(onward_date),
+                flight_type=_norm(onward_type) if onward_type in ("direct", "via") else None,
+                via_city=_norm(onward_via),
+                airline_name=_norm(onward_airline),
+            )
+        )
     if any([return_date, return_type, return_via, return_airline]):
-        db.add(PackageFlight(
-            package_id=pkg.package_id,
-            leg="return",
-            flight_date=_to_date(return_date),
-            flight_type=_norm(return_type) if return_type in ("direct", "via") else None,
-            via_city=_norm(return_via),
-            airline_name=_norm(return_airline),
-        ))
+        db.add(
+            PackageFlight(
+                package_id=pkg.package_id,
+                leg="return",
+                flight_date=_to_date(return_date),
+                flight_type=_norm(return_type) if return_type in ("direct", "via") else None,
+                via_city=_norm(return_via),
+                airline_name=_norm(return_airline),
+            )
+        )
 
-    # ---- Stays ----
+    def resolve_hotel_id_by_name(name_txt: str, link_txt: str) -> int | None:
+        name_txt = (name_txt or "").strip()
+        if not name_txt:
+            return None
+        row = get_or_create_hotel(db, name=name_txt, link=(link_txt or "").strip() or None)
+        return row.id if row else None
+
     if any([mecca_check_in, mecca_check_out, mecca_hotel, mecca_link, mecca_distance_m, mecca_distance_text]):
-        db.add(PackageStay(
-            package_id=pkg.package_id,
-            city="Mecca",
-            check_in=_to_date(mecca_check_in),
-            check_out=_to_date(mecca_check_out),
-            hotel_name=_norm(mecca_hotel),
-            hotel_link=_norm(mecca_link),
-            distance_text=_norm(mecca_distance_text),
-            distance_m=int(mecca_distance_m) if mecca_distance_m.strip().isdigit() else None,
-        ))
-
+        db.add(
+            PackageStay(
+                package_id=pkg.package_id,
+                city="Mecca",
+                check_in=_to_date(mecca_check_in),
+                check_out=_to_date(mecca_check_out),
+                hotel_name=_norm(mecca_hotel),
+                hotel_link=_norm(mecca_link),
+                distance_text=_norm(mecca_distance_text),
+                distance_m=int(mecca_distance_m) if (mecca_distance_m and mecca_distance_m.strip().isdigit()) else None,
+                hotel_id=resolve_hotel_id_by_name(mecca_hotel, mecca_link),
+            )
+        )
     if any([med_check_in, med_check_out, med_hotel, med_link, med_distance_m, med_distance_text]):
-        db.add(PackageStay(
-            package_id=pkg.package_id,
-            city="Medinah",
-            check_in=_to_date(med_check_in),
-            check_out=_to_date(med_check_out),
-            hotel_name=_norm(med_hotel),
-            hotel_link=_norm(med_link),
-            distance_text=_norm(med_distance_text),
-            distance_m=int(med_distance_m) if med_distance_m.strip().isdigit() else None,
-        ))
+        db.add(
+            PackageStay(
+                package_id=pkg.package_id,
+                city="Medinah",
+                check_in=_to_date(med_check_in),
+                check_out=_to_date(med_check_out),
+                hotel_name=_norm(med_hotel),
+                hotel_link=_norm(med_link),
+                distance_text=_norm(med_distance_text),
+                distance_m=int(med_distance_m) if (med_distance_m and med_distance_m.strip().isdigit()) else None,
+                hotel_id=resolve_hotel_id_by_name(med_hotel, med_link),
+            )
+        )
 
-    # ---- Inclusions (1:1 create if any) ----
-    if any([incl_meals, incl_laundry, incl_transport, incl_other]):
-        db.add(PackageInclusion(
-            package_id=pkg.package_id,
-            meals=_norm(incl_meals),
-            laundry=_norm(incl_laundry),
-            transport=_norm(incl_transport),
-            other_notes=_norm(incl_other),
-        ))
+    any_incl = any(
+        [
+            incl_meals_enabled,
+            (incl_meals_desc or "").strip(),
+            incl_laundry_enabled,
+            (incl_laundry_desc or "").strip(),
+            incl_transport_enabled,
+            (incl_transport_desc or "").strip(),
+            incl_zamzam_enabled,
+            (incl_zamzam_desc or "").strip(),
+            incl_welcome_kit_enabled,
+            (incl_welcome_kit_desc or "").strip(),
+            incl_insurance_enabled,
+            (incl_insurance_desc or "").strip(),
+            (incl_other or "").strip(),
+        ]
+    )
+    if any_incl:
+        db.add(
+            PackageInclusion(
+                package_id=pkg.package_id,
+                meals_enabled=1 if incl_meals_enabled == "on" else 0,
+                meals_desc=_norm(incl_meals_desc),
+                laundry_enabled=1 if incl_laundry_enabled == "on" else 0,
+                laundry_desc=_norm(incl_laundry_desc),
+                transport_enabled=1 if incl_transport_enabled == "on" else 0,
+                transport_desc=_norm(incl_transport_desc),
+                zamzam_enabled=1 if incl_zamzam_enabled == "on" else 0,
+                zamzam_desc=_norm(incl_zamzam_desc),
+                welcome_kit_enabled=1 if incl_welcome_kit_enabled == "on" else 0,
+                welcome_kit_desc=_norm(incl_welcome_kit_desc),
+                insurance_enabled=1 if incl_insurance_enabled == "on" else 0,
+                insurance_desc=_norm(incl_insurance_desc),
+                other_notes=_norm(incl_other),
+            )
+        )
 
     db.commit()
-    flash(request, f"Package created. Let's add the itinerary ({days} day{'s' if days != 1 else ''}).", "info")
-    return RedirectResponse(
-        url=f"/package/{pkg.package_id}/itinerary/wizard?day=1",
-        status_code=303,
-    )
+    flash(request, "Package added! Let’s add the day-by-day itinerary (you can skip it).", "info")
+    return RedirectResponse(url=f"/package/{pkg.package_id}/itinerary/wizard?day=1", status_code=303)
+
 
 @router.get("/package/{package_id}/itinerary/wizard", response_class=HTMLResponse)
 def itinerary_wizard_page(
@@ -1097,7 +1517,6 @@ def itinerary_wizard_page(
 ):
     user = require_user(request, db)
 
-    # Fetch package (must belong to the user)
     pkg = db.query(Package).filter(Package.package_id == package_id).first()
     if not pkg:
         flash(request, "Package not found", "error")
@@ -1112,11 +1531,9 @@ def itinerary_wizard_page(
         flash(request, "Not allowed", "error")
         return RedirectResponse(url="/select-agency", status_code=303)
 
-    # Clamp day to [1, pkg.days]
     total_days = max(int(pkg.days or 1), 1)
     current_day = min(max(int(day or 1), 1), total_days)
 
-    # Load existing note for this day (if any)
     entry = (
         db.query(PackageItinerary)
         .filter(PackageItinerary.package_id == package_id, PackageItinerary.day_number == current_day)
@@ -1140,20 +1557,20 @@ def itinerary_wizard_page(
         },
     )
 
+
 @router.post("/package/{package_id}/itinerary/wizard")
 def itinerary_wizard_submit(
     request: Request,
     package_id: int,
-    day_number: int = Form(...),
-    notes: str = Form(""),
-    nav: str = Form("next"),  # 'next' | 'back' | 'skip' | 'finish'
     csrf_token: str = Form(...),
+    day_number: Optional[int] = Form(None),
+    notes: Optional[List[str]] = Form(None),
+    nav: str = Form("next"),
     db: Session = Depends(get_db),
 ):
     require_csrf(request, csrf_token)
     user = require_user(request, db)
 
-    # Load package and owning agency (must belong to logged-in user)
     pkg = db.query(Package).filter(Package.package_id == package_id).first()
     if not pkg:
         flash(request, "Package not found", "error")
@@ -1165,60 +1582,72 @@ def itinerary_wizard_submit(
         .first()
     )
     if not agency:
-        flash(request, "Not allowed", "error")
+        flash(request, "Not allowed to edit this itinerary", "error")
         return RedirectResponse(url="/select-agency", status_code=303)
 
-    total_days = max(int(pkg.days or 1), 1)
-    current_day = min(max(int(day_number or 1), 1), total_days)
+    total_days = pkg.days or 0
 
-    # Upsert or delete (empty) the day's note
-    text = (notes or "").strip()
-    entry = (
-        db.query(PackageItinerary)
-        .filter(
-            PackageItinerary.package_id == package_id,
-            PackageItinerary.day_number == current_day
-        )
-        .first()
-    )
-    if text:
-        if not entry:
-            entry = PackageItinerary(package_id=package_id, day_number=current_day, notes=text)
-            db.add(entry)
+    try:
+        if day_number is not None:
+            submitted_text = (notes[0] if notes and len(notes) > 0 else "") if notes is not None else ""
+            txt_norm = (submitted_text or "").strip() or None
+
+            row = (
+                db.query(PackageItinerary)
+                .filter(PackageItinerary.package_id == pkg.package_id, PackageItinerary.day_number == int(day_number))
+                .first()
+            )
+            if row:
+                row.notes = txt_norm
+            else:
+                db.add(PackageItinerary(package_id=pkg.package_id, day_number=int(day_number), notes=txt_norm))
+
+            db.commit()
+
+            if nav == "back":
+                prev_day = max(1, int(day_number) - 1)
+                return RedirectResponse(url=f"/package/{pkg.package_id}/itinerary/wizard?day={prev_day}", status_code=303)
+            elif nav == "next":
+                next_day = min(total_days, int(day_number) + 1)
+                return RedirectResponse(url=f"/package/{pkg.package_id}/itinerary/wizard?day={next_day}", status_code=303)
+            else:
+                flash(request, "Itinerary saved.", "success")
+                return RedirectResponse(url=f"/agency/{agency.registration_id}/dashboard", status_code=303)
+
         else:
-            entry.notes = text
-    else:
-        if entry:
-            db.delete(entry)
+            notes_list = notes or []
+            if len(notes_list) < total_days:
+                notes_list = notes_list + [""] * (total_days - len(notes_list))
+            elif len(notes_list) > total_days:
+                notes_list = notes_list[:total_days]
 
-    db.commit()
+            for idx, txt in enumerate(notes_list, start=1):
+                txt_norm = (txt or "").strip() or None
+                row = (
+                    db.query(PackageItinerary)
+                    .filter(PackageItinerary.package_id == pkg.package_id, PackageItinerary.day_number == idx)
+                    .first()
+                )
+                if row:
+                    row.notes = txt_norm
+                else:
+                    db.add(PackageItinerary(package_id=pkg.package_id, day_number=idx, notes=txt_norm))
 
-    # Keep session focused on this agency
-    set_active_agency(request, agency.registration_id)
-
-    # Navigation
-    if nav == "back":
-        prev_day = max(current_day - 1, 1)
-        return RedirectResponse(url=f"/package/{package_id}/itinerary/wizard?day={prev_day}", status_code=303)
-
-    if nav == "skip":
-        next_day = current_day + 1
-        if next_day > total_days:
+            db.commit()
             flash(request, "Itinerary saved.", "success")
             return RedirectResponse(url=f"/agency/{agency.registration_id}/dashboard", status_code=303)
-        return RedirectResponse(url=f"/package/{package_id}/itinerary/wizard?day={next_day}", status_code=303)
 
-    # Finish OR last day reached
-    if nav == "finish" or current_day == total_days:
-        flash(request, "Itinerary saved.", "success")
-        return RedirectResponse(url=f"/agency/{agency.registration_id}/dashboard", status_code=303)
+    except Exception as e:
+        db.rollback()
+        print("Error saving itinerary:", e)
+        flash(request, "Could not save itinerary. Please try again.", "error")
+        return RedirectResponse(url=f"/package/{pkg.package_id}/itinerary/wizard", status_code=303)
 
-    # Default: Save & Next
-    return RedirectResponse(url=f"/package/{package_id}/itinerary/wizard?day={current_day + 1}", status_code=303)
 
 @router.get("/package/{package_id}/edit", response_class=HTMLResponse)
 def package_edit_page(request: Request, package_id: int, db: Session = Depends(get_db)):
     user = require_user(request, db)
+
     pkg = db.query(Package).filter(Package.package_id == package_id).first()
     if not pkg:
         flash(request, "Package not found", "error")
@@ -1229,71 +1658,97 @@ def package_edit_page(request: Request, package_id: int, db: Session = Depends(g
         flash(request, "Not allowed to edit this package", "error")
         return RedirectResponse(url="/select-agency", status_code=303)
 
-    onward = db.query(PackageFlight).filter_by(package_id=pkg.package_id, leg="onward").first()
-    ret = db.query(PackageFlight).filter_by(package_id=pkg.package_id, leg="return").first()
-    mecca = db.query(PackageStay).filter_by(package_id=pkg.package_id, city="Mecca").first()
-    med = db.query(PackageStay).filter_by(package_id=pkg.package_id, city="Medinah").first()
-    incl = db.query(PackageInclusion).filter_by(package_id=pkg.package_id).first()
+    onward = db.query(PackageFlight).filter(PackageFlight.package_id == pkg.package_id, PackageFlight.leg == "onward").first()
+    ret = db.query(PackageFlight).filter(PackageFlight.package_id == pkg.package_id, PackageFlight.leg == "return").first()
+    mecca = db.query(PackageStay).filter(PackageStay.package_id == pkg.package_id, PackageStay.city == "Mecca").first()
+    med = db.query(PackageStay).filter(PackageStay.package_id == pkg.package_id, PackageStay.city == "Medinah").first()
+    incl = db.query(PackageInclusion).filter(PackageInclusion.package_id == pkg.package_id).first()
+    price_row = db.query(PackagePrice).filter(PackagePrice.package_id == pkg.package_id).first()
 
+    from app.db.models.hotel import Hotel
+    hotels = db.query(Hotel).order_by(Hotel.name.asc()).all()
+
+    from app.db.models.airline import Airline
+    airlines = db.query(Airline).order_by(Airline.name.asc()).all()
+    selected_airline_ids = {pa.airline_id for pa in pkg.package_airlines}
+    start = 2026
+    end = max(date.today().year + 5, start + 5)
+    years = list(range(start, end + 1))
     flashes = pop_flashes(request)
     return templates.TemplateResponse(
         "package/edit.html",
         {
             "request": request,
+            "title": "Edit Package",
             "user": user,
             "flashes": flashes,
-            "pkg": pkg,
             "agency": agency,
-            "csrf_token": get_csrf_token(request),
+            "pkg": pkg,
             "onward": onward,
             "ret": ret,
             "mecca": mecca,
             "med": med,
             "incl": incl,
+            "price_row": price_row,
+            "csrf_token": get_csrf_token(request),
+            "hotels": hotels,
+            "airlines": airlines,
+            "selected_airline_ids": selected_airline_ids,
+            "years": years,
         },
     )
+
 
 @router.post("/package/{package_id}/edit")
 def package_edit_submit(
     request: Request,
     package_id: int,
+    package_type: str = Form(...),
     package_name: str = Form(...),
     days: int = Form(...),
     price: float = Form(...),
-    description: str = Form(""),
-
-    # Flights
+    description: str = Form(None),
+    package_class: str = Form(""),
+    travel_month: str = Form(""),
+    travel_year: str = Form(""),
+    airline_ids: Optional[List[int]] = Form(None),
     onward_date: str = Form(""),
     onward_type: str = Form(""),
     onward_via: str = Form(""),
     onward_airline: str = Form(""),
-
     return_date: str = Form(""),
     return_type: str = Form(""),
     return_via: str = Form(""),
     return_airline: str = Form(""),
-
-    # Stays
     mecca_check_in: str = Form(""),
     mecca_check_out: str = Form(""),
     mecca_hotel: str = Form(""),
     mecca_link: str = Form(""),
     mecca_distance_m: str = Form(""),
     mecca_distance_text: str = Form(""),
-
     med_check_in: str = Form(""),
     med_check_out: str = Form(""),
     med_hotel: str = Form(""),
     med_link: str = Form(""),
     med_distance_m: str = Form(""),
     med_distance_text: str = Form(""),
-
-    # Inclusions
-    incl_meals: str = Form(""),
-    incl_laundry: str = Form(""),
-    incl_transport: str = Form(""),
+    incl_meals_enabled: Optional[str] = Form(None),
+    incl_meals_desc: str = Form(""),
+    incl_laundry_enabled: Optional[str] = Form(None),
+    incl_laundry_desc: str = Form(""),
+    incl_transport_enabled: Optional[str] = Form(None),
+    incl_transport_desc: str = Form(""),
+    incl_zamzam_enabled: Optional[str] = Form(None),
+    incl_zamzam_desc: str = Form(""),
+    incl_welcome_kit_enabled: Optional[str] = Form(None),
+    incl_welcome_kit_desc: str = Form(""),
+    incl_insurance_enabled: Optional[str] = Form(None),
+    incl_insurance_desc: str = Form(""),
     incl_other: str = Form(""),
-
+    price_double: Optional[float] = Form(None),
+    price_triple: Optional[float] = Form(None),
+    price_quad: Optional[float] = Form(None),
+    price_note: str = Form(""),
     csrf_token: str = Form(...),
     db: Session = Depends(get_db),
 ):
@@ -1305,18 +1760,58 @@ def package_edit_submit(
         flash(request, "Package not found", "error")
         return RedirectResponse(url="/select-agency", status_code=303)
 
-    agency = db.query(Agency).filter(Agency.registration_id == pkg.registration_id, Agency.user_id == user.id).first()
+    agency = (
+        db.query(Agency)
+        .filter(Agency.registration_id == pkg.registration_id, Agency.user_id == user.id)
+        .first()
+    )
     if not agency:
         flash(request, "Not allowed to edit this package", "error")
         return RedirectResponse(url="/select-agency", status_code=303)
 
-    # Update base package
-    pkg.package_name = package_name.strip()
-    pkg.days = days
-    pkg.price = price
-    pkg.description = _norm(description)
+    t_raw = (package_type or "").strip().lower()
+    if t_raw not in {"haj", "umrah"}:
+        flash(request, "Select package type: Haj or Umrah.", "error")
+        return RedirectResponse(url=f"/package/{package_id}/edit", status_code=303)
+    pkg.package_type = t_raw
 
-    # --- Flights upsert ---
+    pkg.package_name = (package_name or "").strip()
+    try:
+        pkg.days = int(days)
+    except Exception:
+        pkg.days = days
+    pkg.price = price
+    pkg.description = (description or "").strip() or None
+
+    cls_raw = (package_class or "").strip().lower()
+    allowed_cls = {"economy", "business", "first"}
+    pkg.package_class = cls_raw if cls_raw in allowed_cls else None
+    if cls_raw and pkg.package_class is None:
+        flash(request, "Invalid package class. Choose Economy, Business, or First Class.", "error")
+        return RedirectResponse(url=f"/package/{package_id}/edit", status_code=303)
+
+    def _to_int_or_none(s: str) -> Optional[int]:
+        s = (s or "").strip()
+        return int(s) if s.isdigit() else None
+
+    tm = _to_int_or_none(travel_month)
+    ty = _to_int_or_none(travel_year)
+    if tm is not None and not (1 <= tm <= 12):
+        flash(request, "Travel month must be between 1 and 12.", "error")
+        return RedirectResponse(url=f"/package/{package_id}/edit", status_code=303)
+    if ty is not None and ty < 2026:
+        flash(request, "Travel year must be 2026 or later.", "error")
+        return RedirectResponse(url=f"/package/{package_id}/edit", status_code=303)
+    pkg.travel_month = tm
+    pkg.travel_year = ty
+
+    from app.db.models.package_airline import PackageAirline
+    db.query(PackageAirline).filter(PackageAirline.package_id == pkg.package_id).delete(synchronize_session=False)
+    if airline_ids:
+        unique_airline_ids = sorted({int(aid) for aid in airline_ids if str(aid).isdigit()})
+        for aid in unique_airline_ids:
+            db.add(PackageAirline(package_id=pkg.package_id, airline_id=aid))
+
     onward = db.query(PackageFlight).filter_by(package_id=pkg.package_id, leg="onward").first()
     if any([onward_date, onward_type, onward_via, onward_airline]):
         if not onward:
@@ -1341,44 +1836,103 @@ def package_edit_submit(
     elif ret:
         db.delete(ret)
 
-    # --- Stays upsert ---
-    def upsert_stay(which_city: str, ci: str, co: str, hotel: str, link: str, dist_m: str, dist_txt: str):
+    def resolve_hotel_id_by_name(name_txt: str, link_txt: str) -> int | None:
+        name_txt = (name_txt or "").strip()
+        if not name_txt:
+            return None
+        row = get_or_create_hotel(db, name=name_txt, link=(link_txt or "").strip() or None)
+        return row.id if row else None
+
+    def upsert_stay(which_city: str, ci: str, co: str, hotel_name_txt: str, hotel_link_txt: str, dist_m: str, dist_txt: str):
         stay = db.query(PackageStay).filter_by(package_id=pkg.package_id, city=which_city).first()
-        if any([ci, co, hotel, link, dist_m, dist_txt]):
+        if any([ci, co, hotel_name_txt, hotel_link_txt, dist_m, dist_txt]):
             if not stay:
                 stay = PackageStay(package_id=pkg.package_id, city=which_city)
                 db.add(stay)
             stay.check_in = _to_date(ci)
             stay.check_out = _to_date(co)
-            stay.hotel_name = _norm(hotel)
-            stay.hotel_link = _norm(link)
+            stay.hotel_name = _norm(hotel_name_txt)
+            stay.hotel_link = _norm(hotel_link_txt)
             stay.distance_text = _norm(dist_txt)
-            stay.distance_m = int(dist_m) if (dist_m or "").strip().isdigit() else None
+            stay.distance_m = int(dist_m) if (dist_m and dist_m.strip().isdigit()) else None
+            stay.hotel_id = resolve_hotel_id_by_name(hotel_name_txt, hotel_link_txt)
         elif stay:
             db.delete(stay)
 
-    upsert_stay("Mecca", mecca_check_in, mecca_check_out, mecca_hotel, mecca_link, mecca_distance_m, mecca_distance_text)
-    upsert_stay("Medinah", med_check_in, med_check_out, med_hotel, med_link, med_distance_m, med_distance_text)
+    upsert_stay(
+        "Mecca",
+        mecca_check_in,
+        mecca_check_out,
+        mecca_hotel,
+        mecca_link,
+        mecca_distance_m,
+        mecca_distance_text,
+    )
 
-    # --- Inclusions upsert (1:1) ---
+    upsert_stay(
+        "Medinah",
+        med_check_in,
+        med_check_out,
+        med_hotel,
+        med_link,
+        med_distance_m,
+        med_distance_text,
+    )
+
     incl = db.query(PackageInclusion).filter_by(package_id=pkg.package_id).first()
-    if any([incl_meals, incl_laundry, incl_transport, incl_other]):
+    any_incl = any(
+        [
+            incl_meals_enabled, (incl_meals_desc or "").strip(),
+            incl_laundry_enabled, (incl_laundry_desc or "").strip(),
+            incl_transport_enabled, (incl_transport_desc or "").strip(),
+            incl_zamzam_enabled, (incl_zamzam_desc or "").strip(),
+            incl_welcome_kit_enabled, (incl_welcome_kit_desc or "").strip(),
+            incl_insurance_enabled, (incl_insurance_desc or "").strip(),
+            (incl_other or "").strip(),
+        ]
+    )
+    if any_incl:
         if not incl:
             incl = PackageInclusion(package_id=pkg.package_id)
             db.add(incl)
-        incl.meals = _norm(incl_meals)
-        incl.laundry = _norm(incl_laundry)
-        incl.transport = _norm(incl_transport)
+        incl.meals_enabled = 1 if incl_meals_enabled == "on" else 0
+        incl.meals_desc = _norm(incl_meals_desc)
+        incl.laundry_enabled = 1 if incl_laundry_enabled == "on" else 0
+        incl.laundry_desc = _norm(incl_laundry_desc)
+        incl.transport_enabled = 1 if incl_transport_enabled == "on" else 0
+        incl.transport_desc = _norm(incl_transport_desc)
+        incl.zamzam_enabled = 1 if incl_zamzam_enabled == "on" else 0
+        incl.zamzam_desc = _norm(incl_zamzam_desc)
+        incl.welcome_kit_enabled = 1 if incl_welcome_kit_enabled == "on" else 0
+        incl.welcome_kit_desc = _norm(incl_welcome_kit_desc)
+        incl.insurance_enabled = 1 if incl_insurance_enabled == "on" else 0
+        incl.insurance_desc = _norm(incl_insurance_desc)
         incl.other_notes = _norm(incl_other)
     elif incl:
         db.delete(incl)
 
+    price_row = db.query(PackagePrice).filter(PackagePrice.package_id == pkg.package_id).first()
+    if price_row:
+        price_row.price_double = price_double
+        price_row.price_triple = price_triple
+        price_row.price_quad = price_quad
+        price_row.note = (price_note or "").strip() or None
+    else:
+        if any(v is not None for v in (price_double, price_triple, price_quad)) or (price_note and price_note.strip()):
+            db.add(
+                PackagePrice(
+                    package_id=pkg.package_id,
+                    price_double=price_double,
+                    price_triple=price_triple,
+                    price_quad=price_quad,
+                    note=(price_note or "").strip() or None,
+                )
+            )
+
     db.commit()
     flash(request, "Package updated", "success")
-    return RedirectResponse(
-        url=f"/agency/{agency.registration_id}/dashboard",
-        status_code=303,
-    )
+    return RedirectResponse(url=f"/agency/{agency.registration_id}/dashboard", status_code=303)
+
 
 @router.post("/package/{package_id}/delete")
 def package_delete(
@@ -1395,8 +1949,7 @@ def package_delete(
         return RedirectResponse(url="/select-agency", status_code=303)
 
     agency = db.query(Agency).filter(
-        Agency.registration_id == pkg.registration_id,
-        Agency.user_id == user.id
+        Agency.registration_id == pkg.registration_id, Agency.user_id == user.id
     ).first()
     if not agency:
         flash(request, "Package not found or not yours", "error")
@@ -1413,144 +1966,168 @@ def package_delete(
 
 # ----------------- Operators (public) -----------------
 
-@router.get("/operators", response_class=HTMLResponse)
-def operators_list(
+@router.get("/umrah_operators", response_class=HTMLResponse)
+def operators_list(request: Request, db: Session = Depends(get_db)):
+    agencies = (
+        db.query(Agency)
+        .options(selectinload(Agency.city_rel))
+        .order_by(Agency.agencies_name.asc())
+        .all()
+    )
+    grouped: dict[str, list[Agency]] = {}
+    for a in agencies:
+        grouped.setdefault(_display_city(a), []).append(a)
+    for items in grouped.values():
+        items.sort(key=lambda ag: (ag.agencies_name or "").casefold())
+
+    def city_sort_key(name: str):
+        return (name == "Unknown", name.casefold())
+
+    cities = [{"city": name, "agencies": grouped[name]} for name in sorted(grouped, key=city_sort_key)]
+
+    return render(
+        "public/operators_list.html",
+        request,
+        db,
+        {
+            "title": "All Operators by City",
+            "cities": cities,
+            "total": len(agencies),
+            "version": "operators_list v5",
+        },
+        is_public=True,
+    )
+
+from app.db.models.agency_branch import AgencyBranch
+
+@router.get("/umrah_operators/{registration_id}", response_class=HTMLResponse)
+def operator_detail(
+    registration_id: int,
     request: Request,
-    q: str = Query("", alias="q"),
-    country: str | None = Query(None),
-    city: str | None = Query(None),
-    sort: str = Query("name"),   # name | newest | oldest
     db: Session = Depends(get_db),
 ):
-    query = db.query(Agency)
+    # Always fetch THIS operator by registration_id (works for logged-in and anonymous users)
+    agency = (
+        db.query(Agency)
+        .filter(Agency.registration_id == registration_id)
+        .first()
+    )
+    if not agency:
+        raise HTTPException(status_code=404, detail="Operator not found")
 
-    # filters
-    if q:
-        like = f"%{q.strip()}%"
-        query = query.filter(
-            (Agency.agencies_name.ilike(like)) |
-            (Agency.city.ilike(like)) |
-            (Agency.country.ilike(like)) |
-            (Agency.description.ilike(like))
-        )
-    if country and country.strip() and country.lower() != "all":
-        query = query.filter(Agency.country == country.strip())
-    if city and city.strip() and city.lower() != "all":
-        query = query.filter(Agency.city == city.strip())
-
-    # sorting
-    if sort == "newest":
-        query = query.order_by(Agency.registration_id.desc())
-    elif sort == "oldest":
-        query = query.order_by(Agency.registration_id.asc())
-    else:
-        query = query.order_by(Agency.agencies_name.asc())
-
-    agencies = query.all()
-
-    countries = [r[0] for r in db.query(Agency.country).distinct().order_by(Agency.country.asc()).all()]
-    cities = [r[0] for r in db.query(Agency.city).distinct().order_by(Agency.city.asc()).all()]
-
-    return templates.TemplateResponse(
-        "public/operators_list.html",
-        {
-            "request": request,
-            "title": "Operators",
-            "agencies": agencies,
-            "q": q,
-            "country": country or "all",
-            "city": city or "all",
-            "sort": sort,
-            "countries": countries,
-            "cities": cities,
-        },
+    # Packages belonging to this operator
+    packages = (
+        db.query(Package)
+        .filter(Package.registration_id == registration_id)
+        .order_by(Package.package_id.desc())
+        .all()
     )
 
-@router.get("/operators/{registration_id}", response_class=HTMLResponse)
-def operator_detail(registration_id: int, request: Request, db: Session = Depends(get_db)):
-    agency = db.query(Agency).filter(Agency.registration_id == registration_id).first()
-    if not agency:
-        raise HTTPException(status_code=404, detail="Agency not found")
+    # Optional: fetch the operator’s main branch (if exists) for address/contact details
+    branch = (
+        db.query(AgencyBranch)
+        .filter(AgencyBranch.agency_id == registration_id, AgencyBranch.is_main == True)
+        .first()
+    )
 
-    packages = db.query(Package).filter(Package.registration_id == registration_id).all()
-    detail = db.query(AgencyDetail).filter(AgencyDetail.agency_id == registration_id).first()
-    return templates.TemplateResponse(
+    # Build UI helpers
+    display_city = _display_city(agency)
+    back_href = (
+        f"/city/{urllib.parse.quote(display_city)}/umrah_operators"
+        if display_city != "Unknown"
+        else "/umrah_operators"
+    )
+
+    # Render strictly with this operator's data
+    return render(
         "public/operator_detail.html",
+        request,
+        db,
         {
-            "request": request,
-            "title": agency.agencies_name,
+            "title": f"{agency.agencies_name} - Umrah Operator",
             "agency": agency,
             "packages": packages,
-            "detail": detail,
+            "display_city": display_city,
+            "back_href": back_href,
+            "branch": branch,  # your template can show it if present
         },
+        is_public=True,
     )
 
 
-# ----------------- Canonical City URLs (public) -----------------
 
-def _decode_city(city_name: str) -> str:
-    return urllib.parse.unquote(city_name).strip()
 
-@router.get("/city/{city_name}/operators", response_class=HTMLResponse, name="city_operators")
+
+@router.get("/city/{city_name}/umrah_operators", response_class=HTMLResponse, name="city_operators")
 def city_operators(city_name: str, request: Request, db: Session = Depends(get_db)):
     city = _decode_city(city_name)
     if not city:
         raise HTTPException(status_code=404, detail="City not found")
-
     agencies = (
         db.query(Agency)
-        .filter(func.lower(Agency.city) == city.lower())
+        .outerjoin(City, City.id == Agency.city_id)
+        .options(selectinload(Agency.city_rel))
+        .filter(
+            func.lower(
+                func.coalesce(
+                    func.nullif(func.trim(Agency.city), ""),
+                    func.trim(City.name),
+                )
+            )
+            == city.lower().strip()
+        )
         .order_by(Agency.agencies_name.asc())
         .all()
     )
-
-    return templates.TemplateResponse(
+    return render(
         "public/operators_by_city.html",
-        {
-            "request": request,
-            "title": f"Operators in {city}",
-            "city": city,
-            "agencies": agencies,
-            "count": len(agencies),
-        },
+        request,
+        db,
+        {"title": f"Operators in {city}", "city": city, "agencies": agencies, "count": len(agencies)},
+        is_public=True,
     )
 
-@router.get("/city/{city_name}/packages", response_class=HTMLResponse, name="city_packages")
+
+@router.get("/city/{city_name}/umrah_packages", response_class=HTMLResponse, name="city_packages")
 def city_packages(city_name: str, request: Request, db: Session = Depends(get_db)):
     city = _decode_city(city_name)
     if not city:
         raise HTTPException(status_code=404, detail="City not found")
-
-    agencies = (
-        db.query(Agency)
-        .filter(func.lower(Agency.city) == city.lower())
-        .order_by(Agency.agencies_name.asc())
+    rows = (
+        db.query(Package, Agency)
+        .join(Agency, Agency.registration_id == Package.registration_id)
+        .outerjoin(City, City.id == Agency.city_id)
+        .options(selectinload(Agency.city_rel))
+        .filter(
+            func.lower(
+                func.coalesce(
+                    func.nullif(func.trim(Agency.city), ""),
+                    func.trim(City.name),
+                )
+            )
+            == city.lower().strip()
+        )
+        .order_by(Package.package_id.desc())
         .all()
     )
-    reg_ids = [a.registration_id for a in agencies]
+    packages = [r[0] for r in rows]
+    agencies = [r[1] for r in rows]
+    agency_by_id = {a.registration_id: a for a in agencies}
 
-    packages = []
-    agency_by_id = {}
-    if reg_ids:
-        packages = (
-            db.query(Package)
-            .filter(Package.registration_id.in_(reg_ids))
-            .order_by(Package.package_id.desc())
-            .all()
-        )
-        agency_by_id = {a.registration_id: a for a in agencies}
-
-    return templates.TemplateResponse(
+    return render(
         "public/packages_city.html",
+        request,
+        db,
         {
-            "request": request,
             "title": f"Packages in {city}",
             "city": city,
             "packages": packages,
             "agency_by_id": agency_by_id,
             "count": len(packages),
         },
+        is_public=True,
     )
+
 
 @router.get("/city/{city_name}", response_class=HTMLResponse, name="city_hub")
 def city_hub(city_name: str, request: Request, db: Session = Depends(get_db)):
@@ -1560,84 +2137,108 @@ def city_hub(city_name: str, request: Request, db: Session = Depends(get_db)):
 
     agencies = (
         db.query(Agency)
-        .filter(func.lower(Agency.city) == city.lower())
+        .outerjoin(City, City.id == Agency.city_id)
+        .options(selectinload(Agency.city_rel))
+        .filter(
+            func.lower(
+                func.coalesce(
+                    func.nullif(func.trim(Agency.city), ""),
+                    func.trim(City.name),
+                )
+            )
+            == city.lower().strip()
+        )
         .order_by(Agency.agencies_name.asc())
         .all()
     )
-
-    reg_ids = [a.registration_id for a in agencies]
-    packages = []
-    agency_by_id = {}
-    if reg_ids:
-        packages = (
-            db.query(Package)
-            .filter(Package.registration_id.in_(reg_ids))
-            .order_by(Package.package_id.desc())
-            .all()
+    pkg_rows = (
+        db.query(Package, Agency)
+        .join(Agency, Agency.registration_id == Package.registration_id)
+        .outerjoin(City, City.id == Agency.city_id)
+        .filter(
+            func.lower(
+                func.coalesce(
+                    func.nullif(func.trim(Agency.city), ""),
+                    func.trim(City.name),
+                )
+            )
+            == city.lower().strip()
         )
-        agency_by_id = {a.registration_id: a for a in agencies}
+        .order_by(Package.package_id.desc())
+        .all()
+    )
+    packages = [r[0] for r in pkg_rows]
+    pkg_agencies = [r[1] for r in pkg_rows]
+    agency_by_id = {a.registration_id: a for a in pkg_agencies}
 
-    return templates.TemplateResponse(
+    return render(
         "public/city_hub.html",
+        request,
+        db,
         {
-            "request": request,
             "title": f"{city} • Operators & Packages",
             "city": city,
             "agencies": agencies,
             "packages": packages,
             "agency_by_id": agency_by_id,
         },
+        is_public=True,
     )
 
 
 # ----------------- Legacy redirects -> Canonical -----------------
 
-# Old dashboard path -> new workspace path
 @router.get("/dashboard/agency/{registration_id}")
 def legacy_dashboard_agency(registration_id: int):
     return RedirectResponse(url=f"/agency/{registration_id}/dashboard", status_code=308)
 
-# Old city package list (singular) -> plural
+
 @router.get("/city/{city_name}/package")
 def legacy_city_package(city_name: str):
-    return RedirectResponse(url=f"/city/{urllib.parse.quote(city_name)}/packages", status_code=308)
+    return RedirectResponse(url=f"/city/{urllib.parse.quote(city_name)}/umrah_packages", status_code=308)
 
-# Old package detail with city -> canonical /packages/{id}
-@router.get("/packages/{city}/{package_id}")
+
+@router.get("/umrah_packages/{city}/{package_id}")
 def legacy_package_detail(city: str, package_id: int):
-    return RedirectResponse(url=f"/packages/{package_id}", status_code=308)
+    return RedirectResponse(url=f"/umrah_packages/{package_id}", status_code=308)
 
-# Older “operators/city/{city}” -> canonical city route
-@router.get("/operators/city/{city_name}")
+
+@router.get("/umrah_operators/city/{city_name}")
 def legacy_operators_city(city_name: str):
-    return RedirectResponse(url=f"/city/{urllib.parse.quote(city_name)}/operators", status_code=308)
+    return RedirectResponse(url=f"/city/{urllib.parse.quote(city_name)}/umrah_operators", status_code=308)
 
-@router.get("/packages/city/{city_name}")
+
+@router.get("/umrah_packages/city/{city_name}")
 def legacy_packages_city(city_name: str):
-    return RedirectResponse(url=f"/city/{urllib.parse.quote(city_name)}/packages", status_code=308)
+    return RedirectResponse(url=f"/city/{urllib.parse.quote(city_name)}/umrah_packages", status_code=308)
 
 
-PHONE_E164_RE   = re.compile(r"^\+[1-9]\d{7,14}$")       # +<country><nsn> (8–15 digits total)
-PHONE_INDIA_RE  = re.compile(r"^[6-9]\d{9}$")            # 10-digit Indian mobile
+# ----------------- Phone + CAPTCHA helpers -----------------
+
+PHONE_E164_RE = re.compile(r"^\+[1-9]\d{7,14}$")  # +<country><nsn> (8–15 digits total)
+PHONE_INDIA_RE = re.compile(r"^[6-9]\d{9}$")  # 10-digit Indian mobile
+
 
 def normalize_phone(raw: str) -> str:
     """Keep digits and a single leading '+'. Convert leading '00' to '+'. Strip spaces/dashes."""
     s = re.sub(r"[^\d+]", "", (raw or ""))
     if s.startswith("00"):
         s = "+" + s[2:]
-    # collapse multiple leading '+' just in case
     s = s[0] + re.sub(r"\+", "", s[1:]) if s.startswith("+") else s
     return s
+
 
 def is_valid_phone(s: str) -> bool:
     """Accept either E.164 (+XXXXXXXX) or 10-digit Indian mobile starting 6–9."""
     return bool(PHONE_E164_RE.fullmatch(s) or PHONE_INDIA_RE.fullmatch(s))
+
 
 def new_captcha(request: Request, tag: str) -> str:
     """Create a simple math captcha and store the answer in session under a namespaced key."""
     a, b = random.randint(2, 9), random.randint(2, 9)
     request.session[f"captcha:{tag}"] = str(a + b)
     return f"{a} + {b} = ?"
+
 
 def check_captcha(request: Request, tag: str, user_answer: str) -> bool:
     """Pop (invalidate) and compare the captcha answer."""
@@ -1646,9 +2247,290 @@ def check_captcha(request: Request, tag: str, user_answer: str) -> bool:
     given = re.sub(r"\D", "", (user_answer or ""))
     return bool(expected) and (given == expected)
 
+
 # ----------------- Debug -----------------
 
 @router.get("/_debug/session")
 def debug_session(request: Request):
     get_csrf_token(request)  # force-create
     return {"has_csrf": "csrf_token" in request.session, "keys": list(request.session.keys())}
+
+
+def _hash_token(token: str) -> str:
+    return hashlib.sha256(token.encode("utf-8")).hexdigest()
+
+
+def create_password_reset_token(db: Session, user_id: int, minutes: int = 60) -> str:
+    """
+    Create a plaintext token, store its SHA256 hash in DB with an aware UTC expiry,
+    and return the plaintext token for emailing.
+    """
+    from app.db.models.password_reset_token import PasswordResetToken
+
+    token = secrets.token_urlsafe(32)
+    token_hash = _hash_token(token)
+    expires_at = datetime.now(timezone.utc) + timedelta(minutes=minutes)
+
+    row = PasswordResetToken(user_id=user_id, token_hash=token_hash, expires_at=expires_at)
+    db.add(row)
+    db.commit()
+    db.refresh(row)
+    return token
+
+
+def verify_and_consume_token(db: Session, token: str):
+    """
+    Validate token: return (user, None) if valid and mark token used.
+    Returns (None, error_message) on failure.
+    """
+    from app.db.models.password_reset_token import PasswordResetToken
+
+    token_hash = _hash_token(token)
+    prt = db.query(PasswordResetToken).filter(PasswordResetToken.token_hash == token_hash).first()
+    if not prt:
+        return None, "Invalid or expired token."
+
+    if prt.used:
+        return None, "This reset link has already been used."
+
+    now = datetime.now(timezone.utc)
+    expires_at = prt.expires_at
+    if expires_at is None:
+        return None, "Invalid token (no expiry)."
+
+    if expires_at.tzinfo is None:
+        expires_at = expires_at.replace(tzinfo=timezone.utc)
+
+    if expires_at < now:
+        return None, "This reset link has expired."
+
+    prt.used = True
+    db.commit()
+
+    return prt.user, None
+
+
+@router.get("/forgot-password", response_class=HTMLResponse)
+def forgot_password_page(request: Request):
+    flashes = pop_flashes(request)
+    return templates.TemplateResponse(
+        "auth/forgot_password.html",
+        {"request": request, "flashes": flashes, "csrf_token": get_csrf_token(request)},
+    )
+
+
+@router.post("/forgot-password")
+def forgot_password_submit(
+    request: Request,
+    email: str = Form(...),
+    csrf_token: str = Form(...),
+    db: Session = Depends(get_db),
+):
+    require_csrf(request, csrf_token)
+
+    user = db.query(User).filter(User.email == email).first()
+    if user:
+        minutes = getattr(settings, "PASSWORD_RESET_EXP_MINUTES", 60)
+        token = create_password_reset_token(db, user.id, minutes=minutes)
+        reset_url = f"{settings.SITE_URL.rstrip('/')}/reset-password?token={token}&email={urllib.parse.quote(user.email)}"
+        html = f"""
+        <p>Hello {user.first_name or ''},</p>
+        <p>We received a password reset request for your account. Click the link to reset your password (valid for {minutes} minutes):</p>
+        <p><a href="{reset_url}">Reset password</a></p>
+        <p>If you didn't request this, ignore this email.</p>
+        """
+        send_email_brevo(to_email=user.email, subject="Reset your password", html_content=html)
+
+    flash(request, "If an account for this email exists, we sent a reset link.", "info")
+    return RedirectResponse(url="/forgot-password", status_code=303)
+
+
+@router.get("/reset-password", response_class=HTMLResponse)
+def reset_password_page(request: Request, token: str = Query(...), email: str | None = Query(None)):
+    flashes = pop_flashes(request)
+    return templates.TemplateResponse(
+        "auth/reset_password.html",
+        {"request": request, "csrf_token": get_csrf_token(request), "token": token, "email": email, "flashes": flashes},
+    )
+
+
+@router.post("/reset-password")
+def reset_password_submit(
+    request: Request,
+    token: str = Form(...),
+    password: str = Form(...),
+    password2: str = Form(...),
+    csrf_token: str = Form(...),
+    db: Session = Depends(get_db),
+):
+    require_csrf(request, csrf_token)
+
+    if password != password2:
+        flash(request, "Passwords do not match.", "error")
+        return RedirectResponse(url=f"/reset-password?token={urllib.parse.quote(token)}", status_code=303)
+
+    user, err = verify_and_consume_token(db, token)
+    if err:
+        flash(request, err, "error")
+        return RedirectResponse(url="/forgot-password", status_code=303)
+
+    try:
+        user.password_hash = hash_password(password)
+        db.commit()
+    except Exception:
+        db.rollback()
+        flash(request, "Could not reset password. Try again.", "error")
+        return RedirectResponse(url="/forgot-password", status_code=303)
+
+    try:
+        send_email_brevo(
+            to_email=user.email,
+            subject="Password changed",
+            html_content=f"<p>Your password was changed. If you did not do this, contact support.</p>",
+        )
+    except Exception:
+        pass
+
+    flash(request, "Password reset. You can now login with your new password.", "success")
+    return RedirectResponse(url="/login", status_code=303)
+
+
+@router.get("/upgrade-subscription", response_class=HTMLResponse)
+def upgrade_subscription(request: Request, db: Session = Depends(get_db)):
+    user = require_user(request, db)
+
+    agencies = (
+        db.query(Agency)
+        .filter(Agency.user_id == user.id)
+        .order_by(Agency.registration_id.desc())
+        .all()
+    )
+
+    primary_id = agencies[0].registration_id if len(agencies) == 1 else None
+
+    return templates.TemplateResponse(
+        "upgrade_subscription.html",
+        {
+            "request": request,
+            "title": "Upgrade Subscription",
+            "user": user,
+            "agencies": agencies,
+            "primary_id": primary_id,
+            "csrf_token": get_csrf_token(request),
+        },
+    )
+
+
+@router.get("/agency/{registration_id}/branches/new", response_class=HTMLResponse)
+def branch_new_page(request: Request, registration_id: int, db: Session = Depends(get_db)):
+    user = require_user(request, db)
+    agency = (
+        db.query(Agency)
+        .filter(Agency.registration_id == registration_id, Agency.user_id == user.id)
+        .first()
+    )
+    if not agency:
+        flash(request, "Agency not found or not yours", "error")
+        return RedirectResponse(url="/select-agency", status_code=303)
+
+    flashes = pop_flashes(request)
+    return templates.TemplateResponse(
+        "agency/branch_new.html",
+        {
+            "request": request,
+            "title": "Add Branch",
+            "agency": agency,
+            "flashes": flashes,
+            "csrf_token": get_csrf_token(request),
+        },
+    )
+
+
+from app.db.models.agency_branch import AgencyBranch
+
+
+@router.post("/agency/{registration_id}/branches/new")
+def branch_new_submit(
+    request: Request,
+    registration_id: int,
+    name: str = Form(...),
+    address_line1: str = Form(""),
+    address_line2: str = Form(""),
+    city: str = Form(""),
+    country: str = Form(""),
+    contact_person: str = Form(""),
+    contact_number: str = Form(""),
+    is_main: Optional[str] = Form(None),
+    csrf_token: str = Form(...),
+    db: Session = Depends(get_db),
+):
+    require_csrf(request, csrf_token)
+    user = require_user(request, db)
+
+    agency = db.query(Agency).filter(Agency.registration_id == registration_id, Agency.user_id == user.id).first()
+    if not agency:
+        flash(request, "Agency not found or not yours", "error")
+        return RedirectResponse(url="/select-agency", status_code=303)
+
+    if not name.strip():
+        flash(request, "Branch name is required", "error")
+        return RedirectResponse(url=f"/agency/{registration_id}/branches/new", status_code=303)
+
+    existing_branches = db.query(AgencyBranch).filter(AgencyBranch.agency_id == agency.registration_id).all()
+    make_main = True if not existing_branches else bool(is_main)
+
+    if make_main and existing_branches:
+        for b in existing_branches:
+            if b.is_main:
+                b.is_main = False
+
+    branch = AgencyBranch(
+        agency_id=agency.registration_id,
+        name=name.strip(),
+        address_line1=(address_line1 or "").strip() or None,
+        address_line2=(address_line2 or "").strip() or None,
+        city=(city or "").strip() or None,
+        country=(country or "").strip() or None,
+        contact_person=(contact_person or "").strip() or None,
+        contact_number=(contact_number or "").strip() or None,
+        is_main=make_main,
+    )
+    db.add(branch)
+
+    if make_main:
+        agency.city = (city or "").strip()
+        agency.country = (country or "").strip()
+
+    db.commit()
+
+    flash(request, "Branch added.", "success")
+    return RedirectResponse(url=f"/agency/{agency.registration_id}/dashboard", status_code=303)
+
+
+# --- Hotels helper (no city) ---
+
+def get_or_create_hotel(db: Session, *, name: str, link: str | None = None):
+    """
+    Find a hotel by name (case-insensitive). If not found, create it.
+    Optionally stores link. Returns the Hotel row.
+    """
+    from app.db.models.hotel import Hotel
+
+    name_norm = (name or "").strip()
+    if not name_norm:
+        return None
+
+    q = db.query(Hotel).filter(func.lower(Hotel.name) == func.lower(name_norm))
+    hotel = q.first()
+    if hotel:
+        if link and not (hotel.link or "").strip():
+            hotel.link = link.strip()
+            db.commit()
+            db.refresh(hotel)
+        return hotel
+
+    hotel = Hotel(name=name_norm, link=(link or "").strip() or None)
+    db.add(hotel)
+    db.commit()
+    db.refresh(hotel)
+    return hotel

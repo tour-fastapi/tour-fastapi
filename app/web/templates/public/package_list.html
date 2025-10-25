@@ -48,11 +48,10 @@
 <div class="page">
 
   <!-- Hero -->
-  <div class="hero">
-    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+  <div class="head">
+    <div>
       <div>
-        <h1>Discover Packages</h1>
-        <p>Hand-picked packages grouped by city. Click any card to see details.</p>
+        <h1>Packages by cities</h1>
       </div>
       <div class="pill">{{ packages_by_city|length }} cities</div>
     </div>
@@ -69,15 +68,17 @@
 
         <div class="card">
               <div style="padding:0 14px 14px">
-                  <a href="/city/{{ city|urlencode }}/packages" style="text-decoration:none;color:#2563eb">
-                    View all packages in {{ city }} →
-                  </a>
-
+                {% if city != 'Unknown' %}
+                <a href="/city/{{ city|urlencode }}/umrah_packages" style="text-decoration:none;color:#2563eb">
+                  View all packages in {{ city }} →
+                </a>
+                {% endif %}
               </div>
+
           <div class="grid">
             {% for p in items %}
               {% set ag = agency_by_id.get(p.registration_id) %}
-              {% set href = "/packages/" ~ p.package_id %}
+              {% set href = "/umrah_packages/" ~ p.package_id %}
 
 
               <a class="pkg" href="{{ href }}">

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Optional
 
-from sqlalchemy import Integer, String, Text, DECIMAL, ForeignKey, DateTime
+from sqlalchemy import Integer, String, Text, DECIMAL, ForeignKey, DateTime, SmallInteger, CheckConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
@@ -15,11 +15,15 @@ class Package(Base):
 
     package_id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     registration_id: Mapped[int] = mapped_column(ForeignKey("agencies.registration_id"), nullable=False)
-
+    package_type: Mapped[str] = mapped_column(String(10), nullable=False)
     package_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    package_class: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
     days: Mapped[int] = mapped_column(Integer, nullable=False)
     price: Mapped[float] = mapped_column(DECIMAL(10, 2), nullable=False)
     description: Mapped[Optional[str]] = mapped_column(Text)
+
+    travel_month: Mapped[Optional[int]] = mapped_column(SmallInteger, nullable=True)  # 1..12
+    travel_year:  Mapped[Optional[int]] = mapped_column(SmallInteger, nullable=True)  # >= 2026
 
     created_at: Mapped[Optional["DateTime"]] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
@@ -27,10 +31,35 @@ class Package(Base):
     
     flights   = relationship("PackageFlight", back_populates="package", cascade="all, delete-orphan")
     stays     = relationship("PackageStay",   back_populates="package", cascade="all, delete-orphan")
-    inclusion = relationship("PackageInclusion", uselist=False, back_populates="package", cascade="all, delete-orphan")
+    inclusion = relationship(
+        "PackageInclusion",
+        back_populates="package",
+        uselist=False,
+        cascade="all, delete-orphan",
+        passive_deletes=True,   
+    )
+        # one-to-one optional child containing alternate prices
+    price_row = relationship("PackagePrice", uselist=False, back_populates="package", cascade="all, delete-orphan")
     itineraries = relationship(
         "PackageItinerary",
         back_populates="package",
         cascade="all, delete-orphan",
         order_by="PackageItinerary.day_number"
+    )
+
+    __table_args__ = (
+        CheckConstraint("travel_month BETWEEN 1 AND 12", name="ck_packages_month"),
+        CheckConstraint("travel_year >= 2026", name="ck_packages_year"),
+    )
+
+    package_airlines = relationship(
+        "PackageAirline",
+        back_populates="package",
+        cascade="all, delete-orphan"
+    )
+    
+    airlines = relationship(
+        "Airline",
+        secondary="package_airlines",
+        viewonly=True
     )

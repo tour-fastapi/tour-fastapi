@@ -1,87 +1,169 @@
 {% extends "base.html" %}
-
 {% block content %}
-<h1 class="h4 mb-3">Edit Agency</h1>
+<div class="container py-4" style="max-width: 720px;">
+  <h1 class="h4 mb-3">Edit Agency</h1>
 
-<form method="post" action="/agency/{{ agency.registration_id }}/edit">
-  {# CSRF partial should output: <input type="hidden" name="csrf_token" value="..."> #}
-  {% include "partials/_csrf_input.html" %}
+  {% if flashes %}
+    {% for f in flashes %}
+      <div class="alert alert-{{ 'danger' if f.type == 'error' else f.type }} alert-dismissible fade show" role="alert">
+        {{ f.text }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
 
-  <!-- Core agency -->
-  <div class="row">
-    <div class="col-md-6 mb-3">
-      <label class="form-label">Agency name</label>
-      <input name="agencies_name" class="form-control" required value="{{ agency.agencies_name }}">
+  <!-- ✅ Independent logo upload card & forms -->
+  <div class="card mb-4">
+    <div class="card-header"><strong>Branding</strong></div>
+    <div class="card-body d-flex align-items-center gap-3 flex-wrap">
+      <div>
+        <div class="small text-muted mb-1">Current logo</div>
+        {% if agency.logo_path %}
+          <img
+            src="/media/agency/{{ agency.registration_id }}/logo?v={{ agency.logo_uploaded_at or '' }}"
+            alt="Agency logo"
+            style="max-height:90px; max-width:260px; object-fit:contain; border:1px solid #eee; padding:6px; background:#fff;">
+        {% else %}
+          <div class="text-muted">No logo uploaded yet.</div>
+        {% endif %}
+      </div>
+
+      <!-- ✅ upload logo (own form) -->
+      <form action="/agency/{{ agency.registration_id }}/logo" method="post" enctype="multipart/form-data" class="d-flex gap-2">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <input class="form-control" type="file" name="file" accept="image/png, image/jpeg, image/webp" required>
+        <button class="btn btn-outline-primary" type="submit">Upload</button>
+      </form>
+
+      <!-- ✅ remove logo (own form) -->
+      <form action="/agency/{{ agency.registration_id }}/logo/remove" method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <button class="btn btn-outline-danger btn-sm" type="submit">Remove</button>
+      </form>
     </div>
-    <div class="col-md-3 mb-3">
-      <label class="form-label">Country</label>
-      <input name="country" class="form-control" required value="{{ agency.country }}">
-    </div>
-    <div class="col-md-3 mb-3">
-      <label class="form-label">City</label>
-      <input name="city" class="form-control" required value="{{ agency.city }}">
-    </div>
+    <div class="form-text px-3 pb-2">PNG / JPG / WEBP up to 2MB.</div>
   </div>
 
-  <div class="mb-3">
-    <label class="form-label">Description (optional)</label>
-    <textarea name="description" class="form-control" rows="3">{{ agency.description or "" }}</textarea>
-  </div>
+  <!-- ✅ Main agency form (no file inputs here) -->
+  <form method="post" action="/agency/{{ agency.registration_id }}/edit" class="card p-3">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
 
-  <hr class="my-3">
-  <h2 class="h6 mb-3">Agency details</h2>
+    <div class="mb-3">
+      <label class="form-label">Agency name *</label>
+      <input class="form-control" type="text" name="agencies_name" value="{{ agency.agencies_name|default('') }}" required>
+    </div>
 
-  <!-- Address -->
-  <div class="row">
-    <div class="col-md-6 mb-3">
-      <label class="form-label">Address line 1 *</label>
-      <input name="address_line1" class="form-control" required value="{{ (detail.address_line1 if detail else '') }}">
+    <div class="mb-3">
+      <label class="form-label">Agency email *</label>
+      <input class="form-control" type="email" name="agency_email" value="{{ agency.agency_email|default('') }}" required>
     </div>
-    <div class="col-md-6 mb-3">
-      <label class="form-label">Address line 2</label>
-      <input name="address_line2" class="form-control" value="{{ (detail.address_line2 if detail else '') }}">
-    </div>
-  </div>
 
-  <div class="row">
-    <div class="col-md-4 mb-3">
-      <label class="form-label">State</label>
-      <input name="state" class="form-control" value="{{ (detail.state if detail else '') }}">
+    <div class="row">
+      <div class="col-md-6 mb-3">
+        <label class="form-label">City *</label>
+        <input class="form-control" type="text" name="city" list="cities" value="{{ agency.city|default('') }}" required>
+        <datalist id="cities">
+          {% for c in cities %}
+            <option value="{{ c.name }}">{{ c.name }}</option>
+          {% endfor %}
+        </datalist>
+      </div>
+      <div class="col-md-6 mb-3">
+        <label class="form-label">Country *</label>
+        <input class="form-control" type="text" name="country" value="{{ agency.country|default('') }}" required>
+      </div>
     </div>
-    <div class="col-md-4 mb-3">
-      <label class="form-label">Postal code</label>
-      <input name="postal_code" class="form-control" value="{{ (detail.postal_code if detail else '') }}">
-    </div>
-    <div class="col-md-4 mb-3">
-      <label class="form-label">Website</label>
-      <input name="website" class="form-control" value="{{ (detail.website if detail else '') }}" placeholder="https://example.com">
-    </div>
-  </div>
 
-  <!-- Contacts -->
-  <div class="row">
-    <div class="col-md-6 mb-3">
-      <label class="form-label">Primary contact name *</label>
-      <input name="contact1_name" class="form-control" required value="{{ (detail.contact1_name if detail else '') }}">
+    <div class="mb-3">
+      <label class="form-label">Short description</label>
+      <textarea class="form-control" name="description" rows="3">{{ agency.description|default('') }}</textarea>
     </div>
-    <div class="col-md-6 mb-3">
-      <label class="form-label">Primary contact phone *</label>
-      <input name="contact1_phone" class="form-control" required value="{{ (detail.contact1_phone if detail else '') }}">
-    </div>
-  </div>
 
-  <div class="row">
-    <div class="col-md-6 mb-3">
-      <label class="form-label">Secondary contact name</label>
-      <input name="contact2_name" class="form-control" value="{{ (detail.contact2_name if detail else '') }}">
-    </div>
-    <div class="col-md-6 mb-3">
-      <label class="form-label">Secondary contact phone</label>
-      <input name="contact2_phone" class="form-control" value="{{ (detail.contact2_phone if detail else '') }}">
-    </div>
-  </div>
+    <hr class="my-3">
+    <h2 class="h6 mb-3">Public profile (optional)</h2>
 
-  <button class="btn btn-primary">Save Changes</button>
-  <a href="/agency/{{ agency.registration_id }}/dashboard" class="btn btn-link">Cancel</a>
-</form>
+    <div class="mb-3">
+      <label class="form-label">Registration ID (public)</label>
+      <input class="form-control" type="text" name="public_registration_code" value="{{ agency.public_registration_code|default('') }}">
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Website URL</label>
+      <input class="form-control" type="text" name="website_url" inputmode="url" autocomplete="url" spellcheck="false" value="{{ agency.website_url|default('') }}">
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Facebook URL</label>
+      <input class="form-control" type="text" name="facebook_url" inputmode="url" autocomplete="url" spellcheck="false" value="{{ agency.facebook_url|default('') }}">
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Instagram URL</label>
+      <input class="form-control" type="text" name="instagram_url" inputmode="url" autocomplete="url" spellcheck="false" value="{{ agency.instagram_url|default('') }}">
+    </div>
+
+    <hr class="my-3">
+    <h2 class="h6 mb-3">Contact Details</h2>
+
+    <div class="mb-3">
+      <label class="form-label">Branch name *</label>
+      <input class="form-control" name="branch_name" value="{{ branch.name|default('') }}" required>
+    </div>
+
+    <div class="row">
+      <div class="col-md-6 mb-3">
+        <label class="form-label">Address line 1</label>
+        <input class="form-control" name="branch_address_line1" value="{{ branch.address_line1|default('') }}">
+      </div>
+      <div class="col-md-6 mb-3">
+        <label class="form-label">Address line 2</label>
+        <input class="form-control" name="branch_address_line2" value="{{ branch.address_line2|default('') }}">
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-md-6 mb-3">
+        <label class="form-label">Contact person</label>
+        <input class="form-control" name="branch_contact_person" value="{{ branch.contact_person|default('') }}">
+      </div>
+      <div class="col-md-6 mb-3">
+        <label class="form-label">Contact number</label>
+        <input class="form-control" name="branch_contact_number" value="{{ branch.contact_number|default('') }}">
+      </div>
+    </div>
+
+    <div class="form-check mb-3">
+      <input class="form-check-input" type="checkbox" id="branch_is_main" name="branch_is_main" {% if branch and branch.is_main %}checked{% endif %}>
+      <label class="form-check-label" for="branch_is_main">Set as main branch</label>
+    </div>
+
+    <hr class="my-3">
+    <h2 class="h6 mb-3">Stats</h2>
+
+    <div class="mb-3">
+      <label class="form-label">Operating since?</label>
+      <input class="form-control" type="number" name="operating_since" min="1900" max="{{ current_year }}" value="{{ agency.operating_since|default('') }}" placeholder="e.g., 2008">
+    </div>
+
+    <div class="row">
+      <div class="col-md-4 mb-3">
+        <label class="form-label">Number of Umrah tours sent</label>
+        <input class="form-control" type="number" name="num_umrah_tours" min="0" step="1" value="{{ agency.num_umrah_tours|default('') }}" placeholder="e.g., 5">
+      </div>
+      <div class="col-md-4 mb-3">
+        <label class="form-label">Number of Hajj tours sent</label>
+        <input class="form-control" type="number" name="num_hajj_tours" min="0" step="1" value="{{ agency.num_hajj_tours|default('') }}" placeholder="e.g., 3">
+      </div>
+      <div class="col-md-4 mb-3">
+        <label class="form-label">Number of pilgrims sent</label>
+        <input class="form-control" type="number" name="num_pilgrims_sent" min="0" step="1" value="{{ agency.num_pilgrims_sent|default('') }}" placeholder="e.g., 250">
+      </div>
+    </div>
+
+    <div class="d-flex gap-2">
+      <button class="btn btn-primary" type="submit">Save changes</button>
+      <a href="/agency/{{ agency.registration_id }}/dashboard" class="btn btn-outline-secondary">Cancel</a>
+    </div>
+  </form>
+</div>
 {% endblock %}

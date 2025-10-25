@@ -36,7 +36,7 @@
 </style>
 
 <div class="page">
-  <a class="back" href="/packages">← Back to Discover Packages</a>
+  <a class="back" href="/umrah_packages">← Back to Discover Packages</a>
 
   <div class="head">
     <h1>Packages in {{ city }}</h1>
@@ -48,7 +48,7 @@
       <div class="grid">
         {% for p in packages %}
           {% set ag = agency_by_id.get(p.registration_id) %}
-          {% set href = "/packages/" ~ p.package_id %}
+          {% set href = "/umrah_packages/" ~ p.package_id %}
           <a class="pkg" href="{{ href }}">
             <div class="pkg-media"></div>
             <div class="pkg-body">

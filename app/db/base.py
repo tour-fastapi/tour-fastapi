@@ -1,7 +1,8 @@
-
 from sqlalchemy.orm import declarative_base
+
 Base = declarative_base()
 
-# example (your file may already import others)
-from app.db.models.agency import Agency
-from app.db.models.agency_detail import AgencyDetail
+# Ensure that all model classes are imported so their mappers are configured.
+# We import via importlib to avoid Pylance unused‑import warnings.
+import importlib
+importlib.import_module("app.db.models")

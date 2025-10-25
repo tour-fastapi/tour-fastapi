@@ -9,11 +9,20 @@
     </div>
   </div>
 
-  <div class="d-flex gap-2">
+<div class="d-flex gap-2">
+  {# Show “Switch agency” only if the user has more than one agency #}
+  {% if user.agencies|length > 1 %}
     <a href="/select-agency" class="btn btn-outline-secondary btn-sm">Switch agency</a>
-    <a href="/agency/{{ agency.registration_id }}/edit" class="btn btn-outline-secondary btn-sm">Edit agency</a>
-    <a href="/package/new?agency_id={{ agency.registration_id }}" class="btn btn-primary btn-sm">+ Add package</a>
-  </div>
+  {% else %}
+    {# Otherwise show a link to create a new agency #}
+    <a href="/agency/new" class="btn btn-outline-secondary btn-sm">+ Add agency</a>
+  {% endif %}
+
+  {# Existing buttons remain unchanged #}
+  <a href="/agency/{{ agency.registration_id }}/edit" class="btn btn-outline-secondary btn-sm">Edit agency</a>
+  <a href="/package/new?agency_id={{ agency.registration_id }}" class="btn btn-primary btn-sm">+ Add package</a>
+</div>
+
 
 </div>
 

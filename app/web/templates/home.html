@@ -6,17 +6,21 @@
   <p class="text-muted">Browse public listings below:</p>
 
   <div class="d-flex gap-3">
-    <a class="btn btn-primary" href="/operators">List Operators (Agencies)</a>
-    <a class="btn btn-outline-primary" href="/packages">List Packages</a>
+    <a class="btn btn-primary" href="/umrah_operators">List Operators</a>
+    <a class="btn btn-primary" href="/umrah_packages">List Packages</a>
   </div>
-
-  {% if user %}
-    <hr class="my-4">
-    <p class="mb-0">
-      Signed in as <strong>{{ user.email }}</strong>.
+{% if user %}
+  <hr class="my-4">
+  <p class="mb-0">
+    Signed in as <strong>{{ user.email }}</strong>.
+    {% if agency %}
       Go to your <a href="/agency/{{ agency.registration_id }}/dashboard">Dashboard</a>.
-    </p>
-  {% endif %}
+    {% else %}
+      <a href="/select-agency">Select an agency</a> to go to your dashboard.
+    {% endif %}
+  </p>
+{% endif %}
+
 
   {% if popular_cities %}
   <section style="margin:28px 0">
@@ -36,7 +40,7 @@
     <div class="loc-wrap">
       <div class="loc-head">
         <h2>Browse by location</h2>
-        <a href="/operators" class="loc-more">View all operators →</a>
+        <a href="/umrah_operators" class="loc-more">View all operators →</a>
       </div>
       <div class="loc-grid">
           {% for c in popular_cities %}
@@ -50,8 +54,6 @@
     </div>
   </section>
   {% endif %}
-  {% if agency is defined and agency %}
-  Go to your <a href="/agency/{{ agency.registration_id }}/dashboard">Dashboard</a>.
-{% endif %}
+  
 </div>
 {% endblock %}

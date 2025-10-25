@@ -65,7 +65,7 @@
     <div class="section-head">
       <h2 class="section-title">Operators in {{ city }}</h2>
       <div class="actions">
-        <a class="btn btn-primary" href="/city/{{ city|urlencode }}/operators">View all operators</a>
+        <a class="btn btn-primary" href="/city/{{ city|urlencode }}/umrah_operators">View all operators</a>
       </div>
     </div>
     <div class="card">
@@ -73,10 +73,10 @@
         <div class="grid3">
           {% for a in agencies %}
             <div class="agency">
-              <h3><a href="/operators/{{ a.registration_id }}">{{ a.agencies_name }}</a></h3>
+              <h3><a href="/umrah_operators/{{ a.registration_id }}">{{ a.agencies_name }}</a></h3>
               <div class="meta">{{ a.city or '-' }}, {{ a.country or '-' }}</div>
               {% if a.description %}<div class="desc">{{ a.description }}</div>{% endif %}
-              <a class="chip" href="/operators/{{ a.registration_id }}">View details →</a>
+              <a class="chip" href="/umrah_operators/{{ a.registration_id }}">View details →</a>
             </div>
           {% endfor %}
         </div>
@@ -91,7 +91,7 @@
     <div class="section-head">
       <h2 class="section-title">Packages in {{ city }}</h2>
       <div class="actions">
-        <a class="btn btn-primary" href="/city/{{ city|urlencode }}/packages">View all packages</a>
+        <a class="btn btn-primary" href="/city/{{ city|urlencode }}/umrah_packages">View all packages</a>
       </div>
     </div>
     <div class="card">
@@ -99,7 +99,7 @@
         <div class="grid3">
           {% for p in packages %}
             {% set ag = agency_by_id.get(p.registration_id) %}
-            {% set href = "/packages/" ~ p.package_id %}
+            {% set href = "/umrah_packages/" ~ p.package_id %}
             <a class="pkg" href="{{ href }}">
               <div class="pkg-media"></div>
               <div class="pkg-body">

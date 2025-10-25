@@ -4,9 +4,10 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Optional, List, TYPE_CHECKING
 
-from sqlalchemy import Integer, String, Boolean, DateTime, text
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-
+from sqlalchemy import Boolean, DateTime
+from datetime import datetime, timezone
 from app.db.base import Base
 
 if TYPE_CHECKING:
@@ -44,3 +45,7 @@ class User(Base):
         cascade="all, delete-orphan",
         lazy="selectin",
     )
+    password_reset_tokens = relationship("PasswordResetToken", back_populates="user", cascade="all, delete-orphan")
+
+    is_email_verified = Column(Boolean, nullable=False, default=False, index=True)
+    email_verified_at = Column(DateTime(timezone=True), nullable=True)

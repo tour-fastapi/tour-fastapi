@@ -2,98 +2,158 @@
 
 {% block content %}
 <div class="container py-4" style="max-width: 720px;">
-  <h1 class="h4 mb-3">Create Agency</h1>
+  <h1 class="h4 mb-3">Create Agency and Main Branch</h1>
 
   {% if flashes %}
     {% for f in flashes %}
       <div class="alert alert-{{ 'danger' if f.type == 'error' else f.type }} alert-dismissible fade show" role="alert">
         {{ f.text }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        <button type="button" class="btn btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
       </div>
     {% endfor %}
   {% endif %}
 
   <form method="post" action="/agency/new" class="card p-3">
-    <!-- CSRF -->
     <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
 
-    <!-- Core agency -->
+    <!-- Agency Details -->
+    <h2 class="h6 mb-3">Agency Details</h2>
     <div class="mb-3">
-      <label class="form-label">Agency name *</label>
-      <input class="form-control" type="text" name="agencies_name" required>
+      <label for="agencies_name" class="form-label">Agency name *</label>
+      <input id="agencies_name" class="form-control" type="text" name="agencies_name"
+             required autocomplete="organization"
+             value="{{ agency.agencies_name|default('') }}">
     </div>
 
     <div class="row">
       <div class="col-md-6 mb-3">
-        <label class="form-label">Country *</label>
-        <input class="form-control" type="text" name="country" required>
+        <label for="city" class="form-label">City *</label>
+        <input id="city" class="form-control" type="text" name="city" list="cities" required
+               placeholder="Start typing to pick or add…" autocomplete="address-level2"
+               value="{{ agency.city|default('') }}">
+        <datalist id="cities">
+          {% for c in cities %}
+            <option value="{{ c.name }}">{{ c.name }}</option>
+          {% endfor %}
+        </datalist>
+        <div class="form-text">Select an existing city or type a new one.</div>
       </div>
       <div class="col-md-6 mb-3">
-        <label class="form-label">City *</label>
-        <input class="form-control" type="text" name="city" required>
+        <label for="country" class="form-label">Country *</label>
+        <input id="country" class="form-control" type="text" name="country" required
+               autocomplete="country-name" placeholder="e.g., India"
+               value="{{ agency.country|default('') }}">
       </div>
     </div>
 
     <div class="mb-3">
-      <label class="form-label">Description</label>
-      <textarea class="form-control" name="description" rows="3"></textarea>
+      <label for="description" class="form-label">Short description</label>
+      <textarea id="description" class="form-control" name="description" rows="3"
+                placeholder="What does your agency do?">{{ agency.description|default('') }}</textarea>
     </div>
 
     <hr class="my-3">
-    <h2 class="h6 mb-3">Agency details</h2>
+    <h2 class="h6 mb-3">Public profile (optional)</h2>
+    <div class="mb-3">
+      <label for="public_registration_code" class="form-label">Registration ID (public)</label>
+      <input id="public_registration_code" class="form-control" type="text"
+             name="public_registration_code" placeholder="e.g., TAA-AB1234"
+             value="{{ agency.public_registration_code|default('') }}">
+    </div>
+    <div class="mb-3">
+      <label for="website_url" class="form-label">Website URL</label>
+      <input id="website_url" class="form-control" type="url" name="website_url"
+             placeholder="https://example.com"
+             value="{{ agency.website_url|default('') }}">
+    </div>
+    <div class="mb-3">
+      <label for="facebook_url" class="form-label">Facebook URL</label>
+      <input id="facebook_url" class="form-control" type="url" name="facebook_url"
+             placeholder="https://facebook.com/yourpage"
+             value="{{ agency.facebook_url|default('') }}">
+    </div>
+    <div class="mb-3">
+      <label for="instagram_url" class="form-label">Instagram URL</label>
+      <input id="instagram_url" class="form-control" type="url" name="instagram_url"
+             placeholder="https://instagram.com/yourhandle"
+             value="{{ agency.instagram_url|default('') }}">
+    </div>
 
-    <!-- Address -->
+    <hr class="my-3">
+    <h2 class="h6 mb-3">Main Branch Details</h2>
+    <div class="mb-3">
+      <label class="form-label">Branch name *</label>
+      <input class="form-control" name="branch_name" required
+             value="{{ branch.name|default('') }}">
+    </div>
     <div class="row">
       <div class="col-md-6 mb-3">
-        <label class="form-label">Address line 1 *</label>
-        <input class="form-control" name="address_line1" required>
+        <label class="form-label">Address line 1</label>
+        <input class="form-control" name="branch_address_line1"
+               value="{{ branch.address_line1|default('') }}">
       </div>
       <div class="col-md-6 mb-3">
         <label class="form-label">Address line 2</label>
-        <input class="form-control" name="address_line2">
+        <input class="form-control" name="branch_address_line2"
+               value="{{ branch.address_line2|default('') }}">
       </div>
     </div>
-
     <div class="row">
-      <div class="col-md-4 mb-3">
-        <label class="form-label">State</label>
-        <input class="form-control" name="state">
+      <div class="col-md-6 mb-3">
+        <label class="form-label">Contact person</label>
+        <input class="form-control" name="branch_contact_person"
+               value="{{ branch.contact_person|default('') }}">
       </div>
-      <div class="col-md-4 mb-3">
-        <label class="form-label">Postal code</label>
-        <input class="form-control" name="postal_code">
-      </div>
-      <div class="col-md-4 mb-3">
-        <label class="form-label">Website</label>
-        <input class="form-control" name="website" placeholder="https://example.com">
+      <div class="col-md-6 mb-3">
+        <label class="form-label">Contact number</label>
+        <input class="form-control" name="branch_contact_number"
+               value="{{ branch.contact_number|default('') }}">
       </div>
     </div>
-
-    <!-- Contacts -->
-    <div class="row">
-      <div class="col-md-6 mb-3">
-        <label class="form-label">Primary contact name *</label>
-        <input class="form-control" name="contact1_name" required>
-      </div>
-      <div class="col-md-6 mb-3">
-        <label class="form-label">Primary contact phone *</label>
-        <input class="form-control" name="contact1_phone" required>
-      </div>
+    <div class="form-check mb-3">
+      <input class="form-check-input" type="checkbox" id="branch_is_main" name="branch_is_main"
+             {% if branch.is_main is not defined or branch.is_main %}checked{% endif %}>
+      <label class="form-check-label" for="branch_is_main">Set as main branch</label>
     </div>
 
+    <div class="mb-3">
+      <label class="form-label">Agency email *</label>
+      <input class="form-control" type="email" name="agency_email"
+             value="{{ agency.agency_email|default('') }}" required autocomplete="email">
+    </div>
+
+    <!-- Stats section -->
+    <hr class="my-3">
+    <h2 class="h6 mb-3">Stats</h2>
+    <div class="mb-3">
+      <label class="form-label">Operating since?</label>
+      <input class="form-control" type="number" name="operating_since" min="1900" max="{{ current_year }}"
+             required placeholder="e.g., 2008"
+             value="{{ agency.operating_since|default('') }}">
+    </div>
     <div class="row">
-      <div class="col-md-6 mb-3">
-        <label class="form-label">Secondary contact name</label>
-        <input class="form-control" name="contact2_name">
+      <div class="col-md-4 mb-3">
+        <label class="form-label">Number of Umrah tours sent</label>
+        <input class="form-control" type="number" name="num_umrah_tours" min="0" step="1"
+               required placeholder="e.g., 5"
+               value="{{ agency.num_umrah_tours|default('') }}">
       </div>
-      <div class="col-md-6 mb-3">
-        <label class="form-label">Secondary contact phone</label>
-        <input class="form-control" name="contact2_phone">
+      <div class="col-md-4 mb-3">
+        <label class="form-label">Number of Hajj tours sent</label>
+        <input class="form-control" type="number" name="num_hajj_tours" min="0" step="1"
+               required placeholder="e.g., 3"
+               value="{{ agency.num_hajj_tours|default('') }}">
+      </div>
+      <div class="col-md-4 mb-3">
+        <label class="form-label">Number of pilgrims sent</label>
+        <input class="form-control" type="number" name="num_pilgrims_sent" min="0" step="1"
+               required placeholder="e.g., 250"
+               value="{{ agency.num_pilgrims_sent|default('') }}">
       </div>
     </div>
 
     <div class="d-flex gap-2">
-      <button class="btn btn-primary" type="submit">Create</button>
+      <button class="btn btn-primary" type="submit">Create Agency & Branch</button>
       <a href="/select-agency" class="btn btn-outline-secondary">Cancel</a>
     </div>
   </form>

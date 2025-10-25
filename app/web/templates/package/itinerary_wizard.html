@@ -18,42 +18,66 @@
 <div class="card">
   <div class="card-body">
     <div class="d-flex justify-content-between align-items-center mb-2">
-      <div class="fw-semibold">Day {{ current_day }} of {{ total_days }}</div>
+      <div class="fw-semibold">Itinerary — {{ pkg.days }} days</div>
       <div class="text-muted small">
-        {% set pct = (current_day / total_days * 100)|round(0, 'floor') %}
-        {{ pct }}% complete
+        <span id="pct-text">0%</span> complete
       </div>
     </div>
 
-    <div class="progress mb-3" role="progressbar" aria-valuenow="{{ pct }}" aria-valuemin="0" aria-valuemax="100" style="height:8px;">
-      <div class="progress-bar" style="width: {{ pct }}%;"></div>
+    <div class="progress mb-3" role="progressbar" aria-valuemin="0" aria-valuemax="100" style="height:8px;">
+      <div id="progress-bar" class="progress-bar" style="width: 0%;"></div>
     </div>
 
+    <!-- All-days form (one textarea per day) -->
     <form method="post" action="/package/{{ pkg.package_id }}/itinerary/wizard">
       <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-      <input type="hidden" name="day_number" value="{{ current_day }}">
 
-      <div class="mb-3">
-        <label class="form-label">Day {{ current_day }} notes</label>
-        <textarea class="form-control" name="notes" rows="8"
-          placeholder="Example: Arrival at JED, transfer to hotel, rest. After Asr, group briefing. Dinner included. Ziyarat next day.">{{ notes }}</textarea>
-        <div class="form-text">Tip: Include activities, transfers, approximate times, meals, reminders.</div>
-      </div>
+      {# render textareas for each day; use name="notes" (multiple values) #}
+      {% set total_days = pkg.days or 0 %}
+      {% for day in range(1, total_days + 1) %}
+        {% set existing = (itineraries_by_day[day] if itineraries_by_day is defined and day in itineraries_by_day else '') %}
+        <div class="mb-3">
+          <label class="form-label">Day {{ day }}</label>
+          <textarea
+            class="form-control itinerary-notes"
+            name="notes"
+            rows="4"
+            data-day="{{ day }}"
+            placeholder="Example: Arrival, transfers, rest, briefing, meals, ziyarat...">{{ existing }}</textarea>
+          <div class="form-text text-muted">Tip: Keep each day concise. Visitors read this on mobile.</div>
+        </div>
+      {% endfor %}
 
       <div class="d-flex gap-2">
-        <button class="btn btn-outline-secondary" type="submit" name="nav" value="back" {% if current_day == 1 %}disabled{% endif %}>
-          ← Back
-        </button>
-
-        {% if current_day < total_days %}
-          <button class="btn btn-outline-secondary" type="submit" name="nav" value="skip">Skip</button>
-          <button class="btn btn-primary" type="submit" name="nav" value="next">Save &amp; Next →</button>
-        {% else %}
-          <button class="btn btn-primary" type="submit" name="nav" value="finish">Save &amp; Finish ✓</button>
-        {% endif %}
+        <button class="btn btn-primary" type="submit" name="nav" value="finish">Save &amp; Finish ✓</button>
+        <a class="btn btn-outline-secondary" href="/agency/{{ agency.registration_id }}/dashboard">Cancel</a>
       </div>
     </form>
   </div>
 </div>
+
+<script>
+/* Live progress: count filled textareas and update bar/text */
+function updateProgress() {
+  const areas = document.querySelectorAll('.itinerary-notes');
+  const total = areas.length;
+  let filled = 0;
+  areas.forEach(a => {
+    if (a.value && a.value.trim().length > 0) filled += 1;
+  });
+  const pct = total ? Math.round((filled / total) * 100) : 0;
+  const bar = document.getElementById('progress-bar');
+  const pctText = document.getElementById('pct-text');
+  if (bar) bar.style.width = pct + '%';
+  if (pctText) pctText.textContent = pct + '%';
+}
+
+document.addEventListener('input', function (e) {
+  if (e.target && e.target.classList.contains('itinerary-notes')) updateProgress();
+});
+
+// initial run
+updateProgress();
+</script>
 
 {% endblock %}

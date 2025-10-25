@@ -33,7 +33,7 @@
 </style>
 
 <div class="page">
-  <a class="back" href="/operators">← Back to Operators</a>
+  <a class="back" href="/umrah_operators">← Back to Operators</a>
 
   <div class="head">
     <h1>Operators in {{ city }}</h1>
@@ -45,10 +45,10 @@
       <div class="grid">
         {% for a in agencies %}
           <div class="agency">
-            <h3><a href="/operators/{{ a.registration_id }}">{{ a.agencies_name }}</a></h3>
+            <h3><a href="/umrah_operators/{{ a.registration_id }}">{{ a.agencies_name }}</a></h3>
             <div class="meta">{{ a.city or '-' }}, {{ a.country or '-' }}</div>
             {% if a.description %}<div class="desc">{{ a.description }}</div>{% endif %}
-            <a class="chip" href="/operators/{{ a.registration_id }}">View details →</a>
+            <a class="chip" href="/umrah_operators/{{ a.registration_id }}">View details →</a>
           </div>
         {% endfor %}
       </div>

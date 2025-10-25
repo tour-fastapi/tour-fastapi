@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from app.core.config import settings
 from app.core.deps import get_db
+from app.db.base import Base
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 # NEW: import routers
@@ -13,9 +14,14 @@ from app.web.routes import router as ui_router
 from starlette.middleware.sessions import SessionMiddleware
 from fastapi.staticfiles import StaticFiles
 from app.web import routes as ui_routes
-from fastapi.staticfiles import StaticFiles
+from app.web.routes import router as web_router
+from app.web.routes_media import router as media_router
 from starlette.middleware.cors import CORSMiddleware
+
+
+
 app = FastAPI(title=settings.APP_NAME)
+
 
 app.add_middleware(
     SessionMiddleware,
@@ -48,6 +54,8 @@ app.include_router(agencies_router, prefix="/api/v1", tags=["agencies"])
 app.include_router(auth_router, prefix="/api/v1", tags=["auth"])
 app.include_router(ui_router)
 app.include_router(ui_routes.router)
+app.include_router(web_router)
+app.include_router(media_router) 
 
 @app.get("/health")
 def health():
