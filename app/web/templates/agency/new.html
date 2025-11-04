@@ -13,8 +13,18 @@
     {% endfor %}
   {% endif %}
 
-  <form method="post" action="/agency/new" class="card p-3">
+  <!-- IMPORTANT: multipart for file upload -->
+  <form method="post" action="/agency/new" class="card p-3" enctype="multipart/form-data">
     <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+    <!-- Branding (optional) -->
+    <div class="mb-3">
+      <h2 class="h6 mb-2">Branding (optional)</h2>
+      <div class="d-flex align-items-center gap-2 flex-wrap">
+        <input class="form-control" type="file" name="logo_file" accept="image/png, image/jpeg, image/webp">
+        <div class="form-text">PNG / JPG / WEBP up to 5MB. We’ll optimize it automatically.</div>
+      </div>
+    </div>
 
     <!-- Agency Details -->
     <h2 class="h6 mb-3">Agency Details</h2>

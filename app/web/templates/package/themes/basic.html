@@ -1,0 +1,172 @@
+{# app/web/templates/package/themes/basic.html #}
+
+<style>
+  /* ========== BASIC (Light, crisp, professional) ========== */
+  .theme-basic {
+    --fg: #0f172a;
+    --muted: #64748b;
+    --card: #ffffff;
+    --band: #ffffff;
+    --bg-grad: linear-gradient(180deg, #f7fafc, #ffffff);
+    --border: #e5e7eb;
+    --hair: #eef2f6;
+    --chip: #f3f4f6;
+    --accent: #1d4ed8;
+    --radius: 14px;
+    --shadow: 0 10px 24px rgba(2,6,23,.08);
+  }
+  .theme-basic { color: var(--fg); }
+  .theme-basic .band {
+    border-radius: var(--radius);
+    padding: 18px;
+    background: var(--bg-grad);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+  }
+  .theme-basic .card-soft {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: 0 8px 20px rgba(2,6,23,.06);
+  }
+  .theme-basic .chip {
+    padding:.24rem .6rem; border-radius:999px; background:var(--chip); border:1px solid var(--border); font-size:.75rem;
+  }
+  .theme-basic .kicker { font-size:.78rem; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); }
+  .theme-basic .label-m { font-size:.74rem; letter-spacing:.04em; text-transform:uppercase; color:var(--muted); }
+  .theme-basic .price-lg { font-size:clamp(24px,3.2vw,34px); line-height:1; font-weight:800; letter-spacing:-.01em; }
+  .theme-basic a { color: var(--accent); text-decoration: none; }
+  .theme-basic a:hover { text-decoration: underline; }
+  .theme-basic .muted { color: var(--muted); }
+  .theme-basic .sep { height:1px; background: var(--hair); margin:.5rem 0 1rem; border-radius:1px; }
+  .theme-basic .block { border:1px dashed var(--border); border-radius:12px; padding:.85rem 1rem; background:#fbfcfe; }
+  .theme-basic .img-brd { border:1px solid var(--border); }
+</style>
+
+<div class="theme-basic">
+  <!-- Header -->
+  <div class="band mb-3">
+    <div class="d-flex align-items-start gap-3">
+      <img src="/media/agency/{{ agency.registration_id }}/logo"
+           alt="{{ agency.agencies_name }} logo"
+           width="56" height="56"
+           class="rounded img-brd"
+           onerror="this.style.display='none'"/>
+
+      <div class="flex-grow-1">
+        <h1 class="h4 mb-1">{{ pkg.package_name }}</h1>
+        <div class="d-flex flex-wrap align-items-center gap-2 small muted">
+          <span>{{ pkg.days }} days</span>
+          {% if pkg.travel_month or pkg.travel_year %}
+            <span>• {{ pkg.travel_month and (pkg.travel_month | int) | default('', true)
+              | replace('1','January') | replace('2','February') | replace('3','March')
+              | replace('4','April') | replace('5','May') | replace('6','June')
+              | replace('7','July') | replace('8','August') | replace('9','September')
+              | replace('10','October') | replace('11','November') | replace('12','December') }}
+              {{ pkg.travel_year or '' }}</span>
+          {% endif %}
+          {% if pkg.package_class %}<span>• {{ pkg.package_class | title }}</span>{% endif %}
+          {% if pkg.package_type %}<span class="chip">{{ pkg.package_type | title }}</span>{% endif %}
+          {% if pkg.description %}<span class="ms-2 text-body">{{ pkg.description }}</span>{% endif %}
+        </div>
+        {% if agency and agency.agencies_name %}
+          <div class="small muted mt-1">
+            {{ agency.agencies_name }}{% if agency.city %}, {{ agency.city }}{% endif %}
+          </div>
+        {% endif %}
+      </div>
+
+      <div class="text-end">
+        <div class="kicker mb-1">Starting</div>
+        <div class="price-lg">₹{{ "%.2f"|format(pkg.price or 0) }}</div>
+        {% if price_row and (price_row.price_double or price_row.price_triple or price_row.price_quad) %}
+          <div class="small muted mt-1">
+            {% if price_row.price_double %}Double/Couple • ₹{{ "%.2f"|format(price_row.price_double) }}<br>{% endif %}
+            {% if price_row.price_triple %}Triple • ₹{{ "%.2f"|format(price_row.price_triple) }}<br>{% endif %}
+            {% if price_row.price_quad %}Quad/Quint • ₹{{ "%.2f"|format(price_row.price_quad) }}{% endif %}
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Flights -->
+  <div class="card-soft p-3 p-md-4 mb-3">
+    <h2 class="h6 mb-3">Flights</h2>
+    <div class="sep"></div>
+    <div class="row g-3">
+      <div class="col-md-6">
+        <div class="block h-100">
+          <div class="label-m mb-1">Onward</div>
+          <div>{{ onward_text }}</div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="block h-100">
+          <div class="label-m mb-1">Return</div>
+          <div>{{ return_text }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stays -->
+  <div class="card-soft p-3 p-md-4 mb-3">
+    <h2 class="h6 mb-3">Stays</h2>
+    <div class="sep"></div>
+    <div class="row g-3">
+      <div class="col-md-6">
+        <div class="block h-100">
+          <div class="fw-semibold mb-2">Mecca</div>
+          <div class="label-m">Dates</div>
+          <div class="mb-2">{{ mecca_dates }}</div>
+          <div class="label-m">Distance</div>
+          <div class="mb-2">{{ mecca_distance_label }}</div>
+          <div class="label-m">Hotel</div>
+          <div>
+            {% if mecca_hotel_name %}
+              {% if mecca_hotel_link %}
+                <a href="{{ mecca_hotel_link }}" target="_blank" rel="noopener">{{ mecca_hotel_name }}</a>
+              {% else %}{{ mecca_hotel_name }}{% endif %}
+            {% else %}—{% endif %}
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <div class="block h-100">
+          <div class="fw-semibold mb-2">Medinah</div>
+          <div class="label-m">Dates</div>
+          <div class="mb-2">{{ med_dates }}</div>
+          <div class="label-m">Distance</div>
+          <div class="mb-2">{{ med_distance_label }}</div>
+          <div class="label-m">Hotel</div>
+          <div>
+            {% if med_hotel_name %}
+              {% if med_hotel_link %}
+                <a href="{{ med_hotel_link }}" target="_blank" rel="noopener">{{ med_hotel_name }}</a>
+              {% else %}{{ med_hotel_name }}{% endif %}
+            {% else %}—{% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Inclusions -->
+  <div class="card-soft p-3 p-md-4">
+    <h2 class="h6 mb-3">Inclusions</h2>
+    <div class="sep" style="margin-top:-.25rem;"></div>
+    {% set incl = pkg.inclusion %}
+    <ul class="mb-0">
+      {% if incl and (incl.meals_desc or incl.meals_enabled) %}<li>Meals: {{ incl.meals_desc or "Included" }}</li>{% endif %}
+      {% if incl and (incl.laundry_desc or incl.laundry_enabled) %}<li>Laundry: {{ incl.laundry_desc or "Included" }}</li>{% endif %}
+      {% if incl and (incl.transport_desc or incl.transport_enabled) %}<li>Transport: {{ incl.transport_desc or "Included" }}</li>{% endif %}
+      {% if incl and (incl.zamzam_desc or incl.zamzam_enabled) %}<li>Zam Zam: {{ incl.zamzam_desc or "Included" }}</li>{% endif %}
+      {% if incl and (incl.welcome_kit_desc or incl.welcome_kit_enabled) %}<li>Welcome Kit: {{ incl.welcome_kit_desc or "Included" }}</li>{% endif %}
+      {% if incl and (incl.insurance_desc or incl.insurance_enabled) %}<li>Insurance: {{ incl.insurance_desc or "Included" }}</li>{% endif %}
+      {% if incl and incl.other %}<li>{{ incl.other }}</li>{% endif %}
+      {% if not incl %}<li>No inclusions listed.</li>{% endif %}
+    </ul>
+  </div>
+</div>

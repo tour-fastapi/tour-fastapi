@@ -1,0 +1,211 @@
+{# app/web/templates/package/themes/premium.html #}
+
+<style>
+  /* ========== PREMIUM (Elegant, below Aurora) ========== */
+  .theme-premium {
+    --bg: #0a1228;
+    --fg: #e9eeff;
+    --muted: #aab6d6;
+    --card: #111836;
+    --card-2: #0e1732;
+    --border: #233055;
+    --hair: rgba(255,255,255,.07);
+    --chip: rgba(255,255,255,.09);
+    --chip-border: rgba(255,255,255,.14);
+    --accent: #c7d2fe;
+    --accent-edge: linear-gradient(90deg, #6ee7ff, #a5b4fc);
+    --radius: 16px;
+    --shadow-lg: 0 12px 36px rgba(0,0,0,.35);
+  }
+  .theme-premium { color: var(--fg); }
+
+  .theme-premium .band {
+    position:relative;
+    border-radius: var(--radius);
+    padding: 20px;
+    background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-lg);
+    overflow:hidden;
+  }
+  .theme-premium .band::before {
+    content:"";
+    position:absolute; inset:0; border-radius:inherit;
+    background: var(--accent-edge);
+    opacity:.35; mask: linear-gradient(#000, transparent 45%);
+    pointer-events:none;
+  }
+
+  .theme-premium .card-soft {
+    background: linear-gradient(180deg, var(--card), var(--card-2));
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-lg);
+  }
+  .theme-premium .chip {
+    padding:.28rem .65rem; border-radius:999px; background:var(--chip);
+    border:1px solid var(--chip-border); font-size:.76rem; backdrop-filter: blur(2px);
+  }
+  .theme-premium .kicker { font-size:.78rem; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); }
+  .theme-premium .label-m { font-size:.75rem; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); }
+  .theme-premium .price-lg { font-size:clamp(28px,3.6vw,38px); font-weight:800; line-height:1; letter-spacing:-.015em; }
+  .theme-premium a { color: var(--accent); text-decoration:none; }
+  .theme-premium a:hover { text-decoration:underline; }
+  .theme-premium .block { border:1px dashed var(--hair); border-radius:14px; padding:.9rem 1rem; background:rgba(255,255,255,.03); }
+  .theme-premium .muted { color: var(--muted); }
+  .theme-premium .img-brd { border:1px solid var(--border); }
+</style>
+
+<div class="theme-premium">
+  <!-- Header -->
+  <div class="band mb-4">
+    <div class="d-flex flex-wrap align-items-start gap-3">
+      <img src="/media/agency/{{ agency.registration_id }}/logo"
+           alt="{{ agency.agencies_name }} logo"
+           width="60" height="60"
+           class="rounded img-brd"
+           onerror="this.style.display='none'"/>
+
+      <div class="flex-grow-1">
+        <div class="d-flex align-items-center gap-2 mb-1">
+          <h1 class="h4 m-0">{{ pkg.package_name }}</h1>
+          {% if pkg.package_type %}<span class="chip">{{ pkg.package_type | title }}</span>{% endif %}
+          {% if pkg.package_class %}<span class="chip">{{ pkg.package_class | title }}</span>{% endif %}
+        </div>
+        <div class="muted small">
+          {{ pkg.days }} days
+          {% if pkg.travel_month or pkg.travel_year %}
+            • {{ pkg.travel_month and (pkg.travel_month | int) | default('', true)
+              | replace('1','January') | replace('2','February') | replace('3','March')
+              | replace('4','April') | replace('5','May') | replace('6','June')
+              | replace('7','July') | replace('8','August') | replace('9','September')
+              | replace('10','October') | replace('11','November') | replace('12','December') }}
+              {{ pkg.travel_year or '' }}
+          {% endif %}
+          {% if agency and agency.agencies_name %} • {{ agency.agencies_name }}{% if agency.city %}, {{ agency.city }}{% endif %}{% endif %}
+        </div>
+        {% if pkg.description %}<div class="mt-2">{{ pkg.description }}</div>{% endif %}
+      </div>
+
+      <div class="text-end ms-auto">
+        <div class="kicker mb-1">Starting</div>
+        <div class="price-lg">₹{{ "%.2f"|format(pkg.price or 0) }}</div>
+        {% if price_row and (price_row.price_double or price_row.price_triple or price_row.price_quad) %}
+          <div class="small muted mt-2">
+            {% if price_row.price_double %}Double: ₹{{ "%.2f"|format(price_row.price_double) }}<br>{% endif %}
+            {% if price_row.price_triple %}Triple: ₹{{ "%.2f"|format(price_row.price_triple) }}<br>{% endif %}
+            {% if price_row.price_quad %}Quad/Quint: ₹{{ "%.2f"|format(price_row.price_quad) }}{% endif %}
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Grid -->
+  <div class="row g-4">
+    <div class="col-lg-8">
+      <div class="card-soft p-3 p-md-4 mb-4">
+        <h2 class="h6 m-0 mb-3">Flights</h2>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <div class="block h-100">
+              <div class="label-m mb-1">Onward</div>
+              <div>{{ onward_text }}</div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="block h-100">
+              <div class="label-m mb-1">Return</div>
+              <div>{{ return_text }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-soft p-3 p-md-4 mb-4">
+        <h2 class="h6 m-0 mb-3">Stays</h2>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <div class="block h-100">
+              <div class="fw-semibold mb-2">Mecca</div>
+              <div class="label-m">Dates</div>
+              <div class="mb-2">{{ mecca_dates }}</div>
+              <div class="label-m">Distance</div>
+              <div class="mb-2">{{ mecca_distance_label }}</div>
+              <div class="label-m">Hotel</div>
+              <div>
+                {% if mecca_hotel_name %}
+                  {% if mecca_hotel_link %}
+                    <a href="{{ mecca_hotel_link }}" target="_blank" rel="noopener">{{ mecca_hotel_name }}</a>
+                  {% else %}{{ mecca_hotel_name }}{% endif %}
+                {% else %}—{% endif %}
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="block h-100">
+              <div class="fw-semibold mb-2">Medinah</div>
+              <div class="label-m">Dates</div>
+              <div class="mb-2">{{ med_dates }}</div>
+              <div class="label-m">Distance</div>
+              <div class="mb-2">{{ med_distance_label }}</div>
+              <div class="label-m">Hotel</div>
+              <div>
+                {% if med_hotel_name %}
+                  {% if med_hotel_link %}
+                    <a href="{{ med_hotel_link }}" target="_blank" rel="noopener">{{ med_hotel_name }}</a>
+                  {% else %}{{ med_hotel_name }}{% endif %}
+                {% else %}—{% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-soft p-3 p-md-4">
+        <h2 class="h6 m-0 mb-3">Inclusions</h2>
+        {% set incl = pkg.inclusion %}
+        <ul class="mb-0">
+          {% if incl and (incl.meals_desc or incl.meals_enabled) %}<li>Meals: {{ incl.meals_desc or "Included" }}</li>{% endif %}
+          {% if incl and (incl.laundry_desc or incl.laundry_enabled) %}<li>Laundry: {{ incl.laundry_desc or "Included" }}</li>{% endif %}
+          {% if incl and (incl.transport_desc or incl.transport_enabled) %}<li>Transport: {{ incl.transport_desc or "Included" }}</li>{% endif %}
+          {% if incl and (incl.zamzam_desc or incl.zamzam_enabled) %}<li>Zam Zam: {{ incl.zamzam_desc or "Included" }}</li>{% endif %}
+          {% if incl and (incl.welcome_kit_desc or incl.welcome_kit_enabled) %}<li>Welcome Kit: {{ incl.welcome_kit_desc or "Included" }}</li>{% endif %}
+          {% if incl and (incl.insurance_desc or incl.insurance_enabled) %}<li>Insurance: {{ incl.insurance_desc or "Included" }}</li>{% endif %}
+          {% if incl and incl.other %}<li>{{ incl.other }}</li>{% endif %}
+          {% if not incl %}<li>No inclusions listed.</li>{% endif %}
+        </ul>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="card-soft p-3 p-md-4 mb-4">
+        <div class="kicker mb-1">Pricing Summary</div>
+        <div class="price-lg mb-2">₹{{ "%.2f"|format(pkg.price or 0) }}</div>
+        <div class="small muted">
+          {% if price_row and (price_row.price_double or price_row.price_triple or price_row.price_quad) %}
+            {% if price_row.price_double %}<div>Double/Couple: ₹{{ "%.2f"|format(price_row.price_double) }}</div>{% endif %}
+            {% if price_row.price_triple %}<div>Triple: ₹{{ "%.2f"|format(price_row.price_triple) }}</div>{% endif %}
+            {% if price_row.price_quad %}<div>Quad/Quint: ₹{{ "%.2f"|format(price_row.price_quad) }}</div>{% endif %}
+          {% else %}
+            <div>No variant pricing specified.</div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<style>
+  .btn-primary {
+    background: linear-gradient(90deg, #2563eb, #1d4ed8);
+    color: #fff;
+    border: none;
+    transition: all .25s ease;
+  }
+  .btn-primary:hover {
+    background: linear-gradient(90deg, #1e3a8a, #1d4ed8);
+    transform: translateY(-2px);
+  }
+</style>
+

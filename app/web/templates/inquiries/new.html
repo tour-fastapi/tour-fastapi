@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-4" style="max-width: 640px;">
+  <div class="card shadow-sm border-0 rounded-4">
+    <div class="card-body p-4">
+
+      <h1 class="h4 mb-3">Send Inquiry</h1>
+
+      {# ---- Flash messages ---- #}
+      {% if flashes %}
+        {% for f in flashes %}
+          <div class="alert alert-{{ 'danger' if f.type == 'error' else f.type }} alert-dismissible fade show" role="alert">
+            {{ f.text }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+
+      {# ---- Package context (helps user confirm) ---- #}
+      {% if pkg %}
+        <div class="mb-4 border rounded p-3 bg-light-subtle">
+          <div class="fw-semibold">{{ pkg.package_name }}</div>
+          <div class="text-muted small">
+            {{ pkg.days }} days
+            {% if pkg.travel_month or pkg.travel_year %}
+              •
+              {{ pkg.travel_month and (pkg.travel_month | int)
+                | replace('1','Jan') | replace('2','Feb') | replace('3','Mar')
+                | replace('4','Apr') | replace('5','May') | replace('6','Jun')
+                | replace('7','Jul') | replace('8','Aug') | replace('9','Sep')
+                | replace('10','Oct') | replace('11','Nov') | replace('12','Dec') }}
+              {{ pkg.travel_year or '' }}
+            {% endif %}
+            {% if agency %} • {{ agency.agencies_name }}{% if agency.city %}, {{ agency.city }}{% endif %}{% endif %}
+          </div>
+        </div>
+      {% endif %}
+
+      {# ---- FORM: posts to your working handler ---- #}
+      <form method="post" action="/umrah_packages/{{ pkg.package_id }}/inquire" novalidate>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <input type="hidden" name="source" value="web">
+        <input type="text" name="website" value="" style="display:none"> {# Honeypot #}
+
+        <div class="mb-3">
+          <label for="name" class="form-label fw-semibold">Full Name *</label>
+          <input type="text" class="form-control" id="name" name="name" placeholder="Your full name" required>
+        </div>
+
+        <div class="mb-3">
+          <label for="phone_number" class="form-label fw-semibold">Phone Number *</label>
+          <input type="text" class="form-control" id="phone_number" name="phone_number" placeholder="+91XXXXXXXXXX" required>
+          <div class="form-text text-muted">Use a valid 10-digit or +91 format.</div>
+        </div>
+
+        <div class="mb-3">
+          <label for="inquiry" class="form-label fw-semibold">Your Message *</label>
+          <textarea class="form-control" id="inquiry" name="inquiry" rows="4" placeholder="Write your query or request here..." required></textarea>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold">CAPTCHA *</label>
+          <div class="d-flex align-items-center gap-2">
+            <input type="text" class="form-control" name="captcha_answer" placeholder="Answer" required style="max-width: 160px;">
+            <span class="badge bg-light text-dark border">{{ captcha_q }}</span>
+          </div>
+        </div>
+
+        <div class="mt-4 d-flex justify-content-between align-items-center">
+          <a href="/umrah_packages/{{ pkg.package_id }}" class="btn btn-outline-secondary">← Back</a>
+          <button type="submit" class="btn btn-primary px-4 py-2 fw-semibold rounded-pill">Send Inquiry</button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,354 +1,89 @@
-{% extends "base.html" %}
+{# optional tiny badge to verify which theme is active #}
+{% if theme_debug %}<div class="text-muted small mb-2">Theme: {{ theme_debug }}</div>{% endif %}
 
-{% block content %}
-<div class="py-3">
-  <a href="/umrah_packages" class="btn btn-link p-0 mb-3">← Back to Packages</a>
+{# this pulls one of: package/themes/premium_aurora.html | premium.html | basic.html #}
+{% include theme_template %}
+{# ---------------- Inquiry Modal ---------------- #}
+<div class="modal fade" id="inquiryModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-4 border-0 shadow-lg">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title">Send Inquiry</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body pt-0">
 
-  <!-- Header -->
-  <div class="card mb-3">
-    <div class="card-body">
-      <div class="d-flex justify-content-between align-items-start">
-        <div>
-          <h1 class="h4 mb-1">{{ pkg.package_name }}</h1>
-          <div class="text-muted mb-2">
-            {{ pkg.days }} day{{ pkg.days == 1 and '' or 's' }} • ₹{{ '%.2f'|format(pkg.price) }}
+        <form method="post" action="/umrah_packages/{{ pkg.package_id }}/inquire" novalidate>
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+          <input type="hidden" name="source" value="web">
+          <input type="text" name="website" value="" style="display:none"> {# Honeypot #}
+
+          <div class="mb-3">
+            <label for="inq-name" class="form-label fw-semibold">Full Name *</label>
+            <input type="text" class="form-control" id="inq-name" name="name" placeholder="Your full name" required>
           </div>
 
-          {% if agency %}
-            <div class="mb-2">
-              <span class="text-muted">Operator:</span>
-              <a href="/umrah_operators/{{ agency.registration_id }}">{{ agency.agencies_name }}</a>
-              <span class="text-muted">— {{ agency.city }}{% if agency.country %}, {{ agency.country }}{% endif %}</span>
-            </div>
-          {% endif %}
-
-          {% if pkg.description %}
-            <p class="mb-0">{{ pkg.description }}</p>
-          {% else %}
-            <p class="mb-0 text-muted">No description provided (tip for operators: mention meals, laundry, transport, add-ons, etc.).</p>
-          {% endif %}
-
-          {# New block: display Type, Class, Travel window, and Airlines if they exist #}
-          {% set month_names = ['January','February','March','April','May','June','July','August','September','October','November','December'] %}
-          <div class="mb-2">
-            <span class="text-muted">Type:</span> {{ pkg.package_type|capitalize }}
-            {% if pkg.package_class %}
-              &nbsp;&bull;&nbsp;<span class="text-muted">Class:</span> {{ pkg.package_class|capitalize }}
-            {% endif %}
-            {% if pkg.travel_month or pkg.travel_year %}
-              &nbsp;&bull;&nbsp;<span class="text-muted">Travel:</span>
-              {% if pkg.travel_month %}
-                {{ month_names[(pkg.travel_month|int) - 1] }}
-              {% endif %}
-              {% if pkg.travel_year %} {{ pkg.travel_year }}{% endif %}
-            {% endif %}
+          <div class="mb-3">
+            <label for="inq-phone" class="form-label fw-semibold">Phone Number *</label>
+            <input type="text" class="form-control" id="inq-phone" name="phone_number" placeholder="+91XXXXXXXXXX" required>
+            <div class="form-text text-muted">Use a valid 10-digit or +91 format.</div>
           </div>
-          {% if pkg.airlines %}
-            <div class="mb-2">
-              <span class="text-muted">Airlines:</span>
-              {% for airline in pkg.airlines %}
-                {{ airline.name }}{% if not loop.last %}, {% endif %}
-              {% endfor %}
-            </div>
-          {% endif %}
-        </div>
 
-        <!-- Variant prices card (Double / Triple / Quad) -->
-        <div class="text-end ms-3">
-          <div class="card border-0 shadow-sm" style="min-width:200px;">
-            <div class="card-body py-2 px-3">
-              <div class="small text-muted">Prices</div>
-              <div class="fw-semibold fs-5">₹{{ '%.2f'|format(pkg.price) }}</div>
+          <div class="mb-3">
+            <label for="inq-msg" class="form-label fw-semibold">Your Message *</label>
+            <textarea class="form-control" id="inq-msg" name="inquiry" rows="3" placeholder="Write your query or request here..." required></textarea>
+          </div>
 
-              {% if price_row %}
-                <div class="mt-2 small">
-                  {% if price_row.price_double is not none %}
-                    <div>Double: ₹{{ '%.2f'|format(price_row.price_double) }}</div>
-                  {% endif %}
-                  {% if price_row.price_triple is not none %}
-                    <div>Triple: ₹{{ '%.2f'|format(price_row.price_triple) }}</div>
-                  {% endif %}
-                  {% if price_row.price_quad is not none %}
-                    <div>Quad/Quint: ₹{{ '%.2f'|format(price_row.price_quad) }}</div>
-                  {% endif %}
-                  {% if price_row.note %}
-                    <div class="text-muted small mt-1">{{ price_row.note }}</div>
-                  {% endif %}
-                </div>
-              {% else %}
-                <div class="text-muted small mt-2">No variant prices specified.</div>
-              {% endif %}
+          <div class="mb-3">
+            <label class="form-label fw-semibold">CAPTCHA *</label>
+            <div class="d-flex align-items-center gap-2">
+              <input type="text" class="form-control" name="captcha_answer" placeholder="Answer" required style="max-width: 160px;">
+              <span class="badge bg-light text-dark border">{{ captcha_q }}</span>
             </div>
           </div>
-        </div>
+
+          <div class="text-end mt-4">
+            <button type="submit" class="btn btn-primary px-4 py-2 rounded-pill fw-semibold">Send Inquiry</button>
+          </div>
+        </form>
+
       </div>
     </div>
   </div>
-
-  <!-- Details grid -->
-  <div class="row g-3">
-
-    <!-- Flights -->
-    <div class="col-lg-6">
-      <div class="card h-100">
-        <div class="card-body">
-          <h2 class="h6 mb-3">Flights</h2>
-
-          <div class="row g-3">
-            <div class="col-sm-6">
-              <div class="border rounded p-3 h-100">
-                <div class="fw-semibold mb-2">Onward</div>
-                {% if onward %}
-                  <div class="small">
-                    {% if onward.flight_date %}<div>Date: {{ onward.flight_date.strftime('%d %b %Y') }}</div>{% endif %}
-                    {% if onward.flight_type %}<div>Type: {{ onward.flight_type|capitalize }}</div>{% endif %}
-                    {% if onward.flight_type == 'via' and onward.via_city %}<div>Via: {{ onward.via_city }}</div>{% endif %}
-                    {% if onward.airline_name %}<div>Airline: {{ onward.airline_name }}</div>{% endif %}
-                  </div>
-                {% else %}
-                  <div class="text-muted small">Not specified.</div>
-                {% endif %}
-              </div>
-            </div>
-
-            <div class="col-sm-6">
-              <div class="border rounded p-3 h-100">
-                <div class="fw-semibold mb-2">Return</div>
-                {% if ret %}
-                  <div class="small">
-                    {% if ret.flight_date %}<div>Date: {{ ret.flight_date.strftime('%d %b %Y') }}</div>{% endif %}
-                    {% if ret.flight_type %}<div>Type: {{ ret.flight_type|capitalize }}</div>{% endif %}
-                    {% if ret.flight_type == 'via' and ret.via_city %}<div>Via: {{ ret.via_city }}</div>{% endif %}
-                    {% if ret.airline_name %}<div>Airline: {{ ret.airline_name }}</div>{% endif %}
-                  </div>
-                {% else %}
-                  <div class="text-muted small">Not specified.</div>
-                {% endif %}
-              </div>
-            </div>
-          </div>
-
-        </div>
-      </div>
-    </div>
-
-    <!-- Stays -->
-    <div class="col-lg-6">
-      <div class="card h-100">
-        <div class="card-body">
-          <h2 class="h6 mb-3">Stay</h2>
-
-          <div class="row g-3">
-            <div class="col-sm-6">
-              <div class="border rounded p-3 h-100">
-                <div class="fw-semibold mb-2">Mecca</div>
-                {% if mecca %}
-                  <div class="small">
-                    {% if mecca.check_in or mecca.check_out %}
-                      <div>
-                        Dates:
-                        {% if mecca.check_in %}{{ mecca.check_in.strftime('%d %b %Y') }}{% endif %}
-                        {% if mecca.check_in and mecca.check_out %} – {% endif %}
-                        {% if mecca.check_out %}{{ mecca.check_out.strftime('%d %b %Y') }}{% endif %}
-                      </div>
-                    {% endif %}
-                    {% if mecca.hotel_name %}
-                      <div>
-                        Hotel:
-                        {% if mecca.hotel_link %}
-                          <a href="{{ mecca.hotel_link if mecca.hotel_link.startswith('http') else 'https://' ~ mecca.hotel_link }}" target="_blank" rel="noopener">
-                            {{ mecca.hotel_name }}
-                          </a>
-                        {% else %}
-                          {{ mecca.hotel_name }}
-                        {% endif %}
-                      </div>
-                    {% endif %}
-                    {% if mecca.distance_text or mecca.distance_m is not none %}
-                      <div>
-                        Distance:
-                        {% if mecca.distance_text %}{{ mecca.distance_text }}{% endif %}
-                        {% if mecca.distance_text and mecca.distance_m is not none %} ({{ mecca.distance_m }} m){% elif mecca.distance_m is not none %}{{ mecca.distance_m }} m{% endif %}
-                      </div>
-                    {% endif %}
-                  </div>
-                {% else %}
-                  <div class="text-muted small">Not specified.</div>
-                {% endif %}
-              </div>
-            </div>
-
-            <div class="col-sm-6">
-              <div class="border rounded p-3 h-100">
-                <div class="fw-semibold mb-2">Medinah</div>
-                {% if med %}
-                  <div class="small">
-                    {% if med.check_in or med.check_out %}
-                      <div>
-                        Dates:
-                        {% if med.check_in %}{{ med.check_in.strftime('%d %b %Y') }}{% endif %}
-                        {% if med.check_in and med.check_out %} – {% endif %}
-                        {% if med.check_out %}{{ med.check_out.strftime('%d %b %Y') }}{% endif %}
-                      </div>
-                    {% endif %}
-                    {% if med.hotel_name %}
-                      <div>
-                        Hotel:
-                        {% if med.hotel_link %}
-                          <a href="{{ med.hotel_link if med.hotel_link.startswith('http') else 'https://' ~ med.hotel_link }}" target="_blank" rel="noopener">
-                            {{ med.hotel_name }}
-                          </a>
-                        {% else %}
-                          {{ med.hotel_name }}
-                        {% endif %}
-                      </div>
-                    {% endif %}
-                    {% if med.distance_text or med.distance_m is not none %}
-                      <div>
-                        Distance:
-                        {% if med.distance_text %}{{ med.distance_text }}{% endif %}
-                        {% if med.distance_text and med.distance_m is not none %} ({{ med.distance_m }} m){% elif med.distance_m is not none %}{{ med.distance_m }} m{% endif %}
-                      </div>
-                    {% endif %}
-                  </div>
-                {% else %}
-                  <div class="text-muted small">Not specified.</div>
-                {% endif %}
-              </div>
-            </div>
-          </div>
-
-        </div>
-      </div>
-    </div>
-
-    <!-- Inclusions (NEW schema rendering) -->
-    <div class="col-12">
-      <div class="card">
-        <div class="card-body">
-          <h2 class="h6 mb-2">Inclusions</h2>
-          {% if incl %}
-            {% set has_any = (
-              incl.meals_enabled or incl.laundry_enabled or incl.transport_enabled or
-              incl.zamzam_enabled or incl.welcome_kit_enabled or incl.insurance_enabled or
-              incl.other_notes
-            ) %}
-            {% if has_any %}
-              <ul class="mb-0">
-                {% if incl.meals_enabled %}
-                  <li><strong>Meals:</strong> {{ incl.meals_desc or 'Included' }}</li>
-                {% endif %}
-                {% if incl.laundry_enabled %}
-                  <li><strong>Laundry:</strong> {{ incl.laundry_desc or 'Included' }}</li>
-                {% endif %}
-                {% if incl.transport_enabled %}
-                  <li><strong>Transport:</strong> {{ incl.transport_desc or 'Included' }}</li>
-                {% endif %}
-                {% if incl.zamzam_enabled %}
-                  <li><strong>Zam Zam:</strong> {{ incl.zamzam_desc or 'Included' }}</li>
-                {% endif %}
-                {% if incl.welcome_kit_enabled %}
-                  <li><strong>Welcome Kit:</strong> {{ incl.welcome_kit_desc or 'Included' }}</li>
-                {% endif %}
-                {% if incl.insurance_enabled %}
-                  <li><strong>Insurance:</strong> {{ incl.insurance_desc or 'Included' }}</li>
-                {% endif %}
-                {% if incl.other_notes %}
-                  <li><strong>Notes:</strong> {{ incl.other_notes }}</li>
-                {% endif %}
-              </ul>
-            {% else %}
-              <p class="text-muted mb-0">No inclusions specified.</p>
-            {% endif %}
-          {% else %}
-            <p class="text-muted mb-0">No inclusions specified.</p>
-          {% endif %}
-        </div>
-      </div>
-    </div>
-
-  </div>
-
-  <!-- Inquiry -->
-  <div class="card mt-4" id="inquire">
-    <div class="card-body">
-      <div class="d-flex justify-content-between align-items-center mb-2">
-        <h2 class="h6 mb-0">Send Inquiry</h2>
-        <a class="btn btn-sm btn-outline-primary" href="#inquire" onclick="document.getElementById('inq-form').style.display='block'">Open form</a>
-      </div>
-
-      <form id="inq-form" method="post" action="/umrah_packages/{{ pkg.package_id }}/inquire" style="display:none;">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-
-        <!-- spam honeypot (leave empty) -->
-        <input type="text" name="website" style="display:none" tabindex="-1" autocomplete="off">
-
-        <div class="row">
-          <div class="col-md-6 mb-2">
-            <label class="form-label">Your name</label>
-            <input class="form-control" name="name" required maxlength="100" autocomplete="name">
-          </div>
-          <div class="col-md-6 mb-2">
-            <label class="form-label">Phone number</label>
-            <input
-              class="form-control"
-              name="phone_number"
-              type="tel"
-              inputmode="tel"
-              required
-              maxlength="20"
-              autocomplete="tel"
-              placeholder="+91XXXXXXXXXX or 98XXXXXXXX"
-              pattern="(\+[1-9]\d{7,14}|[6-9]\d{9})"
-              title="Use +countrycode (e.g., +9198xxxxxx) or a 10-digit Indian mobile starting 6–9"
-            >
-          </div>
-        </div>
-
-        <div class="mb-2">
-          <label class="form-label">Your message</label>
-          <textarea class="form-control" name="inquiry" rows="3" required></textarea>
-        </div>
-
-        <div class="mb-3">
-          <label class="form-label">How did you find us? (optional)</label>
-          <input class="form-control" name="source" maxlength="20" placeholder="instagram / google / friend">
-        </div>
-
-        <!-- Simple math CAPTCHA -->
-        <div class="mb-3">
-          <label class="form-label">CAPTCHA: {{ captcha_q }}</label>
-          <input class="form-control" type="text" name="captcha_answer" required inputmode="numeric" pattern="\d+">
-          <div class="form-text">Enter the result to prove you’re human.</div>
-        </div>
-
-        <button class="btn btn-primary" type="submit">Send</button>
-      </form>
-    </div>
-  </div>
-
-  <!-- Itinerary (one note per day) -->
-  <div class="card mt-3">
-    <div class="card-body">
-      <h2 class="h6 mb-3">Itinerary</h2>
-      {% if pkg.itineraries %}
-        <ol class="mb-0">
-          {% for e in pkg.itineraries %}
-            <li class="mb-2">
-              <div class="fw-semibold">Day {{ e.day_number }}</div>
-              {% if e.notes %}
-                <div class="small">{{ e.notes | replace('\n', '<br>') | safe }}</div>
-              {% else %}
-                <div class="text-muted small">No details added.</div>
-              {% endif %}
-            </li>
-          {% endfor %}
-        </ol>
-      {% else %}
-        <p class="text-muted mb-0">No itinerary added.</p>
-      {% endif %}
-    </div>
-  </div>
-
 </div>
-{% endblock %}
+
+
+
+<style>
+  .modal-content {
+    border-radius: 1rem;
+    border: none;
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.2);
+  }
+  .modal-header {
+    background: linear-gradient(135deg, #0061ff, #60efff);
+    color: white;
+    border-bottom: none;
+  }
+  .modal-title {
+    font-weight: 600;
+    letter-spacing: 0.3px;
+  }
+  .modal-body label {
+    font-weight: 500;
+    color: #333;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, #007bff, #00c6ff);
+    border: none;
+    box-shadow: 0 3px 8px rgba(0, 123, 255, 0.3);
+  }
+  .btn-primary:hover {
+    background: linear-gradient(135deg, #0069d9, #0099ff);
+  }
+  input.form-control,
+  textarea.form-control {
+    border-radius: 0.5rem;
+  }
+</style>
+

@@ -8,7 +8,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
 from app.db.base import Base
-
+from sqlalchemy.orm import relationship
 
 class Package(Base):
     __tablename__ = "packages"
@@ -62,4 +62,11 @@ class Package(Base):
         "Airline",
         secondary="package_airlines",
         viewonly=True
+    )
+
+    theme = relationship(
+        "PackageTheme",
+        uselist=False,
+        back_populates="package",
+        cascade="all, delete-orphan"
     )

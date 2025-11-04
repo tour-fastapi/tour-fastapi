@@ -1,0 +1,225 @@
+{# app/web/templates/package/themes/premium_aurora.html #}
+
+<style>
+  /* ========== AURORA (Flagship) ========== */
+  .theme-aurora {
+    --bg: #090f22;
+    --fg: #e6ecff;
+    --muted: #a7b2d6;
+    --card: #111839;
+    --card-2: #0d1531;
+    --border: #222e57;
+    --hair: rgba(255,255,255,.08);
+    --chip: rgba(255,255,255,.10);
+    --chip-border: rgba(255,255,255,.16);
+    --accent: #b3c6ff;
+    --accent-2: #94e2ff;
+    --glow-1: rgba(148,187,233,.35);
+    --glow-2: rgba(192,132,252,.32);
+    --glow-3: rgba(99,102,241,.28);
+    --radius: 16px;
+    --shadow-xl: 0 16px 48px rgba(0,0,0,.45);
+    --shadow-lg: 0 12px 36px rgba(0,0,0,.35);
+  }
+  .theme-aurora { color: var(--fg); }
+  .theme-aurora .hero {
+    position: relative;
+    border-radius: var(--radius);
+    padding: 22px;
+    background:
+      radial-gradient(1300px 380px at 12% -35%, var(--glow-2), transparent 60%),
+      radial-gradient(1300px 420px at 88% -45%, var(--glow-1), transparent 60%),
+      radial-gradient(900px 340px at 50% -30%, var(--glow-3), transparent 60%),
+      linear-gradient(180deg, #0b1433, #090f22);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-xl);
+    overflow: hidden;
+  }
+  .theme-aurora .hero::after {
+    content:"";
+    position:absolute; inset:-1px;
+    border-radius: inherit;
+    background: radial-gradient(1200px 220px at 50% -60%, rgba(255,255,255,.12), transparent 70%);
+    pointer-events:none;
+  }
+  .theme-aurora .card-soft {
+    background: linear-gradient(180deg, var(--card), var(--card-2));
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-lg);
+  }
+  .theme-aurora .chip {
+    display:inline-block;
+    padding:.3rem .7rem;
+    border-radius: 999px;
+    background: var(--chip);
+    border: 1px solid var(--chip-border);
+    font-size:.76rem;
+    backdrop-filter: blur(2px);
+  }
+  .theme-aurora .kicker { font-size:.8rem; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); }
+  .theme-aurora .label-m { font-size:.76rem; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); }
+  .theme-aurora .price-lg { font-size:clamp(30px,4vw,42px); line-height:1; font-weight:800; letter-spacing:-.02em; text-shadow:0 6px 24px rgba(179,198,255,.35); }
+  .theme-aurora a { color: var(--accent); text-decoration:none; }
+  .theme-aurora a:hover { text-decoration:underline; }
+  .theme-aurora .block {
+    border:1px dashed var(--hair);
+    border-radius: 14px;
+    padding: .9rem 1rem;
+    background: rgba(255,255,255,.03);
+  }
+  .theme-aurora .muted { color: var(--muted); }
+  .theme-aurora .img-brd { border:1px solid var(--border); }
+</style>
+
+<div class="theme-aurora">
+  <!-- Header / Hero -->
+  <div class="hero mb-4">
+    <div class="d-flex flex-wrap align-items-start gap-3">
+      <img src="/media/agency/{{ agency.registration_id }}/logo"
+           alt="{{ agency.agencies_name }} logo"
+           width="64" height="64"
+           class="rounded img-brd"
+           onerror="this.style.display='none'"/>
+
+      <div class="flex-grow-1">
+        <div class="d-flex align-items-center gap-2 mb-1">
+          <h1 class="h4 m-0">{{ pkg.package_name }}</h1>
+          {% if pkg.package_type %}<span class="chip">{{ pkg.package_type | title }}</span>{% endif %}
+          {% if pkg.package_class %}<span class="chip">{{ pkg.package_class | title }}</span>{% endif %}
+        </div>
+        <div class="muted small">
+          {{ pkg.days }} days
+          {% if pkg.travel_month or pkg.travel_year %}
+            • {{ pkg.travel_month and (pkg.travel_month | int) | default('', true)
+              | replace('1','January') | replace('2','February') | replace('3','March')
+              | replace('4','April') | replace('5','May') | replace('6','June')
+              | replace('7','July') | replace('8','August') | replace('9','September')
+              | replace('10','October') | replace('11','November') | replace('12','December') }}
+              {{ pkg.travel_year or '' }}
+          {% endif %}
+          {% if agency and agency.agencies_name %} • {{ agency.agencies_name }}{% if agency.city %}, {{ agency.city }}{% endif %}{% endif %}
+        </div>
+        {% if pkg.description %}<div class="mt-2">{{ pkg.description }}</div>{% endif %}
+      </div>
+
+      <div class="text-end ms-auto">
+        <div class="kicker mb-1">Starting</div>
+        <div class="price-lg">₹{{ "%.2f"|format(pkg.price or 0) }}</div>
+        {% if price_row and (price_row.price_double or price_row.price_triple or price_row.price_quad) %}
+          <div class="small muted mt-2">
+            {% if price_row.price_double %}Double: ₹{{ "%.2f"|format(price_row.price_double) }}<br>{% endif %}
+            {% if price_row.price_triple %}Triple: ₹{{ "%.2f"|format(price_row.price_triple) }}<br>{% endif %}
+            {% if price_row.price_quad %}Quad/Quint: ₹{{ "%.2f"|format(price_row.price_quad) }}{% endif %}
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Grid -->
+  <div class="row g-4">
+    <div class="col-lg-8">
+      <div class="card-soft p-3 p-md-4 mb-4">
+        <h2 class="h6 m-0 mb-3">Flights</h2>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <div class="block h-100">
+              <div class="label-m mb-1">Onward</div>
+              <div>{{ onward_text }}</div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="block h-100">
+              <div class="label-m mb-1">Return</div>
+              <div>{{ return_text }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-soft p-3 p-md-4 mb-4">
+        <h2 class="h6 m-0 mb-3">Stays</h2>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <div class="block h-100">
+              <div class="fw-semibold mb-2">Mecca</div>
+              <div class="label-m">Dates</div>
+              <div class="mb-2">{{ mecca_dates }}</div>
+              <div class="label-m">Distance</div>
+              <div class="mb-2">{{ mecca_distance_label }}</div>
+              <div class="label-m">Hotel</div>
+              <div>
+                {% if mecca_hotel_name %}
+                  {% if mecca_hotel_link %}
+                    <a href="{{ mecca_hotel_link }}" target="_blank" rel="noopener">{{ mecca_hotel_name }}</a>
+                  {% else %}{{ mecca_hotel_name }}{% endif %}
+                {% else %}—{% endif %}
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="block h-100">
+              <div class="fw-semibold mb-2">Medinah</div>
+              <div class="label-m">Dates</div>
+              <div class="mb-2">{{ med_dates }}</div>
+              <div class="label-m">Distance</div>
+              <div class="mb-2">{{ med_distance_label }}</div>
+              <div class="label-m">Hotel</div>
+              <div>
+                {% if med_hotel_name %}
+                  {% if med_hotel_link %}
+                    <a href="{{ med_hotel_link }}" target="_blank" rel="noopener">{{ med_hotel_name }}</a>
+                  {% else %}{{ med_hotel_name }}{% endif %}
+                {% else %}—{% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-soft p-3 p-md-4">
+        <h2 class="h6 m-0 mb-3">Inclusions</h2>
+        {% set incl = pkg.inclusion %}
+        <ul class="mb-0">
+          {% if incl and (incl.meals_desc or incl.meals_enabled) %}<li>Meals: {{ incl.meals_desc or "Included" }}</li>{% endif %}
+          {% if incl and (incl.laundry_desc or incl.laundry_enabled) %}<li>Laundry: {{ incl.laundry_desc or "Included" }}</li>{% endif %}
+          {% if incl and (incl.transport_desc or incl.transport_enabled) %}<li>Transport: {{ incl.transport_desc or "Included" }}</li>{% endif %}
+          {% if incl and (incl.zamzam_desc or incl.zamzam_enabled) %}<li>Zam Zam: {{ incl.zamzam_desc or "Included" }}</li>{% endif %}
+          {% if incl and (incl.welcome_kit_desc or incl.welcome_kit_enabled) %}<li>Welcome Kit: {{ incl.welcome_kit_desc or "Included" }}</li>{% endif %}
+          {% if incl and (incl.insurance_desc or incl.insurance_enabled) %}<li>Insurance: {{ incl.insurance_desc or "Included" }}</li>{% endif %}
+          {% if incl and incl.other %}<li>{{ incl.other }}</li>{% endif %}
+          {% if not incl %}<li>No inclusions listed.</li>{% endif %}
+        </ul>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="card-soft p-3 p-md-4 mb-4">
+        <div class="kicker mb-1">Pricing Summary</div>
+        <div class="price-lg mb-2" style="font-size:clamp(28px,3.4vw,38px);">₹{{ "%.2f"|format(pkg.price or 0) }}</div>
+        <div class="small muted">
+          {% if price_row and (price_row.price_double or price_row.price_triple or price_row.price_quad) %}
+            {% if price_row.price_double %}<div>Double/Couple: ₹{{ "%.2f"|format(price_row.price_double) }}</div>{% endif %}
+            {% if price_row.price_triple %}<div>Triple: ₹{{ "%.2f"|format(price_row.price_triple) }}</div>{% endif %}
+            {% if price_row.price_quad %}<div>Quad/Quint: ₹{{ "%.2f"|format(price_row.price_quad) }}</div>{% endif %}
+          {% else %}
+            <div>No variant pricing specified.</div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<style>
+  .theme-aurora .btn-primary {
+    background: linear-gradient(90deg, #94e2ff, #b3c6ff);
+    color: #000;
+    box-shadow: 0 0 20px rgba(148,187,233,.35);
+  }
+  .theme-aurora .btn-primary:hover {
+    box-shadow: 0 0 28px rgba(179,198,255,.6);
+    transform: translateY(-2px);
+  }
+</style>

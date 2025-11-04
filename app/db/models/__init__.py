@@ -17,7 +17,8 @@ from .package_itinerary import PackageItinerary  # noqa: F401
 from .agency_branch import AgencyBranch   # noqa: F401
 from .city import City                    # noqa: F401
 from .inquiry import Inquiry              # noqa: F401
-
+from .package import Package
+from .package_theme import PackageTheme
 __all__ = [
     "Airline",
     "PackageAirline",
@@ -33,4 +34,5 @@ __all__ = [
     "AgencyBranch",
     "City",
     "Inquiry",
+    "PackageTheme",
 ]

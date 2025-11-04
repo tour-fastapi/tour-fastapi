@@ -22,6 +22,7 @@ from app.db.models.agency import Agency
 from app.db.models.agency_testimonial import AgencyTestimonial  # (kept if used in templates)
 from app.db.models.city import City
 from app.db.models.inquiry import Inquiry
+from app.db.models import PackageStay
 from app.db.models.package import Package
 from app.db.models.package_flight import PackageFlight
 from app.db.models.package_inclusion import PackageInclusion
@@ -40,8 +41,36 @@ from app.web.deps import (
     require_user,
 )
 
+from datetime import datetime  # you already import datetime above, fine if duplicate
+# ⬇ add these
+import os
+from io import BytesIO
+from pathlib import Path
+from fastapi import UploadFile, File, HTTPException
+from PIL import Image, UnidentifiedImageError
+
 router = APIRouter()
 templates = Jinja2Templates(directory="app/web/templates")
+
+# canonical mapping: DB/user input -> file key (without .html)
+THEME_ALIAS_MAP = {
+    "premium-aurora": "premium_aurora",
+    "premium_aurora": "premium_aurora",
+    "aurora": "premium_aurora",
+
+    "premium-classic": "premium",
+    "classic": "premium",
+    "premium": "premium",
+
+    "basic": "basic",
+}
+
+VALID_THEMES = set(THEME_ALIAS_MAP.values())  # {"premium_aurora","premium","basic"}
+
+def normalize_theme_key(raw: str) -> str:
+    k = (raw or "basic").strip().lower().replace(" ", "-").replace("_", "-")
+    k = THEME_ALIAS_MAP.get(k, "basic")
+    return k  # returns one of: premium_aurora | premium | basic
 
 
 # ----------------- Small helpers -----------------
@@ -832,11 +861,58 @@ def agency_new_submit(
     branch_contact_person: str = Form(""),
     branch_contact_number: str = Form(""),
     branch_is_main: Optional[str] = Form(None),
+    # ✅ accept optional file as UploadFile via File()
+    logo_file: Optional[UploadFile] = File(None),
     csrf_token: str = Form(...),
     db: Session = Depends(get_db),
 ):
     require_csrf(request, csrf_token)
     user = require_user(request, db)
+
+    # ---- tiny local helpers (no imports from routes_media to avoid ImportError) ----
+    MEDIA_ROOT = Path("media").resolve()
+    LOGO_NAME = "logo.webp"
+    MAX_UPLOAD_BYTES = 5 * 1024 * 1024
+    ALLOWED_FORMATS = {"PNG", "JPEG", "WEBP"}
+    MAX_W, MAX_H = 2000, 2000
+
+    def _agency_dir(registration_id: int) -> Path:
+        return MEDIA_ROOT / "agency" / str(registration_id)
+
+    def _logo_path(registration_id: int) -> Path:
+        return _agency_dir(registration_id) / LOGO_NAME
+
+    def _read_limited(upload: UploadFile, limit: int = MAX_UPLOAD_BYTES) -> bytes:
+        data = upload.file.read(limit + 1)
+        if len(data) > limit:
+            raise HTTPException(status_code=413, detail=f"File too large (>{limit} bytes)")
+        if not data:
+            raise HTTPException(status_code=400, detail="Empty upload")
+        return data
+
+    def _validate_and_normalize_to_webp(raw: bytes) -> bytes:
+        try:
+            im = Image.open(BytesIO(raw)); im.load()
+        except UnidentifiedImageError:
+            raise HTTPException(status_code=400, detail="Unsupported or corrupted image")
+
+        if im.format not in ALLOWED_FORMATS:
+            raise HTTPException(status_code=400, detail=f"Only PNG, JPEG or WebP allowed (got {im.format})")
+
+        if im.mode == "RGBA":
+            bg = Image.new("RGB", im.size, (255, 255, 255))
+            bg.paste(im, mask=im.split()[3])
+            im = bg
+        elif im.mode != "RGB":
+            im = im.convert("RGB")
+
+        if im.width > MAX_W or im.height > MAX_H:
+            im.thumbnail((MAX_W, MAX_H))
+
+        out = BytesIO()
+        im.save(out, format="WEBP", quality=85, method=6)
+        return out.getvalue()
+    # -------------------------------------------------------------------------------
 
     def _to_int_or_none(s: str) -> Optional[int]:
         s = (s or "").strip()
@@ -900,11 +976,48 @@ def agency_new_submit(
 
     db.commit()
 
+    # ✅ Process logo (optional), identical behavior to Edit flow
+    try:
+        if logo_file is not None and getattr(logo_file, "filename", ""):
+            if not (logo_file.content_type or "").startswith("image/"):
+                raise HTTPException(status_code=400, detail="Upload must be an image file")
+
+            raw = _read_limited(logo_file, MAX_UPLOAD_BYTES)
+            webp_bytes = _validate_and_normalize_to_webp(raw)
+
+            target_dir = _agency_dir(agency.registration_id)
+            target_dir.mkdir(parents=True, exist_ok=True)
+
+            tmp_path = target_dir / (LOGO_NAME + ".tmp")
+            final_path = _logo_path(agency.registration_id)
+
+            with open(tmp_path, "wb") as f:
+                f.write(webp_bytes)
+            os.replace(tmp_path, final_path)
+
+            agency.logo_path = str(final_path)
+            agency.logo_uploaded_at = datetime.utcnow()
+
+            try:
+                img = Image.open(final_path)
+                agency.logo_width, agency.logo_height = img.size
+            except Exception:
+                agency.logo_width = None
+                agency.logo_height = None
+
+            db.commit()
+            flash(request, "Logo uploaded successfully.", "success")
+    except HTTPException as hx:
+        flash(request, f"Logo upload skipped: {hx.detail}", "error")
+    except Exception:
+        flash(request, "Logo upload skipped due to an unexpected error.", "error")
+
     flash(request, "Agency and branch created!", "success")
     return RedirectResponse(
         url=f"/agency/{agency.registration_id}/dashboard",
         status_code=303,
     )
+
 
 
 @router.get("/agency/{registration_id}/edit", response_class=HTMLResponse)
@@ -1121,9 +1234,14 @@ def packages_list(request: Request, db: Session = Depends(get_db)):
         is_public=True,
     )
 
+from sqlalchemy import func
+from app.db.models.hotel import Hotel
+from app.db.models.package_theme import PackageTheme
+
 
 @router.get("/umrah_packages/{package_id}", response_class=HTMLResponse)
 def package_detail(package_id: int, request: Request, db: Session = Depends(get_db)):
+    
     pkg = (
         db.query(Package)
         .options(
@@ -1137,17 +1255,130 @@ def package_detail(package_id: int, request: Request, db: Session = Depends(get_
     if not pkg:
         raise HTTPException(status_code=404, detail="Package not found")
 
-    agency = db.query(Agency).filter(Agency.registration_id == pkg.registration_id).first()
+    agency = (
+        db.query(Agency)
+        .filter(Agency.registration_id == pkg.registration_id)
+        .first()
+    )
+
+    # ---------- helpers ----------
+    def _fmt_date(dt):
+        if not dt:
+            return None
+        if isinstance(dt, str):
+            try:
+                dt = datetime.fromisoformat(dt)
+            except Exception:
+                return dt
+        return dt.strftime("%d %b %Y")
+
+    def _fmt_flight(f):
+        if not f:
+            return None
+        date = getattr(f, "date", None) or getattr(f, "flight_date", None)
+        ftype = getattr(f, "type", None) or getattr(f, "flight_type", None)
+        via = getattr(f, "via", None) or getattr(f, "via_city", None)
+        airline = getattr(f, "airline", None) or getattr(f, "airline_name", None)
+
+        parts = []
+        if date:
+            parts.append(_fmt_date(date))
+        if ftype:
+            parts.append(str(ftype).title())
+        if via:
+            parts.append(f"via {via}")
+        if airline:
+            parts.append(airline)
+        return " • ".join(parts) if parts else None
+
+    def _fmt_dates(stay):
+        if not stay:
+            return None
+        ci = getattr(stay, "check_in", None)
+        co = getattr(stay, "check_out", None)
+        if not ci and not co:
+            return None
+        if ci and co:
+            return f"{_fmt_date(ci)} → {_fmt_date(co)}"
+        return _fmt_date(ci or co)
+
+    def _fmt_distance(stay, default_place):
+        if not stay:
+            return None
+        text = (
+            getattr(stay, "distance_text", None)
+            or getattr(stay, "distance_label", None)
+        )
+        if text:
+            return text
+        meters = getattr(stay, "distance_m", None)
+        if meters is not None:
+            try:
+                m = int(meters)
+                return f"{m} m from {default_place}"
+            except Exception:
+                return f"{meters} from {default_place}"
+        return None
+    # -----------------------------
 
     flights_by_leg = {f.leg: f for f in (pkg.flights or [])}
     onward = flights_by_leg.get("onward")
     ret = flights_by_leg.get("return")
-    mecca = next((s for s in (pkg.stays or []) if s.city == "Mecca"), None)
-    med = next((s for s in (pkg.stays or []) if s.city == "Medinah"), None)
-    incl = pkg.inclusion
-    price_row = db.query(PackagePrice).filter(PackagePrice.package_id == pkg.package_id).first()
 
-    # unified CAPTCHA tag between detail & submit:
+    stays = {s.city: s for s in (pkg.stays or [])}
+    mecca = stays.get("Mecca")
+    med   = stays.get("Medinah")
+
+    price_row = (
+        db.query(PackagePrice)
+        .filter(PackagePrice.package_id == pkg.package_id)
+        .first()
+    )
+
+    # after you fetched raw theme from package_theme:
+    raw_theme = (
+        db.query(PackageTheme.theme_key)
+        .filter(PackageTheme.package_id == package_id)
+        .scalar()
+        or "basic"
+    )
+
+    theme_key = normalize_theme_key(raw_theme)  # premium_aurora | premium | basic
+    theme_template = f"package/themes/{theme_key}.html"
+
+
+
+    onward_text = _fmt_flight(onward) or "—"
+    return_text = _fmt_flight(ret) or "—"
+
+    mecca_dates = _fmt_dates(mecca) or "—"
+    med_dates   = _fmt_dates(med)   or "—"
+
+    mecca_distance_label = _fmt_distance(mecca, "Haram") or "—"
+    med_distance_label   = _fmt_distance(med, "Masjid an-Nabawi") or "—"
+
+    # Resolve hotel IDs -> (name, link) map
+    hotel_ids = [s.hotel_id for s in (pkg.stays or []) if getattr(s, "hotel_id", None)]
+    hotel_map = {}
+    if hotel_ids:
+        rows = (
+            db.query(Hotel.id, Hotel.name, Hotel.link)
+            .filter(Hotel.id.in_(hotel_ids))
+            .all()
+        )
+        hotel_map = {r.id: {"name": r.name, "link": r.link} for r in rows}
+
+    def resolved_hotel(stay):
+        if not stay:
+            return None, None
+        name = stay.hotel_name or hotel_map.get(stay.hotel_id, {}).get("name")
+        link = stay.hotel_link or hotel_map.get(stay.hotel_id, {}).get("link")
+        return name, link
+
+    mecca_hotel_name, mecca_hotel_link = resolved_hotel(mecca)
+    med_hotel_name,   med_hotel_link   = resolved_hotel(med)
+    
+    csrf_token = get_csrf_token(request)
     captcha_tag = f"pkg-inq:{pkg.package_id}"
 
     return render(
@@ -1158,18 +1389,32 @@ def package_detail(package_id: int, request: Request, db: Session = Depends(get_
             "title": pkg.package_name,
             "pkg": pkg,
             "agency": agency,
-            "onward": onward,
-            "ret": ret,
-            "mecca": mecca,
-            "med": med,
-            "incl": incl,
+
+            "onward_text": onward_text,
+            "return_text": return_text,
+
+            "mecca_dates": mecca_dates,
+            "med_dates":   med_dates,
+
+            "mecca_distance_label": mecca_distance_label,
+            "med_distance_label":   med_distance_label,
+
             "price_row": price_row,
+            "theme_key": theme_key,
+            "theme_template": theme_template,       # full path
+             # optional: debug flag if you want
+            "theme_debug": f"raw={raw_theme} → {theme_key}",
+
+            # ✅ Pass the resolved hotel fields to templates
+            "mecca_hotel_name": mecca_hotel_name,
+            "mecca_hotel_link": mecca_hotel_link,
+            "med_hotel_name":   med_hotel_name,
+            "med_hotel_link":   med_hotel_link,
+            "csrf_token": csrf_token,
             "captcha_q": new_captcha(request, captcha_tag),
         },
         is_public=True,
     )
-
-
 @router.post("/umrah_packages/{package_id}/inquire")
 def package_inquire_submit(
     request: Request,
@@ -1280,7 +1525,7 @@ def package_new_page(
         },
     )
 
-
+from app.db.models.package_airline import PackageAirline
 @router.post("/package/new")
 def package_new_submit(
     request: Request,
@@ -1293,31 +1538,38 @@ def package_new_submit(
     package_class: str = Form(""),
     travel_month: str = Form(""),
     travel_year: str = Form(""),
+
     airline_ids: Optional[List[int]] = Form(None),
+
     price_double: Optional[float] = Form(None),
     price_triple: Optional[float] = Form(None),
     price_quad: Optional[float] = Form(None),
     price_note: str = Form(""),
+
     onward_date: str = Form(""),
     onward_type: str = Form(""),
     onward_via: str = Form(""),
     onward_airline: str = Form(""),
+
     return_date: str = Form(""),
     return_type: str = Form(""),
     return_via: str = Form(""),
     return_airline: str = Form(""),
+
     mecca_check_in: str = Form(""),
     mecca_check_out: str = Form(""),
     mecca_hotel: str = Form(""),
     mecca_link: str = Form(""),
     mecca_distance_m: str = Form(""),
     mecca_distance_text: str = Form(""),
+
     med_check_in: str = Form(""),
     med_check_out: str = Form(""),
     med_hotel: str = Form(""),
     med_link: str = Form(""),
     med_distance_m: str = Form(""),
     med_distance_text: str = Form(""),
+
     incl_meals_enabled: Optional[str] = Form(None),
     incl_meals_desc: str = Form(""),
     incl_laundry_enabled: Optional[str] = Form(None),
@@ -1331,12 +1583,19 @@ def package_new_submit(
     incl_insurance_enabled: Optional[str] = Form(None),
     incl_insurance_desc: str = Form(""),
     incl_other: str = Form(""),
+
     csrf_token: str = Form(...),
+
+    # THEME inputs
+    detail_theme: str = Form("basic"),   # UI radio; if you also have a column, name it detail_theme (not 'theme')
+    theme_key: str = Form("basic"),      # stored in package_theme table
+
     db: Session = Depends(get_db),
 ):
     require_csrf(request, csrf_token)
     user = require_user(request, db)
 
+    # ----- Validate agency ownership -----
     agency = (
         db.query(Agency)
         .filter(Agency.registration_id == agency_id, Agency.user_id == user.id)
@@ -1346,6 +1605,7 @@ def package_new_submit(
         flash(request, "Agency not found or not yours", "error")
         return RedirectResponse(url="/select-agency", status_code=303)
 
+    # ----- Basic validations -----
     if not package_name.strip() or int(days) < 1:
         flash(request, "Please fill required fields correctly.", "error")
         return RedirectResponse(url=f"/package/new?agency_id={agency_id}", status_code=303)
@@ -1375,6 +1635,12 @@ def package_new_submit(
         flash(request, "Travel year must be 2026 or later.", "error")
         return RedirectResponse(url=f"/package/new?agency_id={agency_id}", status_code=303)
 
+    # Normalize selected theme text
+    selected_theme = (detail_theme or theme_key or "basic").strip() or "basic"
+
+    # ----------------------------------------------------------------------
+    # 1) Create Package  (IMPORTANT: do NOT pass theme=... here)
+    # ----------------------------------------------------------------------
     pkg = Package(
         registration_id=agency.registration_id,
         package_type=t_raw,
@@ -1385,17 +1651,47 @@ def package_new_submit(
         description=_norm(description),
         travel_month=tm,
         travel_year=ty,
+        # DO NOT set theme=... here — it collides with relationship named "theme"
     )
     db.add(pkg)
-    db.commit()
-    db.refresh(pkg)
+    db.flush()  # ensures pkg.package_id is available
 
-    from app.db.models.package_airline import PackageAirline
+    # If you added a separate text column like `detail_theme` on packages, set it safely:
+    try:
+        # This will work only if a simple column named detail_theme exists.
+        setattr(pkg, "detail_theme", selected_theme)
+    except Exception:
+        # Ignore if column doesn't exist or is a hybrid/relationship
+        pass
+
+    # ----------------------------------------------------------------------
+    # 2) Upsert into package_theme
+    # ----------------------------------------------------------------------
+    existing = db.get(PackageTheme, pkg.package_id)
+    if existing:
+        existing.theme_key = selected_theme
+        existing.set_at = datetime.utcnow()
+        # existing.set_by_user_id = user.id  # if you wire the FK later
+    else:
+        db.add(
+            PackageTheme(
+                package_id=pkg.package_id,
+                theme_key=selected_theme,
+                set_by_user_id=None,  # or user.id if you wire it
+            )
+        )
+
+    # ----------------------------------------------------------------------
+    # 3) Airlines junction
+    # ----------------------------------------------------------------------
     if airline_ids:
         unique_airline_ids = sorted({int(aid) for aid in airline_ids if str(aid).isdigit()})
         for aid in unique_airline_ids:
             db.add(PackageAirline(package_id=pkg.package_id, airline_id=aid))
 
+    # ----------------------------------------------------------------------
+    # 4) Variant prices
+    # ----------------------------------------------------------------------
     if any(v is not None for v in (price_double, price_triple, price_quad)) or (price_note and price_note.strip()):
         db.add(
             PackagePrice(
@@ -1407,6 +1703,9 @@ def package_new_submit(
             )
         )
 
+    # ----------------------------------------------------------------------
+    # 5) Flights
+    # ----------------------------------------------------------------------
     if any([onward_date, onward_type, onward_via, onward_airline]):
         db.add(
             PackageFlight(
@@ -1430,6 +1729,9 @@ def package_new_submit(
             )
         )
 
+    # ----------------------------------------------------------------------
+    # 6) Stays
+    # ----------------------------------------------------------------------
     def resolve_hotel_id_by_name(name_txt: str, link_txt: str) -> int | None:
         name_txt = (name_txt or "").strip()
         if not name_txt:
@@ -1466,6 +1768,9 @@ def package_new_submit(
             )
         )
 
+    # ----------------------------------------------------------------------
+    # 7) Inclusions
+    # ----------------------------------------------------------------------
     any_incl = any(
         [
             incl_meals_enabled,
@@ -1504,8 +1809,10 @@ def package_new_submit(
         )
 
     db.commit()
+
     flash(request, "Package added! Let’s add the day-by-day itinerary (you can skip it).", "info")
     return RedirectResponse(url=f"/package/{pkg.package_id}/itinerary/wizard?day=1", status_code=303)
+
 
 
 @router.get("/package/{package_id}/itinerary/wizard", response_class=HTMLResponse)

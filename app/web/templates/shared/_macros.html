@@ -1,0 +1,27 @@
+{# app/web/templates/shared/_macros.html #}
+{% macro agency_badge(agency, size=56, rounded=True) -%}
+  {# --- Compute initials: 1st + last word only --- #}
+  {% set name = (agency.agencies_name or '').strip() %}
+  {% set words = name.split() %}
+  {% set initials = (
+      (words[0][0] if words|length > 0 else '') ~
+      (words[-1][0] if words|length > 1 else '')
+    ).upper() %}
+
+  {% set has_logo = agency.logo_path %}
+
+  {# Use CSS variable to control badge size safely (no linter warnings) #}
+  <div class="agency-badge{% if rounded %} rounded{% endif %}" style="--badge-size: {{ size }}px;">
+    {% if has_logo %}
+      <img
+        class="agency-badge-img"
+        loading="lazy"
+        alt="{{ agency.agencies_name }} logo"
+        src="/media/agency/{{ agency.registration_id }}/logo{% if agency.logo_uploaded_at %}?v={{ agency.logo_uploaded_at|replace(' ', '_') }}{% endif %}"
+        onerror="this.replaceWith(this.nextElementSibling)">
+      <span class="agency-badge-fallback">{{ initials or 'NA' }}</span>
+    {% else %}
+      <span class="agency-badge-fallback">{{ initials or 'NA' }}</span>
+    {% endif %}
+  </div>
+{%- endmacro %}
