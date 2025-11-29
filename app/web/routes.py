@@ -8,7 +8,7 @@ import urllib.parse
 from collections import defaultdict
 from datetime import date, datetime, timedelta, timezone
 from typing import List, Optional
-
+from app.web.context import ctx as _ctx
 from fastapi import APIRouter, Depends, Form, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
@@ -116,9 +116,41 @@ def set_active_agency(request: Request, registration_id: int | None):
 def get_active_agency_id(request: Request) -> int | None:
     return request.session.get("active_agency_id")
 
+# --- Admin helpers + smart redirect after login ---
+
+ADMIN_EMAILS = {"umrahadvisor@gmail.com", "umrahadvisor1@gmail.com"}
+
+def _is_admin_email(email: str | None) -> bool:
+    return (email or "").strip().lower() in ADMIN_EMAILS
+
+@router.get("/post-login")
+def post_login_redirect(request: Request, db: Session = Depends(get_db)):
+    user = get_current_user_from_cookie(request, db)
+    if user and _is_admin_email(getattr(user, "email", "")):
+        return RedirectResponse(url="/admin", status_code=303)
+    # fallback to the existing normal flow
+    if user:
+        return redirect_after_login(request, db, user)
+    return RedirectResponse(url="/login", status_code=303)
+
 
 def redirect_after_login(request: Request, db: Session, user: User) -> RedirectResponse:
-    """Send the user to the right place after login/OTP."""
+    """
+    Send the user to the right place after login/OTP:
+    - Admins → /admin
+    - If user has no agencies → /agency/new (and flash)
+    - If user has exactly one agency → that agency dashboard
+    - Else → /select-agency
+    """
+    # --- Admin first ---
+    admin_emails = {
+        e.strip().lower()
+        for e in getattr(settings, "ADMIN_EMAILS", ["umrahadvisor@gmail.com", "umrahadvisor1@gmail.com"])
+    }
+    if (getattr(user, "is_admin", False)) or (user.email and user.email.lower() in admin_emails):
+        return RedirectResponse(url="/admin", status_code=303)
+
+    # --- Regular flow as before ---
     agencies = (
         db.query(Agency)
         .filter(Agency.user_id == user.id)
@@ -139,6 +171,15 @@ def redirect_after_login(request: Request, db: Session, user: User) -> RedirectR
 
     set_active_agency(request, None)
     return RedirectResponse(url="/select-agency", status_code=303)
+
+@router.get("/dashboard")
+def legacy_dashboard_redirect(request: Request, db: Session = Depends(get_db)):
+    user = get_current_user_from_cookie(request, db)
+    if not user:
+        return RedirectResponse(url="/login", status_code=303)
+    # Reuse the canonical redirect logic
+    return redirect_after_login(request, db, user)
+
 
 
 def _send_login_otp(to_email: str, code: str):
@@ -342,12 +383,6 @@ def render(
     *,
     is_public: bool = False,
 ):
-    """
-    Global render wrapper:
-      - injects request + csrf_token + footer_cities (cached)
-      - injects user + nav_agency for navbar
-      - injects 'metrics' only for public pages
-    """
     from app.web.deps import get_csrf_token
 
     ctx = dict(context or {})
@@ -355,15 +390,15 @@ def render(
     ctx.setdefault("csrf_token", get_csrf_token(request))
     ctx["footer_cities"] = _get_footer_cities_cached(db, limit=16)
 
-    # navbar context (⚠️ don't clobber page's own `agency`)
+    # navbar context
     user, nav_agency = _resolve_active_agency_for_nav(request, db)
     ctx["user"] = user
-    ctx["nav_agency"] = nav_agency  # <— use a distinct key
+    ctx["nav_agency"] = nav_agency
+    ctx["is_admin"] = _is_admin_user(user)   # <<< add this
 
-    # small stats bar for public pages
     ctx["metrics"] = _get_public_counts(db) if is_public else None
-
     return templates.TemplateResponse(template_name, ctx)
+
 
 
 
@@ -501,10 +536,11 @@ def login_submit(
 
     access = create_token(user.id, timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES), "access")
 
-    resp = redirect_after_login(request, db, user)
+    resp = RedirectResponse(url="/post-login", status_code=303)
     set_access_cookie(resp, access)
     flash(request, "Login successful. Welcome back!", "success")
     return resp
+
 
 
 @router.post("/logout")
@@ -567,10 +603,11 @@ def verify_submit(
     db.commit()
 
     access = create_token(user.id, timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES), "access")
-    resp = redirect_after_login(request, db, user)
+    resp = RedirectResponse(url="/post-login", status_code=303)
     set_access_cookie(resp, access)
     flash(request, "OTP verified. Welcome!", "success")
     return resp
+
 
 
 @router.post("/verify/resend")
@@ -1196,14 +1233,21 @@ def agency_delete_submit(
 
 @router.get("/umrah_packages", response_class=HTMLResponse)
 def packages_list(request: Request, db: Session = Depends(get_db)):
+    from collections import defaultdict
+    from sqlalchemy.orm import selectinload
+
+    # Grab latest packages (unchanged)
     packages = db.query(Package).order_by(Package.package_id.desc()).all()
+    
     reg_ids = {p.registration_id for p in packages}
 
+    # Fetch agencies for those packages
     if reg_ids:
         agencies = (
             db.query(Agency)
             .options(selectinload(Agency.city_rel))
             .filter(Agency.registration_id.in_(reg_ids))
+            .filter(Agency.is_blocked == False)
             .all()
         )
     else:
@@ -1211,12 +1255,25 @@ def packages_list(request: Request, db: Session = Depends(get_db)):
 
     agency_by_id = {a.registration_id: a for a in agencies}
 
+    # ✅ Only include packages whose agency exists AND is not blocked
+    filtered_packages = [
+        p for p in packages
+        if (agency_by_id.get(p.registration_id) and not agency_by_id[p.registration_id].is_blocked)
+    ]
+
     by_city: dict[str, list[Package]] = defaultdict(list)
-    for p in packages:
+    for p in filtered_packages:
         ag = agency_by_id.get(p.registration_id)
         city = _display_city(ag)
         by_city[city].append(p)
-
+    
+    if agency_by_id:
+        packages = (
+            db.query(Package)
+            .filter(Package.registration_id.in_(agency_by_id.keys()))
+            .order_by(Package.package_id.desc())
+            .all()
+        )
     def city_sort_key(name: str):
         return (name == "Unknown", name.casefold())
 
@@ -1229,7 +1286,7 @@ def packages_list(request: Request, db: Session = Depends(get_db)):
         {
             "title": "Discover Packages",
             "packages_by_city": packages_by_city,
-            "agency_by_id": agency_by_id,
+            "agency_by_id": agency_by_id,  # keeps agency info for cards
         },
         is_public=True,
     )
@@ -1241,7 +1298,6 @@ from app.db.models.package_theme import PackageTheme
 
 @router.get("/umrah_packages/{package_id}", response_class=HTMLResponse)
 def package_detail(package_id: int, request: Request, db: Session = Depends(get_db)):
-    
     pkg = (
         db.query(Package)
         .options(
@@ -1260,6 +1316,12 @@ def package_detail(package_id: int, request: Request, db: Session = Depends(get_
         .filter(Agency.registration_id == pkg.registration_id)
         .first()
     )
+    if agency and agency.is_blocked:
+        return templates.TemplateResponse(
+            "void.html",
+            _ctx(request, db, title="Access Restricted"),
+            status_code=403,
+        )
 
     # ---------- helpers ----------
     def _fmt_date(dt):
@@ -1323,7 +1385,7 @@ def package_detail(package_id: int, request: Request, db: Session = Depends(get_
 
     flights_by_leg = {f.leg: f for f in (pkg.flights or [])}
     onward = flights_by_leg.get("onward")
-    ret = flights_by_leg.get("return")
+    ret    = flights_by_leg.get("return")
 
     stays = {s.city: s for s in (pkg.stays or [])}
     mecca = stays.get("Mecca")
@@ -1346,8 +1408,6 @@ def package_detail(package_id: int, request: Request, db: Session = Depends(get_
     theme_key = normalize_theme_key(raw_theme)  # premium_aurora | premium | basic
     theme_template = f"package/themes/{theme_key}.html"
 
-
-
     onward_text = _fmt_flight(onward) or "—"
     return_text = _fmt_flight(ret) or "—"
 
@@ -1357,7 +1417,7 @@ def package_detail(package_id: int, request: Request, db: Session = Depends(get_
     mecca_distance_label = _fmt_distance(mecca, "Haram") or "—"
     med_distance_label   = _fmt_distance(med, "Masjid an-Nabawi") or "—"
 
-    # Resolve hotel IDs -> (name, link) map
+    # ---------- Resolve primary hotel IDs -> (name, link) map ----------
     hotel_ids = [s.hotel_id for s in (pkg.stays or []) if getattr(s, "hotel_id", None)]
     hotel_map = {}
     if hotel_ids:
@@ -1377,7 +1437,35 @@ def package_detail(package_id: int, request: Request, db: Session = Depends(get_
 
     mecca_hotel_name, mecca_hotel_link = resolved_hotel(mecca)
     med_hotel_name,   med_hotel_link   = resolved_hotel(med)
-    
+
+    # ---------- NEW: Resolve "or similar" hotels for both cities ----------
+    def _get_similar_hotels(stay):
+        """
+        Read stay.similar_hotel_ids (e.g. '3,5,8') -> list[Hotel]
+        Used only for display in themes (basic/premium/premium_aurora).
+        """
+        if not stay:
+            return []
+        raw_ids = getattr(stay, "similar_hotel_ids", None)
+        if not raw_ids:
+            return []
+        try:
+            ids = [int(x) for x in str(raw_ids).split(",") if x.strip().isdigit()]
+        except Exception:
+            return []
+        if not ids:
+            return []
+        return (
+            db.query(Hotel)
+            .filter(Hotel.id.in_(ids))
+            .order_by(Hotel.name.asc())
+            .all()
+        )
+
+    mecca_similar_hotels = _get_similar_hotels(mecca)
+    med_similar_hotels   = _get_similar_hotels(med)
+    # --------------------------------------------------------------
+
     csrf_token = get_csrf_token(request)
     captcha_tag = f"pkg-inq:{pkg.package_id}"
 
@@ -1401,20 +1489,25 @@ def package_detail(package_id: int, request: Request, db: Session = Depends(get_
 
             "price_row": price_row,
             "theme_key": theme_key,
-            "theme_template": theme_template,       # full path
-             # optional: debug flag if you want
+            "theme_template": theme_template,
             "theme_debug": f"raw={raw_theme} → {theme_key}",
 
-            # ✅ Pass the resolved hotel fields to templates
+            # primary hotels
             "mecca_hotel_name": mecca_hotel_name,
             "mecca_hotel_link": mecca_hotel_link,
             "med_hotel_name":   med_hotel_name,
             "med_hotel_link":   med_hotel_link,
+
+            # ✅ NEW: lists used by basic / premium / premium_aurora templates
+            "mecca_similar_hotels": mecca_similar_hotels,
+            "med_similar_hotels":   med_similar_hotels,
+
             "csrf_token": csrf_token,
             "captcha_q": new_captcha(request, captcha_tag),
         },
         is_public=True,
     )
+
 @router.post("/umrah_packages/{package_id}/inquire")
 def package_inquire_submit(
     request: Request,
@@ -1493,6 +1586,14 @@ def package_new_page(
 ):
     user = require_user(request, db)
 
+    from app.db.models.hotel import Hotel
+
+    mecca_hotels = db.query(Hotel).filter(Hotel.city == "Mecca").order_by(Hotel.name.asc()).all()
+    medinah_hotels = db.query(Hotel).filter(Hotel.city == "Medinah").order_by(Hotel.name.asc()).all()
+
+    mecca_hotels_json = [{"id": h.id, "name": h.name} for h in mecca_hotels]
+    medinah_hotels_json = [{"id": h.id, "name": h.name} for h in medinah_hotels]
+
     agency = (
         db.query(Agency)
         .filter(Agency.registration_id == agency_id, Agency.user_id == user.id)
@@ -1503,7 +1604,18 @@ def package_new_page(
         return RedirectResponse(url="/select-agency", status_code=303)
 
     from app.db.models.hotel import Hotel
-    hotels = db.query(Hotel).order_by(Hotel.name.asc()).all()
+    mecca_hotels = (
+        db.query(Hotel)
+        .filter(Hotel.city == "Mecca")
+        .order_by(Hotel.name.asc())
+        .all()
+    )
+    medinah_hotels = (
+        db.query(Hotel)
+        .filter(Hotel.city == "Medinah")
+        .order_by(Hotel.name.asc())
+        .all()
+    )
 
     from app.db.models.airline import Airline
     airlines = db.query(Airline).order_by(Airline.name.asc()).all()
@@ -1519,10 +1631,15 @@ def package_new_page(
             "agency": agency,
             "flashes": flashes,
             "csrf_token": get_csrf_token(request),
-            "hotels": hotels,
+            "mecca_hotels": mecca_hotels,      
+            "medinah_hotels": medinah_hotels,
             "airlines": airlines,
             "years": years,
-        },
+            "mecca_hotels": mecca_hotels,
+            "medinah_hotels": medinah_hotels,
+            "mecca_hotels_json": mecca_hotels_json,
+            "medinah_hotels_json": medinah_hotels_json,
+            },
     )
 
 from app.db.models.package_airline import PackageAirline
@@ -1569,6 +1686,8 @@ def package_new_submit(
     med_link: str = Form(""),
     med_distance_m: str = Form(""),
     med_distance_text: str = Form(""),
+    mecca_similar: Optional[List[int]] = Form(None),
+    medinah_similar: Optional[List[int]] = Form(None),
 
     incl_meals_enabled: Optional[str] = Form(None),
     incl_meals_desc: str = Form(""),
@@ -1594,6 +1713,9 @@ def package_new_submit(
 ):
     require_csrf(request, csrf_token)
     user = require_user(request, db)
+    print("DEBUG mecca_similar:", mecca_similar)
+    print("DEBUG medinah_similar:", medinah_similar)
+
 
     # ----- Validate agency ownership -----
     agency = (
@@ -1732,41 +1854,141 @@ def package_new_submit(
     # ----------------------------------------------------------------------
     # 6) Stays
     # ----------------------------------------------------------------------
-    def resolve_hotel_id_by_name(name_txt: str, link_txt: str) -> int | None:
-        name_txt = (name_txt or "").strip()
-        if not name_txt:
-            return None
-        row = get_or_create_hotel(db, name=name_txt, link=(link_txt or "").strip() or None)
-        return row.id if row else None
+    from app.db.models.hotel import Hotel
 
+    def resolve_hotel_and_distance(
+        name_txt: str,
+        link_txt: str,
+        city: str,
+        raw_distance_m: str,
+        raw_distance_text: str,
+    ) -> tuple[int | None, int | None, str | None]:
+        """
+        1. Find or create Hotel row by (name, city)
+        2. If distance fields are empty, fill them from hotel.distance_km (if present)
+        """
+        name = (name_txt or "").strip()
+        link = (link_txt or "").strip() or None
+        distance_text = (raw_distance_text or "").strip()
+        distance_m = None
+
+        # parse distance_m from form if given
+        raw_m = (raw_distance_m or "").strip()
+        if raw_m.isdigit():
+            distance_m = int(raw_m)
+
+        # no hotel name -> nothing to resolve
+        if not name:
+            return None, distance_m or None, distance_text or None
+
+        # 1) find existing hotel
+        row = (
+            db.query(Hotel)
+            .filter(Hotel.name == name, Hotel.city == city)
+            .first()
+        )
+        if row:
+            # update link if we didn't have one before
+            if link and not row.link:
+                row.link = link
+        else:
+            # 2) create a new hotel if not found
+            row = Hotel(name=name, city=city, link=link)
+            db.add(row)
+            db.flush()
+
+        # 3) If no distance filled on form but hotel has distance_km, use it
+        if distance_m is None and row.distance_km is not None:
+            try:
+                meters = int(float(row.distance_km) * 1000)
+            except Exception:
+                meters = None
+
+            if meters is not None:
+                distance_m = meters
+
+                if not distance_text:
+                    # simple default label
+                    if city == "Mecca":
+                        distance_text = f"{meters} m from Haram"
+                    else:
+                        distance_text = f"{meters} m from Masjid"
+
+        return row.id, (distance_m or None), (distance_text or None)
+
+    # ---- Mecca stay ----
+    mecca_stay = None
     if any([mecca_check_in, mecca_check_out, mecca_hotel, mecca_link, mecca_distance_m, mecca_distance_text]):
-        db.add(
-            PackageStay(
-                package_id=pkg.package_id,
-                city="Mecca",
-                check_in=_to_date(mecca_check_in),
-                check_out=_to_date(mecca_check_out),
-                hotel_name=_norm(mecca_hotel),
-                hotel_link=_norm(mecca_link),
-                distance_text=_norm(mecca_distance_text),
-                distance_m=int(mecca_distance_m) if (mecca_distance_m and mecca_distance_m.strip().isdigit()) else None,
-                hotel_id=resolve_hotel_id_by_name(mecca_hotel, mecca_link),
-            )
+        mecca_hotel_id, mecca_distance_m_val, mecca_distance_text_val = resolve_hotel_and_distance(
+            mecca_hotel,
+            mecca_link,
+            "Mecca",
+            mecca_distance_m,
+            mecca_distance_text,
         )
+        similar_ids = ",".join(map(str, mecca_similar)) if mecca_similar else None,
+        mecca_stay = PackageStay(
+            
+            package_id=pkg.package_id,
+            city="Mecca",
+            check_in=_to_date(mecca_check_in),
+            check_out=_to_date(mecca_check_out),
+            hotel_name=_norm(mecca_hotel),
+            hotel_link=_norm(mecca_link),
+            distance_text=mecca_distance_text_val,
+            distance_m=mecca_distance_m_val,
+            hotel_id=mecca_hotel_id,
+            similar_hotel_ids=similar_ids,
+        )
+        db.add(mecca_stay)
+
+
+    # ---- Medinah stay ----
+    med_stay = None
     if any([med_check_in, med_check_out, med_hotel, med_link, med_distance_m, med_distance_text]):
-        db.add(
-            PackageStay(
-                package_id=pkg.package_id,
-                city="Medinah",
-                check_in=_to_date(med_check_in),
-                check_out=_to_date(med_check_out),
-                hotel_name=_norm(med_hotel),
-                hotel_link=_norm(med_link),
-                distance_text=_norm(med_distance_text),
-                distance_m=int(med_distance_m) if (med_distance_m and med_distance_m.strip().isdigit()) else None,
-                hotel_id=resolve_hotel_id_by_name(med_hotel, med_link),
-            )
+        med_hotel_id, med_distance_m_val, med_distance_text_val = resolve_hotel_and_distance(
+            med_hotel,
+            med_link,
+            "Medinah",
+            med_distance_m,
+            med_distance_text,
         )
+        similar_ids = ",".join(map(str, medinah_similar)) if medinah_similar else None
+        med_stay = PackageStay(
+            
+            package_id=pkg.package_id,
+            city="Medinah",
+            check_in=_to_date(med_check_in),
+            check_out=_to_date(med_check_out),
+            hotel_name=_norm(med_hotel),
+            hotel_link=_norm(med_link),
+            distance_text=med_distance_text_val,
+            distance_m=med_distance_m_val,
+            hotel_id=med_hotel_id,
+            similar_hotel_ids=similar_ids,
+        )
+        db.add(med_stay)
+
+        # ----------------------------------------------------------------------
+    # 7.5) Auto-compute "or similar" hotels for each stay
+    # ----------------------------------------------------------------------
+    if mecca_stay and mecca_stay.hotel_id:
+        mecca_stay.similar_hotel_ids = find_similar_hotel_ids(
+            db=db,
+            base_hotel_id=mecca_stay.hotel_id,
+            city="Mecca",
+            limit=4,
+        ) or None
+
+    if med_stay and med_stay.hotel_id:
+        med_stay.similar_hotel_ids = find_similar_hotel_ids(
+            db=db,
+            base_hotel_id=med_stay.hotel_id,
+            city="Medinah",
+            limit=4,
+        ) or None
+
+
 
     # ----------------------------------------------------------------------
     # 7) Inclusions
@@ -1951,6 +2173,11 @@ def itinerary_wizard_submit(
         return RedirectResponse(url=f"/package/{pkg.package_id}/itinerary/wizard", status_code=303)
 
 
+from datetime import date
+from fastapi import Request, Depends
+from fastapi.responses import HTMLResponse, RedirectResponse
+from sqlalchemy.orm import Session
+
 @router.get("/package/{package_id}/edit", response_class=HTMLResponse)
 def package_edit_page(request: Request, package_id: int, db: Session = Depends(get_db)):
     user = require_user(request, db)
@@ -1960,28 +2187,62 @@ def package_edit_page(request: Request, package_id: int, db: Session = Depends(g
         flash(request, "Package not found", "error")
         return RedirectResponse(url="/select-agency", status_code=303)
 
-    agency = db.query(Agency).filter(Agency.registration_id == pkg.registration_id, Agency.user_id == user.id).first()
+    agency = (
+        db.query(Agency)
+        .filter(Agency.registration_id == pkg.registration_id, Agency.user_id == user.id)
+        .first()
+    )
     if not agency:
         flash(request, "Not allowed to edit this package", "error")
         return RedirectResponse(url="/select-agency", status_code=303)
 
-    onward = db.query(PackageFlight).filter(PackageFlight.package_id == pkg.package_id, PackageFlight.leg == "onward").first()
-    ret = db.query(PackageFlight).filter(PackageFlight.package_id == pkg.package_id, PackageFlight.leg == "return").first()
-    mecca = db.query(PackageStay).filter(PackageStay.package_id == pkg.package_id, PackageStay.city == "Mecca").first()
-    med = db.query(PackageStay).filter(PackageStay.package_id == pkg.package_id, PackageStay.city == "Medinah").first()
-    incl = db.query(PackageInclusion).filter(PackageInclusion.package_id == pkg.package_id).first()
-    price_row = db.query(PackagePrice).filter(PackagePrice.package_id == pkg.package_id).first()
+    onward = db.query(PackageFlight).filter(
+        PackageFlight.package_id == pkg.package_id,
+        PackageFlight.leg == "onward"
+    ).first()
 
+    ret = db.query(PackageFlight).filter(
+        PackageFlight.package_id == pkg.package_id,
+        PackageFlight.leg == "return"
+    ).first()
+
+    mecca = db.query(PackageStay).filter(
+        PackageStay.package_id == pkg.package_id,
+        PackageStay.city == "Mecca"
+    ).first()
+
+    med = db.query(PackageStay).filter(
+        PackageStay.package_id == pkg.package_id,
+        PackageStay.city == "Medinah"
+    ).first()
+
+    incl = db.query(PackageInclusion).filter(
+        PackageInclusion.package_id == pkg.package_id
+    ).first()
+
+    price_row = db.query(PackagePrice).filter(
+        PackagePrice.package_id == pkg.package_id
+    ).first()
+
+    # ✅ hotels split by city for dropdowns
     from app.db.models.hotel import Hotel
+    mecca_hotels = db.query(Hotel).filter(Hotel.city == "Mecca").order_by(Hotel.name.asc()).all()
+    medinah_hotels = db.query(Hotel).filter(Hotel.city == "Medinah").order_by(Hotel.name.asc()).all()
+
+    # If anything else still needs "all hotels", keep it (safe)
     hotels = db.query(Hotel).order_by(Hotel.name.asc()).all()
 
     from app.db.models.airline import Airline
     airlines = db.query(Airline).order_by(Airline.name.asc()).all()
+
     selected_airline_ids = {pa.airline_id for pa in pkg.package_airlines}
+
     start = 2026
     end = max(date.today().year + 5, start + 5)
     years = list(range(start, end + 1))
+
     flashes = pop_flashes(request)
+
     return templates.TemplateResponse(
         "package/edit.html",
         {
@@ -1998,6 +2259,12 @@ def package_edit_page(request: Request, package_id: int, db: Session = Depends(g
             "incl": incl,
             "price_row": price_row,
             "csrf_token": get_csrf_token(request),
+
+            # ✅ new vars used by edit.html
+            "mecca_hotels": mecca_hotels,
+            "medinah_hotels": medinah_hotels,
+
+            # keep old ones
             "hotels": hotels,
             "airlines": airlines,
             "selected_airline_ids": selected_airline_ids,
@@ -2143,28 +2410,65 @@ def package_edit_submit(
     elif ret:
         db.delete(ret)
 
-    def resolve_hotel_id_by_name(name_txt: str, link_txt: str) -> int | None:
-        name_txt = (name_txt or "").strip()
-        if not name_txt:
+    def resolve_hotel_id_by_name(
+        name_txt: str,
+        link_txt: str,
+        city: str,
+    ) -> int | None:
+        """
+        Used by EDIT package flow.
+        Ensures the hotel exists with the correct city and returns its id.
+        """
+        name = (name_txt or "").strip()
+        city = (city or "").strip()
+
+        if not name or not city:
             return None
-        row = get_or_create_hotel(db, name=name_txt, link=(link_txt or "").strip() or None)
+
+        row = get_or_create_hotel(
+            db,
+            name=name,
+            city=city,
+            link=(link_txt or "").strip() or None,
+        )
         return row.id if row else None
 
-    def upsert_stay(which_city: str, ci: str, co: str, hotel_name_txt: str, hotel_link_txt: str, dist_m: str, dist_txt: str):
-        stay = db.query(PackageStay).filter_by(package_id=pkg.package_id, city=which_city).first()
-        if any([ci, co, hotel_name_txt, hotel_link_txt, dist_m, dist_txt]):
-            if not stay:
-                stay = PackageStay(package_id=pkg.package_id, city=which_city)
-                db.add(stay)
-            stay.check_in = _to_date(ci)
-            stay.check_out = _to_date(co)
-            stay.hotel_name = _norm(hotel_name_txt)
-            stay.hotel_link = _norm(hotel_link_txt)
-            stay.distance_text = _norm(dist_txt)
-            stay.distance_m = int(dist_m) if (dist_m and dist_m.strip().isdigit()) else None
-            stay.hotel_id = resolve_hotel_id_by_name(hotel_name_txt, hotel_link_txt)
-        elif stay:
-            db.delete(stay)
+    def upsert_stay(
+            which_city: str,
+            ci: str,
+            co: str,
+            hotel_name_txt: str,
+            hotel_link_txt: str,
+            dist_m: str,
+            dist_txt: str,
+        ):
+            stay = (
+                db.query(PackageStay)
+                .filter_by(package_id=pkg.package_id, city=which_city)
+                .first()
+            )
+
+            if any([ci, co, hotel_name_txt, hotel_link_txt, dist_m, dist_txt]):
+                if not stay:
+                    stay = PackageStay(package_id=pkg.package_id, city=which_city)
+                    db.add(stay)
+
+                stay.check_in = _to_date(ci)
+                stay.check_out = _to_date(co)
+                stay.hotel_name = _norm(hotel_name_txt)
+                stay.hotel_link = _norm(hotel_link_txt)
+                stay.distance_text = _norm(dist_txt)
+                stay.distance_m = int(dist_m) if (dist_m and dist_m.strip().isdigit()) else None
+
+                # 🔴 THIS was the missing city earlier
+                stay.hotel_id = resolve_hotel_id_by_name(
+                    hotel_name_txt,
+                    hotel_link_txt,
+                    which_city,   # "Mecca" or "Medinah"
+                )
+            elif stay:
+                db.delete(stay)
+
 
     upsert_stay(
         "Mecca",
@@ -2240,6 +2544,53 @@ def package_edit_submit(
     flash(request, "Package updated", "success")
     return RedirectResponse(url=f"/agency/{agency.registration_id}/dashboard", status_code=303)
 
+def find_similar_hotel_ids(
+    db: Session,
+    base_hotel_id: Optional[int],
+    city: str,
+    limit: int = 4,
+) -> str:
+    """
+    Given a base hotel_id and city, return a comma-separated string of
+    similar hotel IDs in that city.
+
+    Similarity rules (simple, but effective):
+      - Same city
+      - Exclude the base hotel itself
+      - Prefer same rating (±1 star)
+      - Prefer closest distance_km
+    """
+    if not base_hotel_id:
+        return ""
+
+    base = db.query(Hotel).get(base_hotel_id)
+    if not base:
+        return ""
+
+    q = db.query(Hotel).filter(
+        Hotel.city == city,
+        Hotel.id != base.id,
+    )
+
+    # If base has rating, stay within ±1 star
+    if base.rating is not None:
+        q = q.filter(
+            Hotel.rating >= base.rating - 1,
+            Hotel.rating <= base.rating + 1,
+        )
+
+    # Order by distance difference when we have distance_km
+    if base.distance_km is not None:
+        q = q.filter(Hotel.distance_km != None)  # noqa: E711
+        q = q.order_by(func.abs(Hotel.distance_km - base.distance_km))
+    else:
+        # Fallback: just order by id
+        q = q.order_by(Hotel.id.asc())
+
+    similar = q.limit(limit).all()
+    ids = [str(h.id) for h in similar]
+    return ",".join(ids)
+
 
 @router.post("/package/{package_id}/delete")
 def package_delete(
@@ -2272,13 +2623,14 @@ def package_delete(
 
 
 # ----------------- Operators (public) -----------------
-
+from sqlalchemy.orm import selectinload
 @router.get("/umrah_operators", response_class=HTMLResponse)
 def operators_list(request: Request, db: Session = Depends(get_db)):
     agencies = (
         db.query(Agency)
         .options(selectinload(Agency.city_rel))
         .order_by(Agency.agencies_name.asc())
+        .filter(Agency.is_blocked == False)
         .all()
     )
     grouped: dict[str, list[Agency]] = {}
@@ -2292,6 +2644,12 @@ def operators_list(request: Request, db: Session = Depends(get_db)):
 
     cities = [{"city": name, "agencies": grouped[name]} for name in sorted(grouped, key=city_sort_key)]
 
+    by_city = defaultdict(list)
+    for a in agencies:
+        city = _display_city(a)
+        by_city[city].append(a)
+    cards = [(city, len(items)) for city, items in by_city.items() if len(items) > 0]
+    cards.sort(key=lambda t: (t[0] == "Unknown", t[0].casefold()))
     return render(
         "public/operators_list.html",
         request,
@@ -2321,6 +2679,18 @@ def operator_detail(
     )
     if not agency:
         raise HTTPException(status_code=404, detail="Operator not found")
+    
+    if getattr(agency, "is_blocked", False):
+        flashes = pop_flashes(request)
+        return templates.TemplateResponse(
+            "void.html",
+            {
+                "request": request,
+                "title": "Agency Blocked",
+                "flashes": flashes,
+                "csrf_token": get_csrf_token(request),
+            },
+        )
 
     # Packages belonging to this operator
     packages = (
@@ -2383,6 +2753,7 @@ def city_operators(city_name: str, request: Request, db: Session = Depends(get_d
             )
             == city.lower().strip()
         )
+        .filter(Agency.city == city, Agency.is_blocked == False)
         .order_by(Agency.agencies_name.asc())
         .all()
     )
@@ -2455,6 +2826,7 @@ def city_hub(city_name: str, request: Request, db: Session = Depends(get_db)):
             )
             == city.lower().strip()
         )
+        .filter(Agency.city == city, Agency.is_blocked == False)
         .order_by(Agency.agencies_name.asc())
         .all()
     )
@@ -2471,6 +2843,7 @@ def city_hub(city_name: str, request: Request, db: Session = Depends(get_db)):
             )
             == city.lower().strip()
         )
+        .filter(Agency.is_blocked == False)
         .order_by(Package.package_id.desc())
         .all()
     )
@@ -2815,29 +3188,73 @@ def branch_new_submit(
 
 
 # --- Hotels helper (no city) ---
+from app.db.models.hotel import Hotel
 
-def get_or_create_hotel(db: Session, *, name: str, link: str | None = None):
+def get_or_create_hotel(
+    db,
+    *,
+    name: str,
+    city: str,
+    link: str | None = None,
+    distance_km: float | None = None,
+    rating: int | None = None,
+) -> Hotel:
     """
-    Find a hotel by name (case-insensitive). If not found, create it.
-    Optionally stores link. Returns the Hotel row.
+    Find a hotel by (name, city). If it doesn't exist, create it.
+    Also gently update missing fields (link/distance/rating) when we get new info.
     """
-    from app.db.models.hotel import Hotel
+    name = (name or "").strip()
+    city = (city or "").strip()
 
-    name_norm = (name or "").strip()
-    if not name_norm:
-        return None
+    if not name:
+        raise ValueError("Hotel name is required")
+    if not city:
+        raise ValueError("Hotel city is required")
 
-    q = db.query(Hotel).filter(func.lower(Hotel.name) == func.lower(name_norm))
-    hotel = q.first()
-    if hotel:
-        if link and not (hotel.link or "").strip():
-            hotel.link = link.strip()
+    row: Hotel | None = (
+        db.query(Hotel)
+        .filter(Hotel.name == name, Hotel.city == city)
+        .first()
+    )
+
+    if row:
+        updated = False
+
+        if link and not row.link:
+            row.link = link
+            updated = True
+
+        if distance_km is not None and row.distance_km is None:
+            row.distance_km = distance_km
+            updated = True
+
+        if rating is not None and row.rating is None:
+            row.rating = rating
+            updated = True
+
+        if updated:
             db.commit()
-            db.refresh(hotel)
-        return hotel
+            db.refresh(row)
 
-    hotel = Hotel(name=name_norm, link=(link or "").strip() or None)
-    db.add(hotel)
+        return row
+
+    # create new hotel
+    row = Hotel(
+        name=name,
+        city=city,
+        link=link,
+        distance_km=distance_km,
+        rating=rating,
+    )
+    db.add(row)
     db.commit()
-    db.refresh(hotel)
-    return hotel
+    db.refresh(row)
+    return row
+
+# --- Admin helpers ---
+def _is_admin_email(email: str | None) -> bool:
+    admins = {e.strip().lower() for e in getattr(settings, "ADMIN_EMAILS", [])}
+    return bool(email and email.lower() in admins)
+
+def _is_admin_user(user: User | None) -> bool:
+    return bool(user) and (getattr(user, "is_admin", False) or _is_admin_email(user.email))

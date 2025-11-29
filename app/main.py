@@ -17,11 +17,12 @@ from app.web import routes as ui_routes
 from app.web.routes import router as web_router
 from app.web.routes_media import router as media_router
 from starlette.middleware.cors import CORSMiddleware
-
+from app.web.routes_admin import router as admin_router
 
 
 app = FastAPI(title=settings.APP_NAME)
 
+app.include_router(admin_router)
 
 app.add_middleware(
     SessionMiddleware,

@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container py-4">
+  <h1 class="h4 mb-4">Admin Dashboard</h1>
+
+  {% if flashes %}
+    {% for f in flashes %}
+      <div class="alert alert-{{ 'danger' if f.type == 'error' else f.type }} alert-dismissible fade show" role="alert">
+        {{ f.text }} <button class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <div class="row g-3 mb-4">
+
+    <!-- Packages -->
+    <div class="col-md-3">
+      <a href="/admin/packages" class="text-decoration-none text-dark">
+        <div class="card border-0 shadow-sm hover-shadow transition">
+          <div class="card-body">
+            <div class="text-muted small">Packages</div>
+            <div class="fs-3 fw-bold">{{ stats.packages }}</div>
+          </div>
+        </div>
+      </a>
+    </div>
+
+    <!-- Agencies -->
+    <div class="col-md-3">
+      <a href="/admin/agencies" class="text-decoration-none text-dark">
+        <div class="card border-0 shadow-sm hover-shadow transition">
+          <div class="card-body">
+            <div class="text-muted small">Agencies</div>
+            <div class="fs-3 fw-bold">{{ stats.agencies }}</div>
+          </div>
+        </div>
+      </a>
+    </div>
+
+    <!-- Inquiries -->
+    <div class="col-md-3">
+      <a href="/admin/inquiries" class="text-decoration-none text-dark">
+        <div class="card border-0 shadow-sm hover-shadow transition">
+          <div class="card-body">
+            <div class="text-muted small">Inquiries</div>
+            <div class="fs-3 fw-bold">{{ stats.inquiries }}</div>
+          </div>
+        </div>
+      </a>
+    </div>
+
+    <!-- Users -->
+    <div class="col-md-3">
+      <a href="/admin/users" class="text-decoration-none text-dark">
+        <div class="card border-0 shadow-sm hover-shadow transition">
+          <div class="card-body">
+            <div class="text-muted small">Users</div>
+            <div class="fs-3 fw-bold">{{ stats.users }}</div>
+          </div>
+        </div>
+      </a>
+    </div>
+
+    <!-- Hotels -->
+    <div class="col-md-3">
+      <a href="/admin/hotels" class="text-decoration-none text-dark">
+        <div class="card border-0 shadow-sm hover-shadow transition">
+          <div class="card-body">
+            <div class="text-muted small">Hotels</div>
+            <div class="fs-3 fw-bold">{{ stats.hotels }}</div>
+          </div>
+        </div>
+      </a>
+    </div>
+
+
+  </div>
+</div>
+
+<style>
+  /* subtle hover styling */
+  .hover-shadow:hover {
+    box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.1) !important;
+    transform: translateY(-2px);
+  }
+  .transition {
+    transition: all 0.2s ease-in-out;
+  }
+</style>
+{% endblock %}

@@ -1,58 +1,63 @@
-# alembic/env.py
-from __future__ import annotations
-import os
 import sys
+import os
 from logging.config import fileConfig
-
 from sqlalchemy import engine_from_config, pool
 from alembic import context
 
-# --- Make project importable ---
-# Add project root (one level up from alembic/) to PYTHONPATH
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+# --- Setup project path so Alembic can import app modules ---
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../..")))
 
-# --- Import app settings and metadata ---
-from app.core.config import settings  # loads .env
-from app.db.base import Base          # Base.metadata + model imports inside base.py
-import app.db.models 
-# this is the Alembic Config object, which provides access to the values within the .ini file in use.
+# --- Load SQLAlchemy Base and models ---
+from app.db.session import Base
+from app.db import models  # ensure all models (Agency, Package, etc.) are imported
+
+# --- Alembic Config object ---
 config = context.config
 
 # Interpret the config file for Python logging.
+# This line sets up loggers basically.
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-# set DB URL from our app settings
-config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
-
-# target_metadata for 'autogenerate' support
+# Set target metadata for autogenerate support.
 target_metadata = Base.metadata
 
+# --------------------------------------------------------------
+# Modify this if you use dynamic URLs from environment variables
+# --------------------------------------------------------------
+def get_url():
+    return os.getenv(
+        "DATABASE_URL",
+        "mysql+pymysql://root:password@localhost/user_auth"
+    )
 
-
-def run_migrations_offline():
-    """Run migrations in 'offline' mode."""
-    url = config.get_main_option("sqlalchemy.url")
+# --------------------------------------------------------------
+# Offline mode (generates SQL scripts)
+# --------------------------------------------------------------
+def run_migrations_offline() -> None:
+    url = get_url()
     context.configure(
         url=url,
         target_metadata=target_metadata,
         literal_binds=True,
+        compare_type=True,             # detect type changes
+        compare_server_default=True,   # detect default changes
         dialect_opts={"paramstyle": "named"},
-        compare_type=True,   # useful if you later change column types
-        compare_server_default=True,
     )
 
     with context.begin_transaction():
         context.run_migrations()
 
-
-def run_migrations_online():
-    """Run migrations in 'online' mode."""
+# --------------------------------------------------------------
+# Online mode (runs migrations directly on DB)
+# --------------------------------------------------------------
+def run_migrations_online() -> None:
+    configuration = config.get_section(config.config_ini_section)
+    configuration["sqlalchemy.url"] = get_url()
     connectable = engine_from_config(
-        config.get_section(config.config_ini_section, {}),
+        configuration,
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
-        future=True,
     )
 
     with connectable.connect() as connection:
@@ -66,14 +71,10 @@ def run_migrations_online():
         with context.begin_transaction():
             context.run_migrations()
 
-
+# --------------------------------------------------------------
+# Entrypoint
+# --------------------------------------------------------------
 if context.is_offline_mode():
     run_migrations_offline()
 else:
     run_migrations_online()
-
-def upgrade():
-    op.add_column('inquiries', sa.Column('viewed_at', sa.DateTime(timezone=True), nullable=True))
-
-def downgrade():
-    op.drop_column('inquiries', 'viewed_at')

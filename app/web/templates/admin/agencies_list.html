@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-4">
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h5 m-0">Agencies</h1>
+    <a class="btn btn-sm btn-secondary" href="/admin">← Admin</a>
+  </div>
+
+  {% if flashes %}
+    {% for f in flashes %}
+      <div class="alert alert-{{ 'danger' if f.type == 'error' else f.type }} alert-dismissible fade show" role="alert">
+        {{ f.text }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <div class="table-responsive shadow-sm border rounded">
+    <table class="table align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          <th scope="col" style="width: 60px;">ID</th>
+          <th scope="col">Agency</th>
+          <th scope="col">City</th>
+          <th scope="col">Owner</th>
+          <th scope="col">Created at</th>
+          <th scope="col">Updated at</th>
+          <th scope="col" style="width: 110px;"></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if items %}
+          {% for agency in items %}
+            {# ----- Status flags ----- #}
+            {% set is_updated = agency.updated_at and agency.updated_at > agency.created_at %}
+            {% set is_unread = not agency.viewed_by_admin %}
+
+            <tr class="{% if is_unread %}table-warning{% endif %}">
+              <!-- ID (DB id or registration_id, your choice) -->
+              <td>{{ agency.id }}</td>
+
+              <!-- Agency name + badges -->
+              <td>
+                <a
+                  href="/admin/agencies/{{ agency.registration_id }}"
+                  class="text-decoration-none fw-semibold"
+                >
+                  {{ agency.agencies_name }}
+                </a>
+
+                {# Badge logic:
+                   - New: never viewed, not updated
+                   - Updated: updated and not yet viewed after update
+                #}
+                {% if is_unread and not is_updated %}
+                  <span class="badge bg-primary ms-1">New</span>
+                {% elif is_unread and is_updated %}
+                  <span class="badge bg-warning text-dark ms-1">Updated</span>
+                {% endif %}
+              </td>
+
+              <!-- City -->
+              <td>
+                {% if agency.city_rel %}
+                  {{ agency.city_rel.name }}
+                {% elif agency.city %}
+                  {{ agency.city }}
+                {% else %}
+                  —
+                {% endif %}
+              </td>
+
+              <!-- Owner -->
+              <td>
+                {% if agency.user %}
+                  {% if agency.user.name %}
+                    {{ agency.user.name }}
+                  {% elif agency.user.email %}
+                    {{ agency.user.email }}
+                  {% else %}
+                    User #{{ agency.user.id }}
+                  {% endif %}
+                {% else %}
+                  —
+                {% endif %}
+              </td>
+
+              <!-- Created at -->
+              <td>
+                {% if agency.created_at %}
+                  {{ agency.created_at.strftime("%Y-%m-%d %H:%M") }}
+                {% else %}
+                  —
+                {% endif %}
+              </td>
+
+              <!-- Updated at -->
+              <td>
+                {% if agency.updated_at %}
+                  {{ agency.updated_at.strftime("%Y-%m-%d %H:%M") }}
+                {% else %}
+                  —
+                {% endif %}
+              </td>
+
+              <!-- Actions -->
+              <td class="text-end">
+                <a
+                  href="/admin/agencies/{{ agency.registration_id }}"
+                  class="btn btn-sm btn-outline-primary"
+                >
+                  View
+                </a>
+              </td>
+            </tr>
+          {% endfor %}
+        {% else %}
+          <tr>
+            <td colspan="7" class="text-center text-muted py-4">
+              No agencies found.
+            </td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  {% if total and total > limit %}
+    {% set total_pages = (total // limit) + (1 if total % limit else 0) %}
+    <nav class="mt-3" aria-label="Agencies pagination">
+      <ul class="pagination mb-0">
+        <!-- Previous -->
+        <li class="page-item {% if page <= 1 %}disabled{% endif %}">
+          <a class="page-link" href="?page={{ page - 1 }}&limit={{ limit }}">Previous</a>
+        </li>
+
+        <!-- Page numbers -->
+        {% for p in range(1, total_pages + 1) %}
+          <li class="page-item {% if p == page %}active{% endif %}">
+            <a class="page-link" href="?page={{ p }}&limit={{ limit }}">{{ p }}</a>
+          </li>
+        {% endfor %}
+
+        <!-- Next -->
+        <li class="page-item {% if page >= total_pages %}disabled{% endif %}">
+          <a class="page-link" href="?page={{ page + 1 }}&limit={{ limit }}">Next</a>
+        </li>
+      </ul>
+    </nav>
+  {% endif %}
+</div>
+{% endblock %}

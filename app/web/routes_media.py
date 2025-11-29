@@ -8,6 +8,7 @@ from app.core.deps import get_db
 from app.web.deps import require_user, require_csrf, flash
 from app.db.models.agency import Agency
 from app.services.logo_upload import logo_path, save_agency_logo
+from app.web.routes_admin import _ctx
 
 router = APIRouter()
 

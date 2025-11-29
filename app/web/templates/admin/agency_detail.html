@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="h4 mb-3">{{ agency.agencies_name }}</h1>
+
+<div class="row g-3">
+  <div class="col-lg-8">
+    <div class="card">
+      <div class="card-body">
+        <h6 class="text-uppercase text-muted mb-2">Agency</h6>
+        <div class="row">
+          <div class="col-sm-6">
+            <div><strong>Registration ID:</strong> {{ agency.registration_id }}</div>
+            <div><strong>City:</strong> {{ agency.city or (agency.city_rel and agency.city_rel.name) or '—' }}</div>
+            <div><strong>Country:</strong> {{ agency.country or '—' }}</div>
+            <div><strong>Public Code:</strong> {{ agency.public_registration_code or '—' }}</div>
+          </div>
+          <!-- Show current status -->
+{% if agency.is_blocked %}
+  <div class="alert alert-warning">This agency is currently <strong>Blocked</strong>.</div>
+  <form method="post" action="/admin/agencies/{{ agency.registration_id }}/unvoid" class="d-inline">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <button class="btn btn-success">Unvoid (Unblock)</button>
+  </form>
+{% else %}
+  <form method="post" action="/admin/agencies/{{ agency.registration_id }}/void" class="row gy-2 gy-md-0 g-md-2 align-items-center">
+    <div class="col-12 col-md-auto">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <input type="text" class="form-control" name="reason" placeholder="Reason (optional)">
+    </div>
+    <div class="col-12 col-md-auto">
+      <button class="btn btn-danger">Void (Block)</button>
+    </div>
+  </form>
+{% endif %}
+
+          <div class="col-sm-6">
+            <div><strong>Email:</strong> {{ agency.agency_email or '—' }}</div>
+            <div><strong>Website:</strong>
+              {% if agency.website_url %}<a href="{{ agency.website_url }}" target="_blank">{{ agency.website_url }}</a>{% else %}—{% endif %}
+            </div>
+            <div><strong>Facebook:</strong>
+              {% if agency.facebook_url %}<a href="{{ agency.facebook_url }}" target="_blank">{{ agency.facebook_url }}</a>{% else %}—{% endif %}
+            </div>
+            <div><strong>Instagram:</strong>
+              {% if agency.instagram_url %}<a href="{{ agency.instagram_url }}" target="_blank">{{ agency.instagram_url }}</a>{% else %}—{% endif %}
+            </div>
+          </div>
+        </div>
+
+        {% if agency.description %}
+          <hr>
+          <p class="mb-0">{{ agency.description }}</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="card mt-3">
+      <div class="card-body">
+        <h6 class="text-uppercase text-muted mb-2">Packages ({{ packages|length }})</h6>
+        {% if packages %}
+          <div class="list-group list-group-flush">
+            {% for p in packages %}
+              <div class="list-group-item d-flex align-items-center justify-content-between">
+                <div>
+                  <div class="fw-semibold">{{ p.package_name }}</div>
+                  <small class="text-muted">{{ (p.package_type or '')|title }} • {{ p.days }} days • ₹{{ p.price }}</small>
+                </div>
+                <div class="ms-3">
+                  <a class="btn btn-sm btn-outline-primary" href="/umrah_packages/{{ p.package_id }}" target="_blank">Open public page</a>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p class="text-muted mb-0">No packages yet.</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="card mt-3">
+      <div class="card-body">
+        <h6 class="text-uppercase text-muted mb-2">Recent inquiries ({{ inquiries|length }})</h6>
+        {% if inquiries %}
+          <div class="table-responsive">
+            <table class="table table-sm">
+              <thead>
+                <tr><th>ID</th><th>Name</th><th>Phone</th><th>Message</th></tr>
+              </thead>
+              <tbody>
+                {% for q in inquiries %}
+                <tr>
+                  <td>{{ q.inquiry_id }}</td>
+                  <td>{{ q.name }}</td>
+                  <td>{{ q.phone_number }}</td>
+                  <td class="text-break">{{ q.inquiry }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <p class="text-muted mb-0">No inquiries yet.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-4">
+    <div class="card">
+      <div class="card-body">
+        <h6 class="text-uppercase text-muted mb-2">Owner</h6>
+        {% if owner %}
+          <div><strong>{{ owner.first_name or '' }} {{ owner.last_name or '' }}</strong></div>
+          <div class="text-muted small">{{ owner.email }}</div>
+          <div class="text-muted small">Verified: {{ 'Yes' if owner.is_email_verified else 'No' }}</div>
+        {% else %}
+          <p class="text-muted mb-0">—</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="card mt-3">
+      <div class="card-body">
+        <h6 class="text-uppercase text-muted mb-2">Branches ({{ branches|length }})</h6>
+        {% if branches %}
+          <ul class="list-unstyled mb-0">
+          {% for b in branches %}
+            <li class="mb-2">
+              <div class="fw-semibold">
+                {{ b.name }}
+                {% if b.is_main %}<span class="badge text-bg-secondary ms-1">Main</span>{% endif %}
+              </div>
+              <div class="text-muted small">
+                {{ b.address_line1 or '' }} {{ b.address_line2 or '' }}<br>
+                {{ b.city or '' }} {{ b.country or '' }}
+              </div>
+              {% if b.contact_person or b.contact_number %}
+                <div class="small mt-1">
+                  <strong>Contact:</strong> {{ b.contact_person or '—' }} {{ b.contact_number or '' }}
+                </div>
+              {% endif %}
+            </li>
+          {% endfor %}
+          </ul>
+        {% else %}
+          <p class="text-muted mb-0">No branches yet.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<a class="btn btn-link mt-3" href="/admin/agencies">← Back to agencies</a>
+{% endblock %}

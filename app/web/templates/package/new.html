@@ -16,9 +16,8 @@
     <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
     <input type="hidden" name="agency_id" value="{{ agency.registration_id }}">
 
-    <!-- =============== NEW: Package Detail Theme =============== -->
+    <!-- =============== Theme Picker =============== -->
     <style>
-      /* minimal inline styles for a “theme picker” look */
       .theme-grid{display:grid;grid-template-columns:1fr;gap:12px}
       @media (min-width:768px){.theme-grid{grid-template-columns:repeat(3,1fr)}}
       .theme-card{position:relative;border:1px solid #e5e7eb;border-radius:12px;padding:12px;background:#fff;cursor:pointer;transition:box-shadow .15s, border-color .15s}
@@ -35,34 +34,32 @@
     <div class="mb-3">
       <label class="form-label d-block">Package Detail Theme *</label>
       <div class="theme-grid">
-        <!-- Basic -->
         <label class="theme-card">
           <input type="radio" name="detail_theme" value="basic" required checked>
           <span class="theme-title">Basic <span class="theme-badge">Default</span></span>
           <div class="theme-thumb">Clean 2-column, above-the-fold facts</div>
-          <div class="theme-desc">Simple header, key price & dates on the left, quick highlights on the right. Best for clarity and speed.</div>
+          <div class="theme-desc">Simple header, key price & dates on the left, quick highlights on the right.</div>
         </label>
 
-        <!-- Premium: Aurora -->
         <label class="theme-card is-premium">
           <input type="radio" name="detail_theme" value="premium-aurora" required>
           <span class="theme-title">Aurora <span class="theme-badge">Premium</span></span>
           <div class="theme-thumb">Hero banner + stat chips + sticky CTA</div>
-          <div class="theme-desc">Large hero with gradient overlay, stat chips (days, hotels, airline), sticky inquiry button. Polished look.</div>
+          <div class="theme-desc">Large hero with gradient overlay, stat chips, sticky inquiry button.</div>
         </label>
 
-        <!-- Premium: Classic -->
         <label class="theme-card is-premium">
           <input type="radio" name="detail_theme" value="premium-classic" required>
           <span class="theme-title">Classic <span class="theme-badge">Premium</span></span>
           <div class="theme-thumb">Tabbed sections + price cards</div>
-          <div class="theme-desc">Tabs for Overview/Itinerary/Inclusions/FAQ and elegant price cards for Double/Triple/Quad.</div>
+          <div class="theme-desc">Tabs for Overview/Itinerary/Inclusions/FAQ + elegant price cards.</div>
         </label>
       </div>
       <div class="form-text mt-1">You can change this later while editing the package.</div>
     </div>
-    <!-- ========================================================== -->
+    <!-- ============================================ -->
 
+    <!-- Package Type -->
     <div class="mb-3">
       <label class="form-label d-block">Package Type *</label>
       <div class="form-check form-check-inline">
@@ -90,7 +87,6 @@
         <option value="business">Business</option>
         <option value="first">First Class</option>
       </select>
-      <div class="form-text">Choose the cabin/service class for this package.</div>
     </div>
 
     <div class="row g-3">
@@ -135,7 +131,6 @@
             <option value="{{ i }}">{{ month_names[i-1] }}</option>
           {% endfor %}
         </select>
-        <div class="form-text">Pick the month pilgrims will travel.</div>
       </div>
       <div class="col-md-6">
         <label class="form-label">Travel Year</label>
@@ -145,10 +140,10 @@
             <option value="{{ y }}">{{ y }}</option>
           {% endfor %}
         </select>
-        <div class="form-text">Only years ≥ 2026 are listed.</div>
       </div>
     </div>
 
+    <!-- Airlines -->
     <div class="mb-3">
       <label class="form-label">Airlines (you can select multiple)</label>
       <select class="form-select" name="airline_ids" multiple size="6">
@@ -156,7 +151,6 @@
           <option value="{{ a.airline_id }}">{{ a.name }}</option>
         {% endfor %}
       </select>
-      <div class="form-text">Hold Ctrl/Cmd to multi-select (desktop).</div>
     </div>
 
     <hr class="my-4">
@@ -221,14 +215,16 @@
       </div>
     </div>
 
-    <!-- Stays -->
+    <!-- =================== STAYS =================== -->
     <h2 class="h6 mb-3">Stay</h2>
     <div class="row">
+
       <!-- Mecca -->
       <div class="col-md-6">
         <div class="card mb-3">
           <div class="card-body">
             <h3 class="h6">Mecca</h3>
+
             <div class="row">
               <div class="col-md-6 mb-2">
                 <label class="form-label">Check-in</label>
@@ -240,25 +236,81 @@
               </div>
             </div>
 
+            <!-- manual hotel -->
             <div class="mb-2">
               <label class="form-label">Hotel name</label>
-              <input class="form-control" type="text" name="mecca_hotel" list="hotels_list" placeholder="Start typing…">
-            </div>
-            <div class="mb-2">
-              <label class="form-label">Hotel link (optional)</label>
-              <input class="form-control" type="url" name="mecca_link" placeholder="https://">
+              <div class="d-flex gap-2">
+                <input
+                  id="mecca_hotel"
+                  class="form-control"
+                  type="text"
+                  name="mecca_hotel"
+                  placeholder="Type new hotel OR choose below"
+                >
+                <select
+                  id="mecca_hotel_city"
+                  name="mecca_hotel_city"
+                  class="form-select"
+                  style="max-width: 140px;"
+                >
+                  <option value="Mecca" selected>Mecca</option>
+                  <option value="Medinah">Medinah</option>
+                </select>
+              </div>
+              <div class="form-text">Choose city only if you're adding a NEW hotel manually.</div>
             </div>
 
-            <div class="row">
-              <div class="col-md-6 mb-2">
-                <label class="form-label">Distance (meters)</label>
-                <input class="form-control" type="number" name="mecca_distance_m" min="0" placeholder="e.g., 300">
-              </div>
-              <div class="col-md-6 mb-2">
-                <label class="form-label">Distance label</label>
-                <input class="form-control" type="text" name="mecca_distance_text" placeholder="e.g., 300 m from Haram">
-              </div>
+            <!-- saved hotels -->
+            <div class="mb-2">
+              <label class="form-label small text-muted">Or choose from saved Mecca hotels</label>
+              <select id="mecca_hotel_select" class="form-select form-select-sm">
+                <option value="">— Choose existing hotel —</option>
+                {% for h in mecca_hotels %}
+                  <option
+                    value="{{ h.id }}"
+                    data-name="{{ h.name }}"
+                    data-link="{{ h.link or '' }}"
+                    data-distance-km="{{ h.distance_km or '' }}"
+                    data-rating="{{ h.rating or '' }}"
+                  >
+                    {{ h.name }}
+                  </option>
+                {% endfor %}
+              </select>
             </div>
+
+            <div class="mb-2">
+              <label class="form-label">Hotel link (optional)</label>
+              <input id="mecca_link" name="mecca_link" class="form-control" placeholder="https://">
+            </div>
+
+            <div class="mb-2">
+              <label class="form-label">Hotel rating (stars)</label>
+              <input id="mecca_rating" name="mecca_rating" class="form-control" placeholder="e.g., 5">
+            </div>
+
+            <div class="mb-2">
+              <label class="form-label">Distance (km/meters) label</label>
+              <input
+                id="mecca_distance_text"
+                name="mecca_distance_text"
+                class="form-control"
+                placeholder="e.g., 0.30 km from Haram"
+              >
+            </div>
+
+            <!-- OR SIMILAR: Mecca -->
+            <div class="mb-3">
+              <label class="form-label">Similar Hotels (Mecca)</label>
+              <select id="mecca_similar" name="mecca_similar" multiple>
+                {% for h in mecca_hotels %}
+                  <option value="{{ h.id }}">{{ h.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+
+
           </div>
         </div>
       </div>
@@ -268,6 +320,7 @@
         <div class="card mb-3">
           <div class="card-body">
             <h3 class="h6">Medinah</h3>
+
             <div class="row">
               <div class="col-md-6 mb-2">
                 <label class="form-label">Check-in</label>
@@ -279,36 +332,103 @@
               </div>
             </div>
 
+            <!-- manual hotel -->
             <div class="mb-2">
               <label class="form-label">Hotel name</label>
-              <input class="form-control" type="text" name="med_hotel" list="hotels_list" placeholder="Start typing…">
-            </div>
-            <div class="mb-2">
-              <label class="form-label">Hotel link (optional)</label>
-              <input class="form-control" type="url" name="med_link" placeholder="https://">
+              <div class="d-flex gap-2">
+                <input
+                  id="med_hotel"
+                  class="form-control"
+                  type="text"
+                  name="med_hotel"
+                  placeholder="Type new hotel OR choose below"
+                >
+                <select
+                  id="med_hotel_city"
+                  name="med_hotel_city"
+                  class="form-select"
+                  style="max-width: 140px;"
+                >
+                  <option value="Medinah" selected>Medinah</option>
+                  <option value="Mecca">Mecca</option>
+                </select>
+              </div>
+              <div class="form-text">Choose city only if you're adding a NEW hotel manually.</div>
             </div>
 
-            <div class="row">
-              <div class="col-md-6 mb-2">
-                <label class="form-label">Distance (meters)</label>
-                <input class="form-control" type="number" name="med_distance_m" min="0" placeholder="e.g., 500">
-              </div>
-              <div class="col-md-6 mb-2">
-                <label class="form-label">Distance label</label>
-                <input class="form-control" type="text" name="med_distance_text" placeholder="e.g., 500 m from Masjid an-Nabawi">
-              </div>
+            <!-- saved hotels -->
+            <div class="mb-2">
+              <label class="form-label small text-muted">Or choose from saved Medinah hotels</label>
+              <select id="med_hotel_select" class="form-select form-select-sm">
+                <option value="">— Choose existing hotel —</option>
+                {% for h in medinah_hotels %}
+                  <option
+                    value="{{ h.id }}"
+                    data-name="{{ h.name }}"
+                    data-link="{{ h.link or '' }}"
+                    data-distance-km="{{ h.distance_km or '' }}"
+                    data-rating="{{ h.rating or '' }}"
+                  >
+                    {{ h.name }}
+                  </option>
+                {% endfor %}
+              </select>
             </div>
+
+            <div class="mb-2">
+              <label class="form-label">Hotel link (optional)</label>
+              <input id="med_link" name="med_link" class="form-control" placeholder="https://">
+            </div>
+
+            <div class="mb-2">
+              <label class="form-label">Hotel rating (stars)</label>
+              <input id="med_rating" name="med_rating" class="form-control" placeholder="e.g., 4">
+            </div>
+
+            <div class="mb-2">
+              <label class="form-label">Distance (km/meters) label</label>
+              <input
+                id="med_distance_text"
+                name="med_distance_text"
+                class="form-control"
+                placeholder="e.g., 0.20 km from Masjid an-Nabawi"
+              >
+            </div>
+
+            <!-- OR SIMILAR: Medinah -->
+            <div class="mb-3">
+              <label class="form-label">Similar Hotels (Medinah)</label>
+              <select id="medinah_similar" name="medinah_similar" multiple>
+                {% for h in medinah_hotels %}
+                  <option value="{{ h.id }}">{{ h.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+
+
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Shared datalist for hotel suggestions -->
-    <datalist id="hotels_list">
-      {% for h in hotels %}
-        <option value="{{ h.name }}">{{ h.link or '' }}</option>
-      {% endfor %}
-    </datalist>
+    <script>
+  new SlimSelect({
+    select: '#mecca_similar',
+    placeholder: 'Search & select similar hotels...',
+    allowDeselect: true,
+    closeOnSelect: false
+  });
+
+  new SlimSelect({
+    select: '#medinah_similar',
+    placeholder: 'Search & select similar hotels...',
+    allowDeselect: true,
+    closeOnSelect: false
+  });
+</script>
+
+    <!-- ============================================ -->
 
     <!-- Inclusions -->
     <h2 class="h6 mb-3">Inclusions</h2>
@@ -378,40 +498,74 @@
   </form>
 </div>
 
-{# keep your existing list id="hotels_list" but add data-link #}
-<datalist id="hotels_list">
-  {% for h in hotels %}
-    <option value="{{ h.name }}" data-link="{{ h.link or '' }}"></option>
-  {% endfor %}
-</datalist>
+<!-- ================= Similar Hotels Modal (shared) ================= -->
+<div class="modal fade" id="similarHotelsModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Select Similar Hotels</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
 
-{# put this just before </form> or at end of page #}
+      <div class="modal-body">
+        <input id="similar_search" type="text" class="form-control form-control-sm mb-2" placeholder="Search hotel...">
+        <div id="similarHotelsList"></div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-sm btn-light" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-sm btn-primary" id="similarHotelsApplyBtn">
+          Add selected
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= JS ================= -->
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-  function wireAutoLink(nameFieldName, linkFieldName) {
-    const nameInput = document.querySelector(`input[name="${nameFieldName}"]`);
-    const linkInput = document.querySelector(`input[name="${linkFieldName}"]`);
-    if (!nameInput || !linkInput) return;
+  // ----------------------------------------------------
+  // 1) Existing: Autofill hotel fields from DB selects
+  // ----------------------------------------------------
+  function wireHotelSelect(selectId, nameInputId, linkId, distanceLabelId, ratingId, cityLockId) {
+    const select = document.getElementById(selectId);
+    if (!select) return;
 
-    const opts = Array.from(document.querySelectorAll('#hotels_list option'));
+    select.addEventListener("change", function () {
+      const opt = this.selectedOptions[0];
+      if (!opt || !opt.dataset) return;
 
-    function maybeFillLink() {
-      const val = (nameInput.value || '').trim().toLowerCase();
-      const match = opts.find(o => (o.value || '').trim().toLowerCase() === val);
-      const link = match?.dataset?.link || '';
-      if (link && (!linkInput.value || !linkInput.value.trim())) {
-        linkInput.value = link;
+      const name = opt.dataset.name || "";
+      const link = opt.dataset.link || "";
+      const distanceKm = opt.dataset.distanceKm || "";
+      const rating = opt.dataset.rating || "";
+
+      const nameInput = document.getElementById(nameInputId);
+      const linkInput = document.getElementById(linkId);
+      const distLabelInput = document.getElementById(distanceLabelId);
+      const ratingInput = document.getElementById(ratingId);
+      const citySelect = document.getElementById(cityLockId);
+
+      if (nameInput) nameInput.value = name;
+      if (linkInput) linkInput.value = link;
+      if (ratingInput) ratingInput.value = rating;
+
+      if (distLabelInput && distanceKm) {
+        const cityLabel = selectId === "mecca_hotel_select" ? "Haram" : "Masjid an-Nabawi";
+        distLabelInput.value = distanceKm + " km from " + cityLabel;
       }
-    }
 
-    nameInput.addEventListener('change', maybeFillLink);
-    nameInput.addEventListener('blur', maybeFillLink);
+      // lock city when choosing saved hotel
+      if (citySelect) {
+        citySelect.value = (selectId === "mecca_hotel_select") ? "Mecca" : "Medinah";
+      }
+    });
   }
 
-  wireAutoLink('mecca_hotel', 'mecca_link');
-  wireAutoLink('med_hotel', 'med_link');
-});
+  wireHotelSelect("mecca_hotel_select", "mecca_hotel", "mecca_link", "mecca_distance_text", "mecca_rating", "mecca_hotel_city");
+  wireHotelSelect("med_hotel_select", "med_hotel", "med_link", "med_distance_text", "med_rating", "med_hotel_city");
 </script>
+
 
 
 {% endblock %}

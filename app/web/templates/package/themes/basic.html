@@ -130,6 +130,21 @@
               {% else %}{{ mecca_hotel_name }}{% endif %}
             {% else %}—{% endif %}
           </div>
+
+          {# --- OR SIMILAR (MECCA) --- #}
+          {% if mecca_similar_hotels %}
+            <div class="label-m mt-2">Or similar</div>
+            <div class="small">
+              {% for h in mecca_similar_hotels %}
+                {% if h.link %}
+                  <a href="{{ h.link }}" target="_blank" rel="noopener">{{ h.name }}</a>
+                {% else %}
+                  {{ h.name }}
+                {% endif %}
+                {% if not loop.last %}, {% endif %}
+              {% endfor %}
+            </div>
+          {% endif %}
         </div>
       </div>
 
@@ -148,6 +163,21 @@
               {% else %}{{ med_hotel_name }}{% endif %}
             {% else %}—{% endif %}
           </div>
+
+          {# --- OR SIMILAR (MEDINAH) --- #}
+          {% if med_similar_hotels %}
+            <div class="label-m mt-2">Or similar</div>
+            <div class="small">
+              {% for h in med_similar_hotels %}
+                {% if h.link %}
+                  <a href="{{ h.link }}" target="_blank" rel="noopener">{{ h.name }}</a>
+                {% else %}
+                  {{ h.name }}
+                {% endif %}
+                {% if not loop.last %}, {% endif %}
+              {% endfor %}
+            </div>
+          {% endif %}
         </div>
       </div>
     </div>
@@ -170,3 +200,15 @@
     </ul>
   </div>
 </div>
+<style>
+  .btn-primary {
+    background: linear-gradient(90deg, #2563eb, #1d4ed8);
+    color: #fff;
+    border: none;
+    transition: all .25s ease;
+  }
+  .btn-primary:hover {
+    background: linear-gradient(90deg, #1e3a8a, #1d4ed8);
+    transform: translateY(-2px);
+  }
+</style>

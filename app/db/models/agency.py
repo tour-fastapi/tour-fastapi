@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import Optional, List
 from datetime import datetime
 
-from sqlalchemy import Integer, String, Text, ForeignKey, DateTime, Column
+from sqlalchemy import Boolean, Integer, String, Text, ForeignKey, DateTime, Column
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
@@ -47,6 +47,7 @@ class Agency(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=False), server_default=func.now(), nullable=False
     )
+    viewed_by_admin = Column(Boolean, nullable=False, default=False)
 
     # City FK (optional helper to cities table)
     city_id: Mapped[Optional[int]] = mapped_column(ForeignKey("cities.id", ondelete="SET NULL"),
@@ -90,6 +91,10 @@ class Agency(Base):
         cascade="all, delete-orphan",
         lazy="selectin",
     )
+    is_blocked = Column(Boolean, nullable=False, default=False)
+    blocked_at = Column(DateTime(timezone=True), nullable=True)
+    blocked_reason = Column(Text, nullable=True)
+    blocked_by_user_id = Column(Integer, nullable=True)
 
     def __repr__(self) -> str:
         return f"<Agency id={self.registration_id!r} name={self.agencies_name!r} city={self.city!r}>"
@@ -99,3 +104,10 @@ class Agency(Base):
     logo_uploaded_at = Column(DateTime, nullable=True)
     logo_width = Column(Integer, nullable=True)
     logo_height = Column(Integer, nullable=True)
+
+    updated_at = Column(
+        DateTime,
+        server_default=func.now(),
+        onupdate=func.now()
+    )
+    admin_last_viewed_at = Column(DateTime, nullable=True)

@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import Optional, Literal
-from sqlalchemy import String, Date, Enum, ForeignKey, DateTime, Column, Integer
+from sqlalchemy import String, Date, Enum, ForeignKey, DateTime, Column, Integer, Text 
 from sqlalchemy.dialects.mysql import INTEGER as MYSQL_INTEGER
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
@@ -29,4 +29,5 @@ class PackageStay(Base):
 
     package = relationship("Package", back_populates="stays")
     hotel_id = Column(Integer, ForeignKey("hotels.id"), nullable=True)
+    similar_hotel_ids = Column(Text, nullable=True)
 
