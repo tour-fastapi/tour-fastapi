@@ -1,15 +1,17 @@
-from sqlalchemy import (
-    Column, Integer, String, DateTime, ForeignKey, func
-)
+from __future__ import annotations
+
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, func
 from sqlalchemy.orm import relationship
-from app.db.base import Base  # adjust path if your Base is elsewhere
+from sqlalchemy.dialects.mysql import INTEGER as MYSQL_INTEGER
+
+from app.db.base import Base
 
 
 class PackageTheme(Base):
     __tablename__ = "package_theme"
 
     package_id = Column(
-        Integer,
+        MYSQL_INTEGER(unsigned=True),
         ForeignKey("packages.package_id", ondelete="CASCADE"),
         primary_key=True,
         nullable=False
@@ -21,9 +23,6 @@ class PackageTheme(Base):
 
     # Relationships
     package = relationship("Package", back_populates="theme")
-
-    # Uncomment if you have a user or users table
-    # user = relationship("User", foreign_keys=[set_by_user_id])
 
     def __repr__(self):
         return f"<PackageTheme package_id={self.package_id} theme_key={self.theme_key}>"
