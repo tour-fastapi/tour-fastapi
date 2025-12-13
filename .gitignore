@@ -1,22 +1,47 @@
+# OS/editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
 
 # Python
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
-
-# Virtual environment
 .venv/
 venv/
-env/
 
-# Mac
-.DS_Store
+# Env & secrets
+.env
+.env.*
+*.secret
+*.key
+
+# Build/coverage
+build/
+dist/
+*.egg-info/
+.pytest_cache/
+.coverage
+htmlcov/
 
 # Logs
 *.log
 
-# IDE
-.vscode/
-.idea/
+# Node (if any frontend later)
+node_modules/
 
+.venv/
+__pycache__/
+*.pyc
+.DS_Store
+
+cat > .gitignore <<'EOF'
+.venv/
+__pycache__/
+*.pyc
+.DS_Store
+.env
+.env.*
+EOF
