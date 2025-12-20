@@ -1,10 +1,11 @@
 # app/core/config.py
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import Field 
 
 class Settings(BaseSettings):
     APP_NAME: str = "Tour App API"
     ENV: str = "dev"
-    DATABASE_URL: str  # e.g. postgresql+psycopg2://user:pass@localhost:5432/tour_app
+    DATABASE_URL: str = Field(default="")# e.g. postgresql+psycopg2://user:pass@localhost:5432/tour_app
 
     # placeholders for later days
     SECRET_KEY: str | None = None
