@@ -26,8 +26,9 @@ app = FastAPI(title=settings.APP_NAME)
 
 @app.on_event("startup")
 def on_startup():
-    Base.metadata.create_all(bind=engine)
-    print("✅ create_all done. Tables:", list(Base.metadata.tables.keys()))
+    if settings.ENVIRONMENT != "production":
+        Base.metadata.create_all(bind=engine)
+
 
 # Middleware
 app.add_middleware(

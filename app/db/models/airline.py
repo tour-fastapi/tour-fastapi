@@ -10,3 +10,10 @@ class Airline(Base):
     name: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
 
     packages = relationship("PackageAirline", back_populates="airline", cascade="all, delete-orphan")
+
+    package_airlines = relationship(
+    "PackageAirline",
+    back_populates="airline",
+    cascade="all, delete-orphan"
+)
+
