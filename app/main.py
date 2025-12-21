@@ -26,8 +26,10 @@ app = FastAPI(title=settings.APP_NAME)
 
 @app.on_event("startup")
 def on_startup():
-    if settings.ENVIRONMENT != "production":
+    environment = getattr(settings, "ENVIRONMENT", "production")
+    if environment != "production":
         Base.metadata.create_all(bind=engine)
+
 
 
 # Middleware
