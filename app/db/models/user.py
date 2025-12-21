@@ -3,7 +3,7 @@ from typing import Optional, List
 from datetime import datetime
 from sqlalchemy import String, Boolean, DateTime
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from app.db.base import Base
+from app.db.mixins import Base
 from sqlalchemy import Integer, text
 
 
