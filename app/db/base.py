@@ -1,6 +1,7 @@
-from app.db.mixins import Base   # ✅ import Base from mixins
+# app/db/base.py
+from app.db.mixins import Base
 
-# Import all models so Alembic can detect them
+# Import all models so SQLAlchemy registers them
 from app.db.models.user import User
 from app.db.models.agency import Agency
 from app.db.models.agency_branch import AgencyBranch
@@ -14,3 +15,5 @@ from app.db.models.package_inclusion import PackageInclusion
 from app.db.models.package_itinerary import PackageItinerary
 from app.db.models.package_flight import PackageFlight
 from app.db.models.package_stay import PackageStay
+from app.db.models.package_airline import PackageAirline
+from app.db.models.package_theme import PackageTheme

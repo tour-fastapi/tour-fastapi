@@ -1,23 +1,27 @@
+# app/db/session.py
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, Session
+from typing import Generator
 from app.core.config import settings
 
-# Tip: prefer Postgres in production; MySQL works too if you must.
+DATABASE_URL = settings.DATABASE_URL.strip()
+
 engine = create_engine(
-    settings.DATABASE_URL,
-    pool_pre_ping=True,  # drops dead connections
-    future=True
+    DATABASE_URL,
+    pool_pre_ping=True,
+    pool_recycle=300,
+    pool_size=5,
+    max_overflow=10,
+    future=True,
 )
 
 SessionLocal = sessionmaker(
     bind=engine,
     autoflush=False,
     autocommit=False,
-    future=True
+    expire_on_commit=False,
+    future=True,
 )
-
-from sqlalchemy.orm import Session
-from typing import Generator
 
 def get_db() -> Generator[Session, None, None]:
     db = SessionLocal()

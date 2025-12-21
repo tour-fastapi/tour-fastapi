@@ -1,62 +1,60 @@
+# app/main.py
 from fastapi import FastAPI, Depends
-from fastapi.middleware.cors import CORSMiddleware 
-from fastapi.responses import JSONResponse
-from app.core.config import settings
-from app.core.deps import get_db
-from app.db.base import Base
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from starlette.middleware.sessions import SessionMiddleware
 from sqlalchemy.orm import Session
 from sqlalchemy import text
-# NEW: import routers
+
+from app.core.config import settings
+from app.core.deps import get_db
+from app.db.session import engine
+from app.db.mixins import Base
+import app.db.models 
+# ✅ CRITICAL: load DB models so Base.metadata is populated
+import app.db.models  # noqa: F401
+
+# Routers
 from app.api.v1.users import router as users_router
 from app.api.v1.agencies import router as agencies_router
 from app.api.v1.auth import router as auth_router
 from app.web.routes import router as ui_router
-from starlette.middleware.sessions import SessionMiddleware
-from fastapi.staticfiles import StaticFiles
-from app.web import routes as ui_routes
-from app.web.routes import router as web_router
 from app.web.routes_media import router as media_router
-from starlette.middleware.cors import CORSMiddleware
 from app.web.routes_admin import router as admin_router
-
 
 app = FastAPI(title=settings.APP_NAME)
 
-app.include_router(admin_router)
+@app.on_event("startup")
+def on_startup():
+    Base.metadata.create_all(bind=engine)
+    print("✅ create_all done. Tables:", list(Base.metadata.tables.keys()))
 
+# Middleware
 app.add_middleware(
     SessionMiddleware,
-    secret_key=settings.SECRET_KEY,  # must be non-empty and stable
-    same_site="lax",                 # default is fine too
-    https_only=False,                # True only under HTTPS
-    max_age=60 * 60 * 24 * 7,        # optional: one week
-    session_cookie="tour_session",   # optional: custom cookie name
+    secret_key=settings.SECRET_KEY,
+    same_site="lax",
+    https_only=False,
 )
 
-app.mount("/static", StaticFiles(directory="app/web/static"), name="static")
-
-app.include_router(auth_router, prefix="/api/v1")
-
-# CORS (open now; restrict later in prod)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://127.0.0.1:8000", "http://localhost:8000"],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-app.add_middleware(SessionMiddleware, secret_key=settings.JWT_SECRET)
+# Static files
 app.mount("/static", StaticFiles(directory="app/web/static"), name="static")
 
-# API routers
+# Routers
+app.include_router(auth_router, prefix="/api/v1", tags=["auth"])
 app.include_router(users_router, prefix="/api/v1", tags=["users"])
 app.include_router(agencies_router, prefix="/api/v1", tags=["agencies"])
-app.include_router(auth_router, prefix="/api/v1", tags=["auth"])
 app.include_router(ui_router)
-app.include_router(ui_routes.router)
-app.include_router(web_router)
-app.include_router(media_router) 
+app.include_router(media_router)
+app.include_router(admin_router)
 
 @app.get("/health")
 def health():
@@ -64,37 +62,9 @@ def health():
 
 @app.get("/debug/db-ping")
 def db_ping(db: Session = Depends(get_db)):
-    try:
-        db.execute(text("SELECT 1"))
-        return {"db": "ok"}
-    except Exception as e:
-        import traceback
-        tb = traceback.format_exc()
-        # Return full error so we can see what's wrong (dev only!)
-        return JSONResponse(status_code=500, content={"error": str(e), "type": e.__class__.__name__, "trace": tb})
-# app/main.py
-from sqlalchemy import text
-
-@app.get("/debug/table-check")
-def table_check(db: Session = Depends(get_db)):
-    # These are your legacy tables
-    db.execute(text("SELECT 1 FROM users LIMIT 1"))
-    db.execute(text("SELECT 1 FROM agencies LIMIT 1"))
-    db.execute(text("SELECT 1 FROM packages LIMIT 1"))
-    db.execute(text("SELECT 1 FROM inquiries LIMIT 1"))
-    return {"tables": "ok"}
+    db.execute(text("SELECT 1"))
+    return {"db": "ok"}
 
 @app.get("/debug/models")
 def models_loaded():
-    return {"models": sorted({t.name for t in Base.metadata.tables.values()})}
-# app/main.py
-from app.core.config import settings
-
-@app.get("/debug/config")
-def debug_config():
-    # Don’t keep this in production; just for today.
-    return {"database_url": settings.DATABASE_URL}
-
-# mount API v1
-app.include_router(users_router, prefix="/api/v1")
-app.include_router(agencies_router, prefix="/api/v1")
+    return sorted(Base.metadata.tables.keys())
