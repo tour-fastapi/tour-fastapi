@@ -1,30 +1,25 @@
-from __future__ import annotations
 from sqlalchemy import ForeignKey, UniqueConstraint
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-from app.db.base import Base
+from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.dialects.mysql import INTEGER as MYSQL_INTEGER
 
+from app.db.mixins import Base
 
 class PackageAirline(Base):
     __tablename__ = "package_airlines"
 
-    # FK → packages.package_id   (must NOT autoincrement)
+    # packages.package_id is INT UNSIGNED
     package_id: Mapped[int] = mapped_column(
         MYSQL_INTEGER(unsigned=True),
         ForeignKey("packages.package_id", ondelete="CASCADE"),
-        primary_key=True
+        primary_key=True,
     )
 
-    # FK → airlines.airline_id  (also PK in many-to-many)
+    # airlines.airline_id is INT (SIGNED) in your DB
     airline_id: Mapped[int] = mapped_column(
-        MYSQL_INTEGER(unsigned=True),
+        MYSQL_INTEGER(unsigned=False),
         ForeignKey("airlines.airline_id", ondelete="CASCADE"),
-        primary_key=True
+        primary_key=True,
     )
-
-    # relationships
-    package = relationship("Package", back_populates="package_airlines")
-    airline = relationship("Airline", back_populates="packages")
 
     __table_args__ = (
         UniqueConstraint("package_id", "airline_id", name="uq_package_airline"),
