@@ -4,16 +4,22 @@ from sqlalchemy.orm import sessionmaker, Session
 from typing import Generator
 from app.core.config import settings
 
-DATABASE_URL = settings.DATABASE_URL.strip()
+db_url = settings.DATABASE_URL.strip()
+
+connect_args = {}
+if "mysql+pymysql://" in db_url:
+    connect_args = {"ssl": {}}
 
 engine = create_engine(
-    DATABASE_URL,
+    db_url,
     pool_pre_ping=True,
     pool_recycle=300,
     pool_size=5,
     max_overflow=10,
     future=True,
+    connect_args=connect_args,
 )
+
 
 SessionLocal = sessionmaker(
     bind=engine,
