@@ -2093,7 +2093,7 @@ def itinerary_wizard_submit(
     package_id: int,
     csrf_token: str = Form(...),
     day_number: Optional[int] = Form(None),
-    notes: Optional[List[str]] = Form(None),
+    notes: Optional[List[str]] = Form(None, alias="notes[]"),
     nav: str = Form("next"),
     db: Session = Depends(get_db),
 ):
