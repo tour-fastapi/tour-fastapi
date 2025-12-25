@@ -5,51 +5,45 @@
 /* =========================
    THEME TOKENS (1 place)
    ========================= */
+/* 1) Base theme tokens */
 @layer base {
   :root {
-    /* Colors as RGB triplets (lets us use rgb(var(--token)) nicely) */
-    --bg: 255 255 255;
-    --fg: 17 24 39;          /* slate-900 */
-    --muted: 107 114 128;    /* gray-500 */
+    /* Brand (Primary Green – Trust-first) */
+    --primary-h: 145;
+    --primary-s: 62%;
+    --primary-l: 34%; /* change to 40% to compare */
 
-    --surface: 255 255 255;  /* cards, inputs */
-    --surface-2: 249 250 251;/* subtle sections */
-    --border: 229 231 235;   /* gray-200 */
+    /* Core colors */
+    --bg: 220 18% 97%;
+    --fg: 222 22% 12%;
+    --muted: 215 12% 40%;
+    --card: 0 0% 100%;
+    --border: 220 13% 90%;
 
-    --primary: 37 99 235;    /* blue-600 */
-    --primary: 16 185 129; /* emerald green */
-    --primary-fg: 255 255 255;
-
-    --radius: 12px;
+    /* Derived */
+    --primary: var(--primary-h) var(--primary-s) var(--primary-l);
+    --primary-fg: 0 0% 100%;
+    --radius: 0.75rem;
   }
 
-  [data-theme="sand"] body {
-  outline: 6px solid red;
-}
-  /* A second theme to prove switching works */
-  [data-theme="sand"] {
-    --bg: 252 251 249;
-    --fg: 28 25 23;
-    --muted: 120 113 108;
-    --surface: 255 255 255;
-    --surface-2: 250 249 247;
-    --border: 231 229 228;
-    --primary: 12 74 110;
-    --primary-fg: 255 255 255;
-    --radius: 14px;
-    --primary: 220 38 38;
-    --radius: 28px;
-  }
+  /* Dark theme (token-only, no layout changes) */
+  [data-theme="dark"] {
+    --bg: 222 18% 10%;
+    --fg: 220 18% 95%;
+    --muted: 220 10% 70%;
+    --card: 222 16% 14%;
+    --border: 220 12% 22%;
 
-  html, body { height: 100%; }
+    /* brighter green for dark */
+    --primary-l: 45%;
+  }
 
   body {
-    @apply antialiased text-sm;
-    background: rgb(var(--bg));
-    color: rgb(var(--fg));
+    background-color: hsl(var(--bg));
+    color: hsl(var(--fg));
+    font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont,
+      "Segoe UI", Roboto, Arial, sans-serif;
   }
-
-  a { @apply underline-offset-4 hover:underline; }
 }
 
 /* =========================
@@ -125,4 +119,194 @@
     border-radius: 12px;
     font-weight: 600;
   }
+
+  /* ===============================
+     Operators – City Page
+     =============================== */
+
+  .page {
+    @apply max-w-3xl mx-auto px-4 py-6;
+  }
+
+  .page-header {
+    @apply mb-6;
+  }
+
+  .page-back {
+    @apply inline-block text-sm text-[hsl(var(--muted))]
+           mb-2 hover:text-[hsl(var(--primary))];
+  }
+
+  .page-title-wrap {
+    @apply flex items-center justify-between gap-4;
+  }
+
+  .page-title {
+    @apply text-2xl font-semibold tracking-tight;
+  }
+
+  .page-count {
+    @apply text-xs font-medium px-3 py-1 rounded-full
+           bg-[hsl(var(--primary))] text-white;
+  }
+
+  .operator-list {
+    @apply space-y-4;
+  }
+
+  .operator-card {
+    @apply flex gap-4 p-4 rounded-xl
+           bg-[hsl(var(--card))]
+           border border-[hsl(var(--border))]
+           transition
+           hover:border-[hsl(var(--primary))]
+           hover:shadow-md;
+  }
+
+ /* Operator avatar – logo OR initials (never both) */
+.operator-avatar{
+  @apply relative shrink-0 rounded-xl overflow-hidden;
+  width: 56px;
+  height: 56px;
+  background: hsl(var(--surface-2));
+  border: 1px solid hsl(var(--border));
+}
+
+/* Logo image */
+.operator-avatar img{
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: hsl(var(--surface));
+  padding: 6px;
+  z-index: 2;
+}
+
+/* Initials fallback */
+.operator-avatar .agency-badge-fallback{
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: hsl(var(--fg));
+  z-index: 1;
+  background: hsl(var(--av-h) 70% 92%);
+  color: hsl(var(--av-h) 45% 25%);
+}
+/* Stable hue buckets using first letter of seed */
+.operator-avatar { --av-h: 145; } /* default */
+
+.operator-avatar[data-seed^="a"], .operator-avatar[data-seed^="b"] { --av-h: 10; }
+.operator-avatar[data-seed^="c"], .operator-avatar[data-seed^="d"] { --av-h: 28; }
+.operator-avatar[data-seed^="e"], .operator-avatar[data-seed^="f"] { --av-h: 45; }
+.operator-avatar[data-seed^="g"], .operator-avatar[data-seed^="h"] { --av-h: 70; }
+.operator-avatar[data-seed^="i"], .operator-avatar[data-seed^="j"] { --av-h: 95; }
+.operator-avatar[data-seed^="k"], .operator-avatar[data-seed^="l"] { --av-h: 125; }
+.operator-avatar[data-seed^="m"], .operator-avatar[data-seed^="n"] { --av-h: 155; }
+.operator-avatar[data-seed^="o"], .operator-avatar[data-seed^="p"] { --av-h: 185; }
+.operator-avatar[data-seed^="q"], .operator-avatar[data-seed^="r"] { --av-h: 210; }
+.operator-avatar[data-seed^="s"], .operator-avatar[data-seed^="t"] { --av-h: 235; }
+.operator-avatar[data-seed^="u"], .operator-avatar[data-seed^="v"] { --av-h: 265; }
+.operator-avatar[data-seed^="w"], .operator-avatar[data-seed^="x"] { --av-h: 295; }
+.operator-avatar[data-seed^="y"], .operator-avatar[data-seed^="z"] { --av-h: 325; }
+
+
+
+  .operator-body {
+    @apply flex flex-col gap-1;
+  }
+
+  .operator-name {
+    @apply text-base font-semibold leading-tight;
+  }
+
+  .operator-location {
+    @apply text-sm text-[hsl(var(--muted))];
+  }
+
+  .operator-description {
+    @apply text-sm text-[hsl(var(--fg))] line-clamp-2;
+  }
+
+  .operator-meta {
+    @apply text-xs text-[hsl(var(--muted))] mt-1;
+  }
+
+  .empty-state {
+    @apply text-center text-sm text-[hsl(var(--muted))] py-12;
+  }
+
+  .operator-card {
+    @apply block no-underline;
+    @apply bg-white border border-slate-200 rounded-2xl;
+    @apply p-4 md:p-5;
+    @apply shadow-sm hover:shadow-md transition-shadow;
+  }
+
+  .operator-card {
+    @apply grid gap-4;
+    grid-template-columns: 56px 1fr;
+    align-items: start;
+  }
+
+  .operator-card__media {
+    @apply w-14 h-14;
+  }
+
+  /* This is the KEY: constrain the macro output */
+  .operator-card__media .agency-badge,
+  .operator-card__media img {
+    @apply w-14 h-14;
+  }
+
+  .operator-card__media img {
+    @apply object-contain;
+  }
+
+  .operator-card__title {
+    @apply text-base md:text-lg font-semibold text-slate-900 leading-snug;
+  }
+
+  .operator-card__meta {
+    @apply text-sm text-slate-600 mt-0.5;
+  }
+
+  .operator-card__desc {
+    @apply text-sm text-slate-800 mt-2;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .operator-card__sub {
+    @apply text-sm text-slate-700 mt-2;
+  }
+
+.group {
+    @apply mb-10;
+  }
+
+  .group-header {
+    @apply flex items-center justify-between mb-4;
+  }
+
+  .group-title {
+    @apply text-xl font-semibold;
+    color: rgb(var(--foreground));
+  }
+
+  .group-meta {
+    @apply text-sm;
+    color: rgb(var(--muted));
+  }
+
+  .operator-list {
+    @apply space-y-4;
+  }
+  
 }
