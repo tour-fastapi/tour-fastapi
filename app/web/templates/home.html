@@ -44,11 +44,15 @@
       </div>
       <div class="loc-grid">
           {% for c in popular_cities %}
-            <a class="loc-card" href="/city/{{ c.name | urlencode }}">
-              <div class="loc-name">{{ c.name }}</div>
+            <a class="card" href="/city/{{ c.name | urlencode }}">
+              <div class="card-header">{{ c.name }}</div>
               <div class="loc-meta">{{ c.count }} operator{{ 's' if c.count != 1 else '' }}</div>
             </a>
+            <div style="margin: 16px 0;">
+            <button class="t-btn-primary">TAILWIND TEST BUTTON</button>
+          </div>
 
+            
           {% endfor %}
       </div>
     </div>

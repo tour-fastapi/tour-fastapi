@@ -1,0 +1,128 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* =========================
+   THEME TOKENS (1 place)
+   ========================= */
+@layer base {
+  :root {
+    /* Colors as RGB triplets (lets us use rgb(var(--token)) nicely) */
+    --bg: 255 255 255;
+    --fg: 17 24 39;          /* slate-900 */
+    --muted: 107 114 128;    /* gray-500 */
+
+    --surface: 255 255 255;  /* cards, inputs */
+    --surface-2: 249 250 251;/* subtle sections */
+    --border: 229 231 235;   /* gray-200 */
+
+    --primary: 37 99 235;    /* blue-600 */
+    --primary: 16 185 129; /* emerald green */
+    --primary-fg: 255 255 255;
+
+    --radius: 12px;
+  }
+
+  [data-theme="sand"] body {
+  outline: 6px solid red;
+}
+  /* A second theme to prove switching works */
+  [data-theme="sand"] {
+    --bg: 252 251 249;
+    --fg: 28 25 23;
+    --muted: 120 113 108;
+    --surface: 255 255 255;
+    --surface-2: 250 249 247;
+    --border: 231 229 228;
+    --primary: 12 74 110;
+    --primary-fg: 255 255 255;
+    --radius: 14px;
+    --primary: 220 38 38;
+    --radius: 28px;
+  }
+
+  html, body { height: 100%; }
+
+  body {
+    @apply antialiased text-sm;
+    background: rgb(var(--bg));
+    color: rgb(var(--fg));
+  }
+
+  a { @apply underline-offset-4 hover:underline; }
+}
+
+/* =========================
+   SEMANTIC COMPONENT CLASSES
+   (use these in templates)
+   ========================= */
+@layer components {
+  /* Layout */
+  .page {
+    @apply mx-auto w-full max-w-6xl px-4 py-6;
+  }
+
+  /* Typography */
+  .h1 { @apply text-2xl font-semibold tracking-tight; }
+  .h2 { @apply text-xl font-semibold tracking-tight; }
+  .subtle { color: rgb(var(--muted)); }
+
+  /* Surfaces */
+  .card {
+    @apply rounded-theme border shadow-sm;
+    background: rgb(var(--surface));
+    border-color: rgb(var(--border));
+  }
+  .card-header { @apply px-4 py-3 border-b; border-color: rgb(var(--border)); }
+  .card-body { @apply px-4 py-4; }
+
+  /* Buttons */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition;
+  }
+  .btn-primary {
+    @apply btn shadow-sm hover:opacity-95 active:opacity-90;
+    background: rgb(var(--primary));
+    color: rgb(var(--primary-fg));
+  }
+  .btn-outline {
+    @apply btn border hover:bg-black/5 active:bg-black/10;
+    border-color: rgb(var(--border));
+  }
+  .btn-ghost {
+    @apply btn hover:bg-black/5 active:bg-black/10;
+  }
+
+  /* Inputs */
+  .input {
+    @apply w-full rounded-lg border px-3 py-2 text-sm outline-none transition;
+    background: rgb(var(--surface));
+    border-color: rgb(var(--border));
+  }
+  .input:focus {
+    border-color: rgba(var(--primary), 0.8);
+    box-shadow: 0 0 0 3px rgba(var(--primary), 0.18);
+  }
+
+  /* Tables (nice default) */
+  .table {
+    @apply w-full text-sm;
+  }
+  .table th {
+    @apply text-left font-medium px-4 py-2 border-b;
+    border-color: rgb(var(--border));
+    color: rgb(var(--muted));
+  }
+  .table td {
+    @apply px-4 py-3 border-b align-middle;
+    border-color: rgb(var(--border));
+  }
+
+  .t-btn-primary {
+    background: rgb(var(--primary));
+    color: rgb(var(--primary-fg));
+    padding: 10px 14px;
+    border-radius: 12px;
+    font-weight: 600;
+  }
+}
