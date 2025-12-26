@@ -8,13 +8,17 @@
 
 <main class="page">
   <header class="page-header">
-    <div class="page-header__title">
-      <h1 class="page-title">Umrah Tour Operators by City</h1>
-      <p class="page-subtitle">Browse operators grouped by city</p>
-    </div>
+    <div class="page-title-wrap">
+      <div class="page-title-group">
+        <h1 class="page-title">Umrah Tour Operators by City</h1>
+        <p class="page-subtitle">Browse verified Umrah tour operators across cities</p>
+      </div>
 
-    <div class="page-header__meta">
-      <span class="pill">{{ total_operators }} operator{{ 's' if total_operators != 1 else '' }} • {{ cities|length }} cit{{ 'ies' if cities|length != 1 else 'y' }}</span>
+    <span class="page-count ">
+        {{ total_operators }} operator{{ 's' if total_operators != 1 else '' }}
+        •
+        {{ total_cities }} cit{{ 'ies' if total_cities != 1 else 'y' }}
+      </span>
     </div>
   </header>
 
@@ -25,10 +29,11 @@
       <div class="group">
         <header class="group-header">
           <h2 class="group-title">{{ group.city }}</h2>
-           <span class="page-count">
-            {{ group.agencies|length }} operator{{ 's' if agencies|length != 1 else '' }}
+           <span class="group-count">
+                        {{ group.agencies|length }} operator{{ 's' if agencies|length != 1 else '' }}
+
           </span>
-      </header>
+        </header>
         
          <div class="operator-list">
 
@@ -38,9 +43,9 @@
               {% for a in group.agencies %}
                 <a class="operator-card" href="/umrah_operators/{{ a.registration_id }}">
 
-                  <div class="operator-avatar" data-seed="{{ (a.agencies_name or 'X')|lower }}">
-                    {{ ui.agency_badge(a, 56, True) }}
-                  </div>
+                  <div class="operator-avatar" data-tone="{{ (loop.index0 + (a.agencies_name|length)) % 12 }}">
+                  {{ ui.agency_badge(a, 56, True) }}
+                </div>
                   <div class="operator-card__body">
                     <h3 class="operator-card__title">{{ a.agencies_name }}</h3>
                     <div class="operator-card__meta">{{ a.city or '-' }}, {{ a.country or '-' }}</div>
@@ -48,6 +53,36 @@
                     {% if a.description %}
                       <p class="operator-card__desc">{{ a.description }}</p>
                     {% endif %}
+
+                    <div class="operator-meta-primary">
+                      <span class="meta-item">
+                        <span class="meta-icon">📦</span>
+                        <span>3 upcoming packages</span>
+                      </span>
+
+                      <span class="meta-sep">•</span>
+
+                      <span class="meta-item">
+                        <span>Starting from ₹45,000</span>
+                      </span>
+
+                      <span class="meta-sep">•</span>
+
+                      <span class="meta-item">
+                        <span class="meta-icon">⭐</span>
+                        <span>4.6</span>
+                      </span>
+                    </div>
+                    <div class="operator-meta-primary operator-meta-muted is-hidden">
+                      <span>No upcoming packages</span>
+                    </div>
+                    <div class="operator-meta-secondary">
+                      <span>In business since 2019</span>
+                      <span class="meta-sep">•</span>
+                      <span>120+ tours</span>
+                      <span class="meta-sep">•</span>
+                      <span>3,500+ pilgrims</span>
+                    </div>
 
                     {% if a.min_package_price %}
                       <div class="operator-card__sub">
