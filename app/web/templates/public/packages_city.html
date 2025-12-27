@@ -35,38 +35,170 @@
       {% set ag = agency_by_id.get(p.registration_id) %}
       {% set href = "/umrah_packages/" ~ p.package_id %}
 
-      <a class="package-card entity-card" href="{{ href }}">  
-        <!-- Agency avatar (same logic as operators) -->
-         
-        <div
-          class="package-avatar operator-avatar"
-          data-tone="{{ (loop.index0 + (ag.agencies_name|length if ag else 0)) % 12 }}"
-        >
-          {% if ag %}
-            {{ ui.agency_badge(ag, 56, True) }}
-          {% endif %}
+      <a class="package-card entity-card" href="{{ href }}">
+
+  <!-- Left: placeholder avatar / image later -->
+  <div
+    class="package-avatar operator-avatar"
+    data-tone="{{ (loop.index0 + (ag.agencies_name|length if ag else 0)) % 12 }}"
+  >
+    {% if ag %}
+      {{ ui.agency_badge(ag, 56, True) }}
+    {% endif %}
+  </div>
+
+  <div class="package-body">
+
+    <!-- Top row: title + price -->
+    <div class="package-top">
+      <div class="package-top__left">
+        <div class="package-title-row">
+          <h2 class="package-name">{{ p.package_name }}</h2>
+
+          <!-- Nudges next to title -->
+          <div class="package-nudges-inline">
+            <span class="nudge nudge--good">Refundable</span>
+            <span class="nudge nudge--warn">Filling fast</span>
+            <!-- only render 1–2 usually -->
+          </div>
         </div>
 
-        <div class="package-body">
-          <h2 class="package-name">
-            {{ p.package_name }}
-          </h2>
+        <div class="package-route-line">
+          <span class="package-route">Mumbai → Jeddah → Mumbai</span>
+          <span class="meta-sep">•</span>
+          <span class="package-duration">10D / 9N</span>
+        </div>
+      </div>
 
-          <p class="package-location">
-            {{ ag.city if ag and ag.city else '—' }}, {{ ag.country if ag and ag.country else '—' }}
-          </p>
 
-          <div class="package-meta">
-            {% if p.days %}<span class="meta-chip">{{ p.days }} day{{ 's' if p.days != 1 else '' }}</span>{% endif %}
-            {% if p.price is not none %}<span class="meta-chip">From ₹ {{ '%0.0f'|format(p.price) }}</span>{% endif %}
-            {% if ag and ag.agencies_name %}<span class="meta-chip">{{ ag.agencies_name }}</span>{% endif %}
+      <div class="package-price">
+        <div class="package-price__value">₹ 45,000</div>
+        <div class="package-price__label">Starting</div>
+      </div>
+    </div>
+
+   
+
+    
+
+    <!-- Chips / inclusions -->
+    <div class="package-meta">
+      <span class="meta-chip">Direct Flight</span>
+      <span class="meta-chip">Visa Included</span>
+      <span class="meta-chip">Transfers</span>
+      <span class="meta-chip">Breakfast</span>
+    </div>
+
+    <!-- Dates: start / return -->
+    <div class="package-flights">
+      <!-- Onward -->
+      <div class="flight-card">
+        <div class="flight-avatar">SV</div>
+
+        <div class="flight-body">
+          <div class="flight-top">
+            <div class="flight-label">Onward</div>
+            <div class="flight-primary">
+              <span class="flight-airline">Saudia</span>
+              <span class="meta-sep">•</span>
+              <span class="flight-date">12 Jan 2026</span>
+            </div>
           </div>
 
-          {% if p.description %}
-            <p class="package-description">{{ p.description }}</p>
-          {% endif %}
+          <div class="flight-sub">BOM → JED • Direct</div>
         </div>
-      </a>
+      </div>
+
+      <!-- Return -->
+      <div class="flight-card">
+        <div class="flight-avatar">AI</div>
+
+        <div class="flight-body">
+          <div class="flight-top">
+            <div class="flight-label">Return</div>
+            <div class="flight-primary">
+              <span class="flight-airline">Air India</span>
+              <span class="meta-sep">•</span>
+              <span class="flight-date">22 Jan 2026</span>
+            </div>
+          </div>
+
+          <div class="flight-sub">JED → BOM • Via DEL</div>
+        </div>
+      </div>
+    </div>
+
+
+
+    <!-- Stay blocks -->
+     <div class="package-stays">
+      <!-- Stay in Makkah -->
+      <div class="stay-card">
+        <div class="stay-thumb">M</div>
+
+        <div class="stay-body">
+          <div class="stay-label">Stay in Makkah</div>
+
+          <div class="stay-primary">
+            <span class="stay-hotel">Anjum Hotel</span>
+            <span class="meta-sep">•</span>
+            <span class="stay-nights">6 nights</span>
+          </div>
+
+          <div class="stay-sub">0.6 km from Haram</div>
+        </div>
+      </div>
+
+      <!-- Stay in Madinah -->
+      <div class="stay-card">
+        <div class="stay-thumb">D</div>
+
+        <div class="stay-body">
+          <div class="stay-label">Stay in Madinah</div>
+
+          <div class="stay-primary">
+            <span class="stay-hotel">Province Al Sham</span>
+            <span class="meta-sep">•</span>
+            <span class="stay-nights">3 nights</span>
+          </div>
+
+          <div class="stay-sub">0.4 km from Masjid Nabawi</div>
+        </div>
+      </div>
+    </div>
+
+    
+
+
+    <!-- Description -->
+    <p class="package-description">
+      A carefully curated package with premium hotel stays near Haram, direct flights, and guided support throughout your pilgrimage...
+    </p>
+
+    <!-- Operator strip (not clickable) -->
+
+    <div class="package-operator">
+      <div class="mini-card">
+        <div class="mini-card__label">Operator</div>
+
+        <div class="mini-card__row">
+          <div class="mini-card__title">
+            {{ ag.agencies_name if ag and ag.agencies_name else '—' }}
+          </div>
+
+          <div class="mini-card__rating">
+            <span class="stars" aria-hidden="true">★★★★★</span>
+            <span class="mini-card__score">4.6</span>
+            <span class="mini-card__count">(120)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+  </div>
+</a>
+
     {% endfor %}
   </section>
 {% else %}

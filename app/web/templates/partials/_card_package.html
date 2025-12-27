@@ -1,0 +1,37 @@
+{# expects: p (package), ag (agency or None), ui (macros imported), loop (Jinja loop) #}
+{% set href = "/umrah_packages/" ~ p.package_id %}
+
+<a class="entity-card package-card" href="{{ href }}">
+  <div
+    class="operator-avatar package-avatar"
+    data-tone="{{ (loop.index0 + (ag.agencies_name|length if ag else 0)) % 12 }}"
+  >
+    {% if ag %}
+      {{ ui.agency_badge(ag, 56, True) }}
+    {% endif %}
+  </div>
+
+  <div class="package-body">
+    <h2 class="package-name">{{ p.package_name }}</h2>
+
+    <p class="package-location">
+      {{ ag.city if ag and ag.city else '—' }}, {{ ag.country if ag and ag.country else '—' }}
+    </p>
+
+    <div class="package-meta">
+      {% if p.days %}
+        <span class="meta-chip">{{ p.days }} day{{ 's' if p.days != 1 else '' }}</span>
+      {% endif %}
+      {% if p.price is not none %}
+        <span class="meta-chip">From ₹ {{ '%0.0f'|format(p.price) }}</span>
+      {% endif %}
+      {% if ag and ag.agencies_name %}
+        <span class="meta-chip">{{ ag.agencies_name }}</span>
+      {% endif %}
+    </div>
+
+    {% if p.description %}
+      <p class="package-description">{{ p.description }}</p>
+    {% endif %}
+  </div>
+</a>

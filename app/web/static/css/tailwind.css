@@ -306,64 +306,473 @@
   color: hsl(var(--muted));
 }
 
-/* ======================================================
-   Packages components (public)
-   ====================================================== */
+  /* ======================================================
+     5. Package cards (public listing)
+     ====================================================== */
 
-.package-list{
-  @apply space-y-4;
+  .package-list{
+    @apply space-y-4;
+  }
+
+  /* The anchor card wrapper */
+  .package-card{
+    @apply block no-underline;
+    @apply p-4 md:p-5;
+    @apply grid gap-4;
+    grid-template-columns: 56px 1fr;
+    align-items: start;
+  }
+
+  /* Keep your avatar block as-is (you reuse operator-avatar) */
+  .package-avatar{
+    @apply shrink-0;
+  }
+
+  .package-body{
+    @apply flex flex-col gap-2 min-w-0;
+  }
+
+  /* Title + price row */
+  .package-top{
+    @apply flex items-start justify-between gap-3;
+  }
+
+  .package-name{
+    @apply text-base md:text-lg font-semibold leading-snug;
+    color: hsl(var(--fg));
+    @apply min-w-0;
+  }
+
+  .package-price{
+    @apply text-right shrink-0;
+  }
+
+  .package-price__label{
+    @apply text-[11px] leading-none;
+    color: hsl(var(--muted));
+  }
+
+  .package-price__value{
+    @apply text-sm md:text-base font-semibold leading-tight;
+    color: hsl(var(--fg));
+  }
+
+  /* Route + duration */
+  .package-subline{
+    @apply flex flex-wrap items-center gap-2 text-sm;
+    color: hsl(var(--muted));
+  }
+
+  .package-route{
+    @apply truncate;
+  }
+
+  .package-duration{
+    @apply whitespace-nowrap;
+  }
+
+  /* Chips (meta) */
+  .package-meta{
+    @apply flex flex-wrap items-center gap-2;
+  }
+
+  .meta-chip{
+    @apply inline-flex items-center rounded-full px-3 py-1 text-xs font-medium;
+    background: hsl(var(--surface-2));
+    color: hsl(var(--muted));
+    border: 1px solid hsl(var(--border));
+  }
+
+  /* Dates row */
+  .package-dates{
+    @apply grid gap-2 text-sm;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .package-dates__item{
+    @apply rounded-xl px-3 py-2;
+    background: hsl(var(--surface-2));
+    border: 1px solid hsl(var(--border));
+  }
+
+  .package-dates__label{
+    @apply block text-[11px] leading-none mb-1;
+    color: hsl(var(--muted));
+  }
+
+  .package-dates__value{
+    @apply block text-sm font-medium;
+    color: hsl(var(--fg));
+  }
+
+  /* Flights (inside package card) */
+.package-flights{
+  @apply grid gap-3 mt-4;
+  grid-template-columns: 1fr;
 }
 
-.package-card{
-  @apply grid gap-4 p-4 md:p-5;
-  grid-template-columns: 56px 1fr;
-  align-items: start;
+@media (min-width: 640px){
+  .package-flights{ grid-template-columns: 1fr 1fr; }
 }
 
-.package-media{
-  @apply shrink-0 rounded-xl;
-  width: 56px;
-  height: 56px;
+.flight-card{
+  @apply flex gap-3 rounded-2xl px-4 py-3;
   background: hsl(var(--surface-2));
   border: 1px solid hsl(var(--border));
 }
-/* Package avatar (reuse operator avatar styles) */
-.package-avatar{
-  @apply shrink-0;
-}
-.package-body{
-  @apply flex flex-col gap-1 min-w-0;
+
+.flight-avatar{
+  @apply grid place-items-center font-semibold text-xs rounded-xl shrink-0;
+  width: 44px;
+  height: 44px;
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  color: hsl(var(--fg));
 }
 
-.package-name{
+.flight-body{ @apply min-w-0 flex-1; }
+
+.flight-top{ @apply flex flex-col gap-1; }
+
+.flight-label{
+  @apply text-xs font-semibold uppercase tracking-wide;
+  color: hsl(var(--muted));
+}
+
+.flight-primary{
+  @apply flex flex-wrap items-center gap-2;
+}
+
+.flight-airline, .flight-date{
+  @apply text-base font-semibold;
+  color: hsl(var(--fg));
+}
+
+.flight-sub{
+  @apply text-sm mt-1;
+  color: hsl(var(--muted));
+}
+
+  /* Detail rows (flight/hotel blocks) */
+  .package-details{
+    @apply flex flex-col gap-2;
+  }
+
+  .detail-row{
+    @apply flex gap-2;
+  }
+
+  .detail-icn{
+    @apply shrink-0;
+    width: 18px;
+    line-height: 1.1;
+    color: hsl(var(--muted));
+  }
+
+  .detail-main{
+    @apply min-w-0;
+  }
+
+  .detail-title{
+    @apply text-sm font-medium leading-snug;
+    color: hsl(var(--fg));
+  }
+
+  .detail-sub{
+    @apply text-sm leading-snug;
+    color: hsl(var(--muted));
+  }
+
+  /* Description truncation */
+  .package-description{
+    @apply text-sm leading-relaxed;
+    color: hsl(var(--fg));
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* ======================================================
+   Package – Operator mini card (supplier)
+   ====================================================== */
+
+.package-operator{
+  @apply mt-4;
+}
+
+/* Reusable mini card used inside entity cards */
+.mini-card{
+  @apply rounded-xl border p-3;
+  background: hsl(var(--surface-2));
+  border-color: hsl(var(--border));
+}
+
+.mini-card__label{
+  @apply text-xs font-semibold tracking-wide uppercase;
+  color: hsl(var(--muted));
+}
+
+.mini-card__row{
+  @apply mt-1 flex items-center justify-between gap-3;
+}
+
+.mini-card__title{
   @apply text-base font-semibold leading-tight;
+  color: hsl(var(--fg));
 }
 
-.package-location{
+/* Rating right side */
+.mini-card__rating{
+  @apply flex items-center gap-2 shrink-0;
+  color: hsl(var(--fg));
+}
+
+.stars{
+  letter-spacing: 1px;
+  font-size: 0.95rem;
+  line-height: 1;
+  color: hsl(var(--muted));
+}
+
+.mini-card__score{
+  @apply text-base font-semibold;
+}
+
+.mini-card__count{
   @apply text-sm;
   color: hsl(var(--muted));
 }
 
-.package-meta{
-  @apply flex flex-wrap gap-2 mt-1;
+
+    /* Stay blocks */
+  .package-stays{
+    @apply flex flex-col gap-3;
+  }
+
+  .stay-card{
+    @apply grid gap-3 items-center;
+    grid-template-columns: 56px 1fr auto;
+  }
+
+  .stay-media{
+    @apply rounded-xl overflow-hidden shrink-0;
+    width: 56px;
+    height: 56px;
+    border: 1px solid hsl(var(--border));
+    background: hsl(var(--surface-2));
+  }
+
+  .stay-body{
+    @apply min-w-0;
+  }
+
+  .stay-title{
+    @apply text-sm font-semibold leading-snug truncate;
+    color: hsl(var(--fg));
+  }
+
+  .stay-sub{
+    @apply text-sm leading-snug truncate;
+    color: hsl(var(--muted));
+  }
+
+  
+
+  /* Stays (match flight card layout) */
+.package-stays{
+  @apply grid gap-3 mt-4;
+  grid-template-columns: 1fr;
 }
 
-.meta-chip{
-  @apply text-xs px-2 py-1 rounded-full border;
+@media (min-width: 640px){
+  .package-stays{ grid-template-columns: 1fr 1fr; }
+}
+
+.stay-card{
+  @apply flex gap-3 rounded-2xl px-4 py-3;
   background: hsl(var(--surface-2));
-  border-color: hsl(var(--border));
+  border: 1px solid hsl(var(--border));
+}
+
+.stay-thumb{
+  @apply grid place-items-center font-semibold text-xs rounded-xl shrink-0 overflow-hidden;
+  width: 44px;
+  height: 44px;
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
   color: hsl(var(--muted));
 }
 
-.package-description{
-  @apply text-sm mt-1;
-  color: hsl(var(--fg));
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+/* If later you use <img> inside stay-thumb */
+.stay-thumb img{
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
-  
+
+.stay-body{ @apply min-w-0 flex-1; }
+
+.stay-label{
+  @apply text-xs font-semibold uppercase tracking-wide;
+  color: hsl(var(--muted));
+}
+
+.stay-primary{
+  @apply flex flex-wrap items-center gap-2 mt-1;
+}
+
+.stay-hotel, .stay-nights{
+  @apply text-base font-semibold;
+  color: hsl(var(--fg));
+}
+
+.stay-sub{
+  @apply text-sm mt-1;
+  color: hsl(var(--muted));
+}
+
+
+    /* Route line near title */
+  .package-top__left{ @apply min-w-0; }
+  .package-title-row{ @apply flex flex-wrap items-start gap-2; }
+  .package-nudges-inline{ @apply flex flex-wrap gap-2; }
+  .package-route-line{
+    @apply mt-1 text-sm flex flex-wrap items-center gap-2;
+    color: hsl(var(--muted));
+  }
+  .package-route{ @apply font-medium; color: hsl(var(--muted)); }
+
+
+  /* Price: value then label */
+  .package-price__value{ @apply text-xl font-semibold; color: hsl(var(--fg)); }
+  .package-price__label{ @apply text-xs mt-1; color: hsl(var(--muted)); }
+
+  /* Nudges */
+  .package-nudges{ @apply flex flex-wrap gap-2 mt-3; }
+  .nudge{
+    @apply text-xs font-semibold px-3 py-1 rounded-full border;
+  }
+  .nudge--good{
+    background: hsl(145 60% 92%);
+    color: hsl(145 45% 25%);
+    border-color: hsl(145 40% 80%);
+  }
+  .nudge--warn{
+    background: hsl(38 90% 92%);
+    color: hsl(28 75% 25%);
+    border-color: hsl(35 75% 80%);
+  }
+  .nudge--deal{
+    background: hsl(210 80% 92%);
+    color: hsl(220 55% 25%);
+    border-color: hsl(210 60% 80%);
+  }
+  .nudge--hot{
+    background: hsl(0 85% 92%);
+    color: hsl(0 60% 28%);
+    border-color: hsl(0 65% 80%);
+  }
+
+  .package-flight-grid{
+  @apply grid gap-3 mt-4;
+  grid-template-columns: 44px 1fr;
+  align-items: start;
+}
+
+.package-flight-avatars{
+  @apply flex flex-col gap-2;
+}
+
+.airline-avatar{
+  @apply grid place-items-center font-semibold text-xs rounded-xl;
+  width: 44px;
+  height: 44px;
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  color: hsl(var(--fg));
+}
+
+.package-dates{
+  @apply grid gap-3;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 640px){
+  .package-dates{ grid-template-columns: 1fr 1fr; }
+}
+
+.package-dates__hint{
+  @apply text-xs font-medium;
+  color: hsl(var(--muted));
+}
+
+
+  /* Dates cards: airline row inside */
+  .package-dates__item{
+    @apply rounded-2xl px-4 py-3;
+    background: hsl(var(--surface-2));
+    border: 1px solid hsl(var(--border));
+  }
+  .dates-top{
+    @apply flex items-center justify-between gap-3;
+  }
+  .dates-sub{
+    @apply text-sm mt-1;
+    color: hsl(var(--muted));
+  }
+
+  /* Airline mini */
+  .airline-mini{
+    @apply inline-flex items-center gap-2;
+  }
+  .airline-mini__logo{
+    @apply grid place-items-center font-semibold text-xs rounded-lg;
+    width: 32px;
+    height: 32px;
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+    color: hsl(var(--fg));
+  }
+  .airline-mini__name{
+    @apply text-sm font-medium;
+    color: hsl(var(--fg));
+  }
+
+  .package-stays{ @apply grid gap-3 mt-4; }
+
+.package-stay-card{
+  @apply flex gap-3 rounded-2xl px-4 py-3;
+  background: hsl(var(--surface-2));
+  border: 1px solid hsl(var(--border));
+}
+
+.stay-thumb{
+  @apply grid place-items-center font-semibold text-xs rounded-xl shrink-0;
+  width: 44px;
+  height: 44px;
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  color: hsl(var(--muted));
+}
+
+.stay-title{ @apply text-base font-semibold; color: hsl(var(--fg)); }
+.stay-sub{ @apply text-sm; color: hsl(var(--muted)); }
+
+
+  /* Stay label */
+  .stay-label{
+    @apply text-[11px] font-semibold uppercase tracking-wide mb-0.5;
+    color: hsl(var(--muted));
+  }
+
+  .stay-label,
+.flight-label {
+  margin-bottom: 2px;
+}
+
+
 
   /* Surfaces */
   .card {

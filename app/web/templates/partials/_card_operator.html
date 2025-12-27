@@ -1,0 +1,53 @@
+{% import "shared/_macros.html" as ui %}
+
+{# expects: a (agency), ui (macros imported), loop (Jinja loop), optional: city #}
+<a
+  href="/umrah_operators/{{ a.registration_id }}"
+  class="entity-card operator-card"
+>
+  <div class="operator-avatar"
+       data-tone="{{ (loop.index0 + (a.agencies_name|length)) % 12 }}">
+    {{ ui.agency_badge(a, 56, True) }}
+  </div>
+
+  <div class="operator-body">
+    <h2 class="operator-name">{{ a.agencies_name }}</h2>
+
+    <p class="operator-location">
+      {{ a.city or '-' }}, {{ a.country or '-' }}
+    </p>
+
+    {% if a.description %}
+      <p class="operator-description">{{ a.description }}</p>
+    {% endif %}
+
+    {# Static placeholders for now (dev will wire later) #}
+    <div class="operator-meta-primary">
+      <span class="meta-item">
+        <span class="meta-icon">📦</span>
+        <span>3 upcoming packages</span>
+      </span>
+      <span class="meta-sep">•</span>
+      <span class="meta-item">
+        <span>Starting from ₹45,000</span>
+      </span>
+      <span class="meta-sep">•</span>
+      <span class="meta-item">
+        <span class="meta-icon">⭐</span>
+        <span>4.6</span>
+      </span>
+    </div>
+
+    <div class="operator-meta-primary operator-meta-muted is-hidden">
+      <span>No upcoming packages</span>
+    </div>
+
+    <div class="operator-meta-secondary">
+      <span>In business since 2019</span>
+      <span class="meta-sep">•</span>
+      <span>120+ tours</span>
+      <span class="meta-sep">•</span>
+      <span>3,500+ pilgrims</span>
+    </div>
+  </div>
+</a>

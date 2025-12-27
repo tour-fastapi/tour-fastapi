@@ -1044,8 +1044,8 @@ body {
 }
 
 /* ======================================================
-   Packages components (public)
-   ====================================================== */
+     5. Package cards (public listing)
+     ====================================================== */
 
 .package-list > :not([hidden]) ~ :not([hidden]) {
   --tw-space-y-reverse: 0;
@@ -1053,9 +1053,11 @@ body {
   margin-bottom: calc(1rem * var(--tw-space-y-reverse));
 }
 
+/* The anchor card wrapper */
+
 .package-card {
-  display: grid;
-  gap: 1rem;
+  display: block;
+  text-decoration-line: none;
   padding: 1rem;
 }
 
@@ -1065,12 +1067,14 @@ body {
   }
 }
 
-.package-card{
+.package-card {
+  display: grid;
+  gap: 1rem;
   grid-template-columns: 56px 1fr;
   align-items: start;
 }
 
-/* Package avatar (reuse operator avatar styles) */
+/* Keep your avatar block as-is (you reuse operator-avatar) */
 
 .package-avatar {
   flex-shrink: 0;
@@ -1080,52 +1084,515 @@ body {
   display: flex;
   min-width: 0px;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.5rem;
+}
+
+/* Title + price row */
+
+.package-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
 }
 
 .package-name {
   font-size: 1rem;
   line-height: 1.5rem;
   font-weight: 600;
-  line-height: 1.25;
+  line-height: 1.375;
 }
 
-.package-location {
-  font-size: 0.875rem;
-  line-height: 1.25rem;
+@media (min-width: 768px) {
+  .package-name {
+    font-size: 1.125rem;
+    line-height: 1.75rem;
+  }
+}
+
+.package-name{
+  color: hsl(var(--fg));
+  min-width: 0px;
+}
+
+.package-price {
+  flex-shrink: 0;
+  text-align: right;
+}
+
+.package-price__label {
+  font-size: 11px;
+  line-height: 1;
   color: hsl(var(--muted));
 }
 
+.package-price__value {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+@media (min-width: 768px) {
+  .package-price__value {
+    font-size: 1rem;
+    line-height: 1.5rem;
+  }
+}
+
+.package-price__value{
+  color: hsl(var(--fg));
+}
+
+/* Route + duration */
+
+.package-route {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.package-duration {
+  white-space: nowrap;
+}
+
+/* Chips (meta) */
+
 .package-meta {
-  margin-top: 0.25rem;
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 0.5rem;
 }
 
 .meta-chip {
+  display: inline-flex;
+  align-items: center;
   border-radius: 9999px;
-  border-width: 1px;
-  padding-left: 0.5rem;
-  padding-right: 0.5rem;
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
   padding-top: 0.25rem;
   padding-bottom: 0.25rem;
   font-size: 0.75rem;
   line-height: 1rem;
+  font-weight: 500;
   background: hsl(var(--surface-2));
-  border-color: hsl(var(--border));
+  color: hsl(var(--muted));
+  border: 1px solid hsl(var(--border));
+}
+
+/* Dates row */
+
+/* Flights (inside package card) */
+
+.package-flights {
+  margin-top: 1rem;
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 640px){
+  .package-flights{
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.flight-card {
+  display: flex;
+  gap: 0.75rem;
+  border-radius: 1rem;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+  background: hsl(var(--surface-2));
+  border: 1px solid hsl(var(--border));
+}
+
+.flight-avatar {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  border-radius: 0.75rem;
+  font-size: 0.75rem;
+  line-height: 1rem;
+  font-weight: 600;
+  width: 44px;
+  height: 44px;
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  color: hsl(var(--fg));
+}
+
+.flight-body {
+  min-width: 0px;
+  flex: 1 1 0%;
+}
+
+.flight-top {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.flight-label {
+  font-size: 0.75rem;
+  line-height: 1rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
   color: hsl(var(--muted));
 }
 
-.package-description {
+.flight-primary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.flight-airline, .flight-date {
+  font-size: 1rem;
+  line-height: 1.5rem;
+  font-weight: 600;
+  color: hsl(var(--fg));
+}
+
+.flight-sub {
   margin-top: 0.25rem;
   font-size: 0.875rem;
   line-height: 1.25rem;
+  color: hsl(var(--muted));
+}
+
+/* Detail rows (flight/hotel blocks) */
+
+/* Description truncation */
+
+.package-description {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  line-height: 1.625;
   color: hsl(var(--fg));
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+/* ======================================================
+   Package – Operator mini card (supplier)
+   ====================================================== */
+
+.package-operator {
+  margin-top: 1rem;
+}
+
+/* Reusable mini card used inside entity cards */
+
+.mini-card {
+  border-radius: 0.75rem;
+  border-width: 1px;
+  padding: 0.75rem;
+  background: hsl(var(--surface-2));
+  border-color: hsl(var(--border));
+}
+
+.mini-card__label {
+  font-size: 0.75rem;
+  line-height: 1rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  color: hsl(var(--muted));
+}
+
+.mini-card__row {
+  margin-top: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.mini-card__title {
+  font-size: 1rem;
+  line-height: 1.5rem;
+  font-weight: 600;
+  line-height: 1.25;
+  color: hsl(var(--fg));
+}
+
+/* Rating right side */
+
+.mini-card__rating {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 0.5rem;
+  color: hsl(var(--fg));
+}
+
+.stars{
+  letter-spacing: 1px;
+  font-size: 0.95rem;
+  line-height: 1;
+  color: hsl(var(--muted));
+}
+
+.mini-card__score {
+  font-size: 1rem;
+  line-height: 1.5rem;
+  font-weight: 600;
+}
+
+.mini-card__count {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: hsl(var(--muted));
+}
+
+/* Stay blocks */
+
+.package-stays {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.stay-card {
+  display: grid;
+  align-items: center;
+  gap: 0.75rem;
+  grid-template-columns: 56px 1fr auto;
+}
+
+.stay-body {
+  min-width: 0px;
+}
+
+.stay-sub {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  line-height: 1.375;
+  color: hsl(var(--muted));
+}
+
+/* Stays (match flight card layout) */
+
+.package-stays {
+  margin-top: 1rem;
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 640px){
+  .package-stays{
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.stay-card {
+  display: flex;
+  gap: 0.75rem;
+  border-radius: 1rem;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+  background: hsl(var(--surface-2));
+  border: 1px solid hsl(var(--border));
+}
+
+.stay-thumb {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 0.75rem;
+  font-size: 0.75rem;
+  line-height: 1rem;
+  font-weight: 600;
+  width: 44px;
+  height: 44px;
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  color: hsl(var(--muted));
+}
+
+/* If later you use <img> inside stay-thumb */
+
+.stay-thumb img{
+  width: 100%;
+  height: 100%;
+  -o-object-fit: cover;
+     object-fit: cover;
+  display: block;
+}
+
+.stay-body {
+  min-width: 0px;
+  flex: 1 1 0%;
+}
+
+.stay-label {
+  font-size: 0.75rem;
+  line-height: 1rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  color: hsl(var(--muted));
+}
+
+.stay-primary {
+  margin-top: 0.25rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.stay-hotel, .stay-nights {
+  font-size: 1rem;
+  line-height: 1.5rem;
+  font-weight: 600;
+  color: hsl(var(--fg));
+}
+
+.stay-sub {
+  margin-top: 0.25rem;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: hsl(var(--muted));
+}
+
+/* Route line near title */
+
+.package-top__left {
+  min-width: 0px;
+}
+
+.package-title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.package-nudges-inline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.package-route-line {
+  margin-top: 0.25rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: hsl(var(--muted));
+}
+
+.package-route {
+  font-weight: 500;
+  color: hsl(var(--muted));
+}
+
+/* Price: value then label */
+
+.package-price__value {
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+  font-weight: 600;
+  color: hsl(var(--fg));
+}
+
+.package-price__label {
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  line-height: 1rem;
+  color: hsl(var(--muted));
+}
+
+/* Nudges */
+
+.nudge {
+  border-radius: 9999px;
+  border-width: 1px;
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+  font-size: 0.75rem;
+  line-height: 1rem;
+  font-weight: 600;
+}
+
+.nudge--good{
+  background: hsl(145 60% 92%);
+  color: hsl(145 45% 25%);
+  border-color: hsl(145 40% 80%);
+}
+
+.nudge--warn{
+  background: hsl(38 90% 92%);
+  color: hsl(28 75% 25%);
+  border-color: hsl(35 75% 80%);
+}
+
+/* Dates cards: airline row inside */
+
+/* Airline mini */
+
+.package-stays {
+  margin-top: 1rem;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.stay-thumb {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  border-radius: 0.75rem;
+  font-size: 0.75rem;
+  line-height: 1rem;
+  font-weight: 600;
+  width: 44px;
+  height: 44px;
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  color: hsl(var(--muted));
+}
+
+.stay-sub {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: hsl(var(--muted));
+}
+
+/* Stay label */
+
+.stay-label {
+  margin-bottom: 0.125rem;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  color: hsl(var(--muted));
+}
+
+.stay-label,
+.flight-label {
+  margin-bottom: 2px;
 }
 
 /* Surfaces */
