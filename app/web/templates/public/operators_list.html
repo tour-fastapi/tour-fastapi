@@ -41,7 +41,7 @@
             
             
               {% for a in group.agencies %}
-                <a class="operator-card" href="/umrah_operators/{{ a.registration_id }}">
+                <a class="operator-card entity-card" href="/umrah_operators/{{ a.registration_id }}">
 
                   <div class="operator-avatar" data-tone="{{ (loop.index0 + (a.agencies_name|length)) % 12 }}">
                   {{ ui.agency_badge(a, 56, True) }}

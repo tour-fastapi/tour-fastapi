@@ -24,6 +24,8 @@
     --primary: var(--primary-h) var(--primary-s) var(--primary-l);
     --primary-fg: 0 0% 100%;
     --radius: 0.75rem;
+    --surface: var(--card);
+    --surface-2: 220 18% 96%;
   }
 
   /* Dark theme (token-only, no layout changes) */
@@ -36,6 +38,8 @@
 
     /* brighter green for dark */
     --primary-l: 45%;
+    --surface: var(--card);
+    --surface-2: 222 16% 18%;
   }
 
   body {
@@ -51,78 +55,15 @@
    (use these in templates)
    ========================= */
 @layer components {
+
+  /* ======================================================
+     1. Layout & Page Shell
+     ====================================================== */
+
   /* Layout */
   .page {
     @apply mx-auto w-full max-w-6xl px-4 py-6;
   }
-
-  /* Typography */
-  .h1 { @apply text-2xl font-semibold tracking-tight; }
-  .h2 { @apply text-xl font-semibold tracking-tight; }
-  .subtle { color: rgb(var(--muted)); }
-
-  /* Surfaces */
-  .card {
-    @apply rounded-theme border shadow-sm;
-    background: rgb(var(--surface));
-    border-color: rgb(var(--border));
-  }
-  .card-header { @apply px-4 py-3 border-b; border-color: rgb(var(--border)); }
-  .card-body { @apply px-4 py-4; }
-
-  /* Buttons */
-  .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition;
-  }
-  .btn-primary {
-    @apply btn shadow-sm hover:opacity-95 active:opacity-90;
-    background: rgb(var(--primary));
-    color: rgb(var(--primary-fg));
-  }
-  .btn-outline {
-    @apply btn border hover:bg-black/5 active:bg-black/10;
-    border-color: rgb(var(--border));
-  }
-  .btn-ghost {
-    @apply btn hover:bg-black/5 active:bg-black/10;
-  }
-
-  /* Inputs */
-  .input {
-    @apply w-full rounded-lg border px-3 py-2 text-sm outline-none transition;
-    background: rgb(var(--surface));
-    border-color: rgb(var(--border));
-  }
-  .input:focus {
-    border-color: rgba(var(--primary), 0.8);
-    box-shadow: 0 0 0 3px rgba(var(--primary), 0.18);
-  }
-
-  /* Tables (nice default) */
-  .table {
-    @apply w-full text-sm;
-  }
-  .table th {
-    @apply text-left font-medium px-4 py-2 border-b;
-    border-color: rgb(var(--border));
-    color: rgb(var(--muted));
-  }
-  .table td {
-    @apply px-4 py-3 border-b align-middle;
-    border-color: rgb(var(--border));
-  }
-
-  .t-btn-primary {
-    background: rgb(var(--primary));
-    color: rgb(var(--primary-fg));
-    padding: 10px 14px;
-    border-radius: 12px;
-    font-weight: 600;
-  }
-
-  /* ===============================
-     Operators – City Page
-     =============================== */
 
   .page {
     @apply max-w-3xl mx-auto px-4 py-6;
@@ -153,17 +94,67 @@
            bg-[hsl(var(--primary))] text-white;
   }
 
-  .operator-list {
+  /* ======================================================
+     2. Grouping (city sections)
+     ====================================================== */
+
+     .group {
+    @apply mb-10;
+  }
+
+  .group-header {
+    @apply flex items-center justify-between mb-4;
+  }
+
+  .group-title {
+    @apply text-xl font-semibold;
+    
+    color: hsl(var(--fg));
+
+  }
+  .group-count{
+    @apply text-xs font-medium px-3 py-1 rounded-full;
+    background: hsl(var(--surface-2));
+    color: hsl(var(--muted));
+    border: 1px solid hsl(var(--border));
+  }
+
+  .group-meta {
+    @apply text-sm;
+    color: hsl(var(--muted));
+  }
+
+  /* ======================================================
+   Shared Entity Card (base for public listings)
+   ====================================================== */
+.entity-card {
+  @apply border rounded-2xl transition;
+  background: hsl(var(--surface));
+  border-color: hsl(var(--border));
+}
+
+.entity-card:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+}
+
+.entity-card:focus-visible {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 3px;
+}
+
+
+  /* ======================================================
+     3. Operator-specific components
+     ====================================================== */
+
+     .operator-list {
     @apply space-y-4;
   }
 
   .operator-card {
-    @apply flex gap-4 p-4 rounded-xl
-           bg-[hsl(var(--card))]
-           border border-[hsl(var(--border))]
-           transition
-           hover:border-[hsl(var(--primary))]
-           hover:shadow-md;
+    @apply entity-card grid gap-4 p-4 md:p-5;
+    grid-template-columns: 56px 1fr;
+    align-items: start;
   }
 
  /* Operator avatar – logo OR initials (never both) */
@@ -243,18 +234,7 @@
     @apply text-center text-sm text-[hsl(var(--muted))] py-12;
   }
 
-  .operator-card {
-    @apply block no-underline;
-    @apply bg-white border border-slate-200 rounded-2xl;
-    @apply p-4 md:p-5;
-    @apply shadow-sm hover:shadow-md transition-shadow;
-  }
-
-  .operator-card {
-    @apply grid gap-4;
-    grid-template-columns: 56px 1fr;
-    align-items: start;
-  }
+ 
 
   .operator-card__media {
     @apply w-14 h-14;
@@ -290,35 +270,13 @@
     @apply text-sm text-slate-700 mt-2;
   }
 
-.group {
-    @apply mb-10;
-  }
 
-  .group-header {
-    @apply flex items-center justify-between mb-4;
-  }
 
-  .group-title {
-    @apply text-xl font-semibold;
-    color: rgb(var(--foreground));
-  }
-  .group-count{
-  @apply text-xs font-medium px-3 py-1 rounded-full;
-  background: hsl(var(--surface-2));
-  color: hsl(var(--muted));
-  border: 1px solid hsl(var(--border));
-}
+  /* ======================================================
+     4. Operator Meta (decision + trust)
+     ====================================================== */
 
-  .group-meta {
-    @apply text-sm;
-    color: rgb(var(--muted));
-  }
-
-  .operator-list {
-    @apply space-y-4;
-  }
-
-  /* Meta – primary (decision drivers) */
+  
 .operator-meta-primary{
   @apply flex flex-wrap items-center gap-2 mt-2 text-sm;
   color: hsl(var(--fg));
@@ -347,6 +305,138 @@
   @apply flex flex-wrap items-center gap-2 mt-1 text-xs;
   color: hsl(var(--muted));
 }
+
+/* ======================================================
+   Packages components (public)
+   ====================================================== */
+
+.package-list{
+  @apply space-y-4;
+}
+
+.package-card{
+  @apply grid gap-4 p-4 md:p-5;
+  grid-template-columns: 56px 1fr;
+  align-items: start;
+}
+
+.package-media{
+  @apply shrink-0 rounded-xl;
+  width: 56px;
+  height: 56px;
+  background: hsl(var(--surface-2));
+  border: 1px solid hsl(var(--border));
+}
+/* Package avatar (reuse operator avatar styles) */
+.package-avatar{
+  @apply shrink-0;
+}
+.package-body{
+  @apply flex flex-col gap-1 min-w-0;
+}
+
+.package-name{
+  @apply text-base font-semibold leading-tight;
+}
+
+.package-location{
+  @apply text-sm;
+  color: hsl(var(--muted));
+}
+
+.package-meta{
+  @apply flex flex-wrap gap-2 mt-1;
+}
+
+.meta-chip{
+  @apply text-xs px-2 py-1 rounded-full border;
+  background: hsl(var(--surface-2));
+  border-color: hsl(var(--border));
+  color: hsl(var(--muted));
+}
+
+.package-description{
+  @apply text-sm mt-1;
+  color: hsl(var(--fg));
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+  
+
+  /* Surfaces */
+  .card {
+    @apply rounded-2xl border shadow-sm;
+    background: hsl(var(--surface));
+    border-color: hsl(var(--border));
+  }
+  .card-header { @apply px-4 py-3 border-b; border-color: hsl(var(--border)); }
+  .card-body { @apply px-4 py-4; }
+
+  
+  /* ======================================================
+     6. Generic UI (buttons, inputs, tables)
+     ====================================================== */
+/* Typography */
+  .h1 { @apply text-2xl font-semibold tracking-tight; }
+  .h2 { @apply text-xl font-semibold tracking-tight; }
+  .subtle { color: hsl(var(--muted)); }
+  
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition;
+  }
+  .btn-primary {
+    @apply btn shadow-sm hover:opacity-95 active:opacity-90;
+    background: hsl(var(--border));
+    color: rgb(var(--primary-fg));
+  }
+  .btn-outline {
+    @apply btn border hover:bg-black/5 active:bg-black/10;
+    border-color: hsl(var(--border));
+  }
+  .btn-ghost {
+    @apply btn hover:bg-black/5 active:bg-black/10;
+  }
+
+  /* Inputs */
+  .input {
+    @apply w-full rounded-lg border px-3 py-2 text-sm outline-none transition;
+    background: hsl(var(--border));
+    border-color: hsl(var(--border));
+  }
+  .input:focus {
+    border-color: hsl(var(--primary));
+  box-shadow: 0 0 0 3px hsl(var(--primary) / 0.18);
+  }
+
+  /* Tables (nice default) */
+  .table {
+    @apply w-full text-sm;
+  }
+  .table th {
+    @apply text-left font-medium px-4 py-2 border-b;
+    border-color: hsl(var(--border));
+    color: hsl(var(--muted));
+  }
+  .table td {
+    @apply px-4 py-3 border-b align-middle;
+    border-color: hsl(var(--border));
+  }
+
+  .t-btn-primary {
+    background: hsl(var(--border));
+    color: rgb(var(--primary-fg));
+    padding: 10px 14px;
+    border-radius: 12px;
+    font-weight: 600;
+  }
+
+
+
+  
+
+  
 
   
 }

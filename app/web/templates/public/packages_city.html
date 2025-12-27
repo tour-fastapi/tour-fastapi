@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Packages in {{ city }}{% endblock %}
 {% block content %}
+{% import "shared/_macros.html" as ui %}
 
 
 <main class="page">
@@ -28,36 +29,49 @@
   </header>
 
 
-  <div class="card">
-    {% if packages and packages|length > 0 %}
-      <div class="grid">
-        {% for p in packages %}
-          {% set ag = agency_by_id.get(p.registration_id) %}
-          {% set href = "/umrah_packages/" ~ p.package_id %}
-          <a class="pkg" href="{{ href }}">
-            <div class="pkg-media"></div>
-            <div class="pkg-body">
-              <h3 class="pkg-name">{{ p.package_name }}</h3>
-              <div class="pkg-sub">
-                {% if p.days %}<span class="chip">{{ p.days }} day{{ 's' if p.days != 1 else '' }}</span>{% endif %}
-                {% if p.price is not none %}<span class="chip">₹ {{ '%0.2f'|format(p.price) }}</span>{% endif %}
-                {% if ag and ag.agencies_name %}<span class="chip">{{ ag.agencies_name }}</span>{% endif %}
-                {% if ag and ag.country %}<span class="chip">{{ ag.country }}</span>{% endif %}
-              </div>
-              {% if p.description %}
-              <div class="pkg-desc">{{ p.description }}</div>
-              {% endif %}
-              <div class="pkg-foot">
-                <div>{{ ag.city if ag and ag.city else '—' }}, {{ ag.country if ag and ag.country else '—' }}</div>
-                <div class="cta">View details →</div>
-              </div>
-            </div>
-          </a>
-        {% endfor %}
-      </div>
-    {% else %}
-      <div class="empty">No packages found in {{ city }}.</div>
-    {% endif %}
-  </div>
+  {% if packages and packages|length > 0 %}
+  <section class="package-list">
+    {% for p in packages %}
+      {% set ag = agency_by_id.get(p.registration_id) %}
+      {% set href = "/umrah_packages/" ~ p.package_id %}
+
+      <a class="package-card entity-card" href="{{ href }}">  
+        <!-- Agency avatar (same logic as operators) -->
+         
+        <div
+          class="package-avatar operator-avatar"
+          data-tone="{{ (loop.index0 + (ag.agencies_name|length if ag else 0)) % 12 }}"
+        >
+          {% if ag %}
+            {{ ui.agency_badge(ag, 56, True) }}
+          {% endif %}
+        </div>
+
+        <div class="package-body">
+          <h2 class="package-name">
+            {{ p.package_name }}
+          </h2>
+
+          <p class="package-location">
+            {{ ag.city if ag and ag.city else '—' }}, {{ ag.country if ag and ag.country else '—' }}
+          </p>
+
+          <div class="package-meta">
+            {% if p.days %}<span class="meta-chip">{{ p.days }} day{{ 's' if p.days != 1 else '' }}</span>{% endif %}
+            {% if p.price is not none %}<span class="meta-chip">From ₹ {{ '%0.0f'|format(p.price) }}</span>{% endif %}
+            {% if ag and ag.agencies_name %}<span class="meta-chip">{{ ag.agencies_name }}</span>{% endif %}
+          </div>
+
+          {% if p.description %}
+            <p class="package-description">{{ p.description }}</p>
+          {% endif %}
+        </div>
+      </a>
+    {% endfor %}
+  </section>
+{% else %}
+  <div class="empty-state">No packages found in {{ city }}.</div>
+{% endif %}
+
 </main>
 {% endblock %}

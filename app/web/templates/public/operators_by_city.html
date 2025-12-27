@@ -31,7 +31,7 @@
       {% for a in agencies %}
         <a
           href="/umrah_operators/{{ a.registration_id }}"
-          class="operator-card"
+          class="operator-card entity-card"
         >
           <!-- Avatar -->
           <div class="operator-avatar" data-tone="{{ (loop.index0 + (a.agencies_name|length)) % 12 }}">
