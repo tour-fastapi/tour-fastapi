@@ -35,72 +35,68 @@
           </span>
         </header>
         
-         <div class="operator-list">
+        {% if group.agencies and group.agencies|length > 0 %} 
+        <div class="operator-list">
+            {% for a in group.agencies %}
+              <a class="operator-card entity-card" href="/umrah_operators/{{ a.registration_id }}">
 
-            {% if group.agencies and group.agencies|length > 0 %}
-            
-            
-              {% for a in group.agencies %}
-                <a class="operator-card entity-card" href="/umrah_operators/{{ a.registration_id }}">
+                <div class="operator-avatar" data-tone="{{ (loop.index0 + (a.agencies_name|length)) % 12 }}">
+                {{ ui.agency_badge(a, 56, True) }}
+              </div>
+                <div class="operator-card__body">
+                  <h3 class="operator-card__title">{{ a.agencies_name }}</h3>
+                  <div class="operator-card__meta">{{ a.city or '-' }}, {{ a.country or '-' }}</div>
 
-                  <div class="operator-avatar" data-tone="{{ (loop.index0 + (a.agencies_name|length)) % 12 }}">
-                  {{ ui.agency_badge(a, 56, True) }}
-                </div>
-                  <div class="operator-card__body">
-                    <h3 class="operator-card__title">{{ a.agencies_name }}</h3>
-                    <div class="operator-card__meta">{{ a.city or '-' }}, {{ a.country or '-' }}</div>
+                  {% if a.description %}
+                    <p class="operator-card__desc">{{ a.description }}</p>
+                  {% endif %}
 
-                    {% if a.description %}
-                      <p class="operator-card__desc">{{ a.description }}</p>
-                    {% endif %}
+                  <div class="operator-meta-primary">
+                    <span class="meta-item">
+                      <span class="meta-icon">📦</span>
+                      <span>3 upcoming packages</span>
+                    </span>
 
-                    <div class="operator-meta-primary">
-                      <span class="meta-item">
-                        <span class="meta-icon">📦</span>
-                        <span>3 upcoming packages</span>
-                      </span>
+                    <span class="meta-sep">•</span>
 
-                      <span class="meta-sep">•</span>
+                    <span class="meta-item">
+                      <span>Starting from ₹45,000</span>
+                    </span>
 
-                      <span class="meta-item">
-                        <span>Starting from ₹45,000</span>
-                      </span>
+                    <span class="meta-sep">•</span>
 
-                      <span class="meta-sep">•</span>
-
-                      <span class="meta-item">
-                        <span class="meta-icon">⭐</span>
-                        <span>4.6</span>
-                      </span>
-                    </div>
-                    <div class="operator-meta-primary operator-meta-muted is-hidden">
-                      <span>No upcoming packages</span>
-                    </div>
-                    <div class="operator-meta-secondary">
-                      <span>In business since 2019</span>
-                      <span class="meta-sep">•</span>
-                      <span>120+ tours</span>
-                      <span class="meta-sep">•</span>
-                      <span>3,500+ pilgrims</span>
-                    </div>
-
-                    {% if a.min_package_price %}
-                      <div class="operator-card__sub">
-                        Packages from <strong>₹ {{ a.min_package_price }}</strong>
-                      </div>
-                    {% endif %}
+                    <span class="meta-item">
+                      <span class="meta-icon">⭐</span>
+                      <span>4.6</span>
+                    </span>
+                  </div>
+                  <div class="operator-meta-primary operator-meta-muted is-hidden">
+                    <span>No upcoming packages</span>
+                  </div>
+                  <div class="operator-meta-secondary">
+                    <span>In business since 2019</span>
+                    <span class="meta-sep">•</span>
+                    <span>120+ tours</span>
+                    <span class="meta-sep">•</span>
+                    <span>3,500+ pilgrims</span>
                   </div>
 
+                  {% if a.min_package_price %}
+                    <div class="operator-card__sub">
+                      Packages from <strong>₹ {{ a.min_package_price }}</strong>
+                    </div>
+                  {% endif %}
+                </div>
 
-                  
-                </a>
-              {% endfor %}
-           </div>
-          {% else %}
-            <div class="empty">No operators in {{ group.city }}.</div>
-          {% endif %}
+
+                
+              </a>
+            {% endfor %}
           </div>
-        
+        {% else %}
+          <div class="empty">No operators in {{ group.city }}.</div>
+        {% endif %}
+      </div>
     {% endfor %}
   {% else %}
     <div class="card"><div class="empty">No operators available yet.</div></div>

@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Discover Packages{% endblock %}
 {% block content %}
+{% import "shared/_macros.html" as ui %}
 
 
 <main class="page">
@@ -36,8 +37,172 @@
           </span>
         </div>
 
-        <div class="card">
-              <div style="padding:0 14px 14px">
+        
+              
+          <section class="package-list">
+            {% for p in items %}
+              {% set ag = agency_by_id.get(p.registration_id) %}
+              {% set href = "/umrah_packages/" ~ p.package_id %}
+
+
+              <a class="package-card entity-card" href="{{ href }}">
+                <!-- image / banner (placeholder gradient) -->
+                 <div
+                  class="package-avatar operator-avatar is is-hidden"
+                  data-tone="{{ (loop.index0 + (ag.agencies_name|length if ag else 0)) % 12 }}"
+                >
+                  {% if ag %}
+                    {{ ui.agency_badge(ag, 56, True) }}
+                  {% endif %}
+                </div>
+                <div class="package-body">
+    <div class="package-banner">
+      <img src="/media/packages-banners/haram-sharif.jpg" />
+    </div>
+
+    <!-- Top row: title + price -->
+    <div class="package-top">
+      <div class="package-top__left">
+        <div class="package-title-row">
+          <h2 class="package-name">{{ p.package_name }}</h2>
+
+          <!-- Nudges next to title -->
+          <div class="package-nudges-inline">
+            <span class="nudge nudge--good">Refundable</span>
+            <span class="nudge nudge--warn">Filling fast</span>
+            <!-- only render 1–2 usually -->
+          </div>
+        </div>
+
+        <div class="package-route-line">
+          <span class="package-route">Mumbai → Jeddah → Mumbai</span>
+          <span class="meta-sep">•</span>
+          <span class="package-duration">10D / 9N</span>
+        </div>
+      </div>
+
+
+      <div class="package-price">
+        <div class="package-price__value">₹ 45,000</div>
+        <div class="package-price__label">Starting</div>
+      </div>
+    </div>
+
+   
+
+    
+
+    <!-- Chips / inclusions -->
+    <div class="package-meta">
+      <span class="meta-chip">Direct Flight</span>
+      <span class="meta-chip">Visa Included</span>
+      <span class="meta-chip">Transfers</span>
+      <span class="meta-chip">Breakfast</span>
+    </div>
+
+    
+    <div class="package-rows">
+      <!-- Onward -->
+      <div class="package-row">
+        <div class="package-row__label">Onward</div>
+        <div class="package-row__main">
+          <div class="package-row__icon" aria-hidden="true">✈️</div>
+          <div class="package-row__content">
+            
+            <div class="package-row__title">Saudia • 12 Jan 2026</div>
+            <div class="package-row__meta">BOM → JED • Direct</div>
+          </div>
+        </div>  
+      </div>
+
+      <!-- Return -->
+      <div class="package-row">
+        <div class="package-row__label">Return</div>
+        <div class="package-row__main">
+          <div class="package-row__icon" aria-hidden="true">🛬</div>
+          <div class="package-row__content">
+            
+            <div class="package-row__title">Air India • 22 Jan 2026</div>
+            <div class="package-row__meta">JED → BOM • Via DEL</div>
+          </div>
+        </div>  
+      </div>
+
+      <!-- Operator -->
+      <div class="package-row">
+        <div class="package-row__label">Operator</div>
+        <div class="package-row__main">
+
+          <div class="package-row__icon" aria-hidden="true">🏷️</div>
+          <div class="package-row__content">
+            
+            <div class="package-row__title">Al Abaya</div>
+            <div class="package-row__meta">★★★★★ 4.6 (120)</div>
+          </div>
+        </div>  
+      </div>
+    </div>
+
+
+
+
+    <!-- Stay blocks -->
+     <div class="package-stays is-hidden">
+      <!-- Stay in Makkah -->
+      <div class="stay-card">
+        <div class="stay-thumb">M</div>
+
+        <div class="stay-body">
+          <div class="stay-label">Stay in Makkah</div>
+
+          <div class="stay-primary">
+            <span class="stay-hotel">Anjum Hotel</span>
+            <span class="meta-sep">•</span>
+            <span class="stay-nights">6 nights</span>
+          </div>
+
+          <div class="stay-sub">0.6 km from Haram</div>
+        </div>
+      </div>
+
+      <!-- Stay in Madinah -->
+      <div class="stay-card">
+        <div class="stay-thumb">D</div>
+
+        <div class="stay-body">
+          <div class="stay-label">Stay in Madinah</div>
+
+          <div class="stay-primary">
+            <span class="stay-hotel">Province Al Sham</span>
+            <span class="meta-sep">•</span>
+            <span class="stay-nights">3 nights</span>
+          </div>
+
+          <div class="stay-sub">0.4 km from Masjid Nabawi</div>
+        </div>
+      </div>
+    </div>
+
+    
+
+
+    <!-- Description -->
+    {% if p.description %}
+    <p class="package-description is-hidden">
+      {{ p.description }}
+    </p>
+  {% endif %}
+
+   
+
+  </div>
+
+                
+              </a>
+            {% endfor %}
+            </section>
+        
+        <div style="padding:0 14px 14px">
                 {% if city != 'Unknown' %}
                 <a href="/city/{{ city|urlencode }}/umrah_packages" style="text-decoration:none;color:#2563eb">
                   View all packages in {{ city }} →
@@ -45,41 +210,6 @@
                 {% endif %}
               </div>
 
-          <div class="grid">
-            {% for p in items %}
-              {% set ag = agency_by_id.get(p.registration_id) %}
-              {% set href = "/umrah_packages/" ~ p.package_id %}
-
-
-              <a class="pkg" href="{{ href }}">
-                <!-- image / banner (placeholder gradient) -->
-                <div class="pkg-media"></div>
-                
-
-                <div class="pkg-body">
-                  <h3 class="pkg-name">{{ p.package_name }}</h3>
-                  
-
-                  <div class="pkg-sub">
-                    {% if p.days %}<span class="chip">{{ p.days }} day{{ 's' if p.days != 1 else '' }}</span>{% endif %}
-                    {% if p.price is not none %}<span class="chip">₹ {{ '%0.2f'|format(p.price) }}</span>{% endif %}
-                    {% if ag and ag.agencies_name %}<span class="chip">{{ ag.agencies_name }}</span>{% endif %}
-                    {% if ag and ag.country %}<span class="chip">{{ ag.country }}</span>{% endif %}
-                  </div>
-
-                  {% if p.description %}
-                    <div class="pkg-desc">{{ p.description }}</div>
-                  {% endif %}
-
-                  <div class="pkg-foot">
-                    <div>{{ ag.city if ag and ag.city else '—' }}, {{ ag.country if ag and ag.country else '—' }}</div>
-                    <div class="cta">View details →</div>
-                  </div>
-                </div>
-              </a>
-            {% endfor %}
-          </div>
-        </div>
       </section>
     {% endfor %}
     

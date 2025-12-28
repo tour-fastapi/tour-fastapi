@@ -316,11 +316,11 @@
 
   /* The anchor card wrapper */
   .package-card{
-    @apply block no-underline;
+    display: block;
+    @apply no-underline; ;
+    
     @apply p-4 md:p-5;
-    @apply grid gap-4;
-    grid-template-columns: 56px 1fr;
-    align-items: start;
+    
   }
 
   /* Keep your avatar block as-is (you reuse operator-avatar) */
@@ -509,6 +509,7 @@
 .package-row__label {
   @apply text-xs font-medium uppercase tracking-wide;
   color: hsl(var(--muted));
+  @apply mb-1;
 }
 
 /* Main row (icon + text aligned) */

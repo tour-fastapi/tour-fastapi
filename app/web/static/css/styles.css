@@ -107,7 +107,7 @@
 }
 
 /*
-! tailwindcss v3.4.17 | MIT License | https://tailwindcss.com
+! tailwindcss v3.4.19 | MIT License | https://tailwindcss.com
 */
 
 /*
@@ -1055,7 +1055,7 @@ body {
 
 /* The anchor card wrapper */
 
-.package-card {
+.package-card{
   display: block;
   text-decoration-line: none;
   padding: 1rem;
@@ -1065,13 +1065,6 @@ body {
   .package-card {
     padding: 1.25rem;
   }
-}
-
-.package-card {
-  display: grid;
-  gap: 1rem;
-  grid-template-columns: 56px 1fr;
-  align-items: start;
 }
 
 /* Keep your avatar block as-is (you reuse operator-avatar) */
@@ -1227,6 +1220,7 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.025em;
   color: hsl(var(--muted));
+  margin-bottom: 0.25rem;
 }
 
 /* Main row (icon + text aligned) */

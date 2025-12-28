@@ -50,6 +50,9 @@ app.add_middleware(
 
 # Static files
 app.mount("/static", StaticFiles(directory="app/web/static"), name="static")
+from starlette.staticfiles import StaticFiles
+
+app.mount("/media", StaticFiles(directory="media"), name="media")
 
 # Routers
 app.include_router(auth_router, prefix="/api/v1", tags=["auth"])

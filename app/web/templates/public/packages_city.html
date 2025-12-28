@@ -39,7 +39,7 @@
 
   <!-- Left: placeholder avatar / image later -->
   <div
-    class="package-avatar operator-avatar"
+    class="package-avatar operator-avatar is-hidden"
     data-tone="{{ (loop.index0 + (ag.agencies_name|length if ag else 0)) % 12 }}"
   >
     {% if ag %}
@@ -48,6 +48,9 @@
   </div>
 
   <div class="package-body">
+    <div class="package-banner">
+      <img src="/media/packages-banners/haram-sharif.jpg" />
+    </div>
 
     <!-- Top row: title + price -->
     <div class="package-top">
