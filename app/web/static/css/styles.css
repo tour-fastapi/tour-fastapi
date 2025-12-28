@@ -1185,87 +1185,6 @@ body {
 
 /* Flights (inside package card) */
 
-.package-flights {
-  margin-top: 1rem;
-  display: grid;
-  gap: 0.75rem;
-  grid-template-columns: 1fr;
-}
-
-@media (min-width: 640px){
-  .package-flights{
-    grid-template-columns: 1fr 1fr;
-  }
-}
-
-.flight-card {
-  display: flex;
-  gap: 0.75rem;
-  border-radius: 1rem;
-  padding-left: 1rem;
-  padding-right: 1rem;
-  padding-top: 0.75rem;
-  padding-bottom: 0.75rem;
-  background: hsl(var(--surface-2));
-  border: 1px solid hsl(var(--border));
-}
-
-.flight-avatar {
-  display: grid;
-  flex-shrink: 0;
-  place-items: center;
-  border-radius: 0.75rem;
-  font-size: 0.75rem;
-  line-height: 1rem;
-  font-weight: 600;
-  width: 44px;
-  height: 44px;
-  background: hsl(var(--card));
-  border: 1px solid hsl(var(--border));
-  color: hsl(var(--fg));
-}
-
-.flight-body {
-  min-width: 0px;
-  flex: 1 1 0%;
-}
-
-.flight-top {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.flight-label {
-  font-size: 0.75rem;
-  line-height: 1rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.025em;
-  color: hsl(var(--muted));
-}
-
-.flight-primary {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.flight-airline, .flight-date {
-  font-size: 1rem;
-  line-height: 1.5rem;
-  font-weight: 600;
-  color: hsl(var(--fg));
-}
-
-.flight-sub {
-  margin-top: 0.25rem;
-  font-size: 0.875rem;
-  line-height: 1.25rem;
-  color: hsl(var(--muted));
-}
-
 /* Detail rows (flight/hotel blocks) */
 
 /* Description truncation */
@@ -1281,75 +1200,86 @@ body {
   overflow: hidden;
 }
 
-/* ======================================================
-   Package – Operator mini card (supplier)
-   ====================================================== */
-
-.package-operator {
+.package-rows {
   margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
 
-/* Reusable mini card used inside entity cards */
-
-.mini-card {
-  border-radius: 0.75rem;
-  border-width: 1px;
-  padding: 0.75rem;
-  background: hsl(var(--surface-2));
-  border-color: hsl(var(--border));
+.package-row {
+  gap: 0.75rem;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  border-top: 1px solid hsl(var(--border));
 }
 
-.mini-card__label {
+.package-row:first-child{
+  border-top: 0;
+}
+
+/* Label on top (lighter) */
+
+.package-row__label {
   font-size: 0.75rem;
   line-height: 1rem;
-  font-weight: 600;
+  font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.025em;
   color: hsl(var(--muted));
 }
 
-.mini-card__row {
-  margin-top: 0.25rem;
+/* Main row (icon + text aligned) */
+
+.package-row__main {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  align-items: flex-start;
   gap: 0.75rem;
 }
 
-.mini-card__title {
+.package-row__icon {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  border-radius: 0.75rem;
+  width: 40px;
+  height: 40px;
+  background: hsl(var(--surface-2));
+  border: 1px solid hsl(var(--border));
+  font-size: 18px;
+  line-height: 1;
+}
+
+.package-row__content {
+  flex: 1 1 0%;
+}
+
+.package-row__title {
   font-size: 1rem;
   line-height: 1.5rem;
   font-weight: 600;
-  line-height: 1.25;
+  line-height: 1.375;
   color: hsl(var(--fg));
 }
+
+.package-row__meta {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: hsl(var(--muted));
+}
+
+/* ======================================================
+   Package – Operator mini card (supplier)
+   ====================================================== */
+
+/* Reusable mini card used inside entity cards */
 
 /* Rating right side */
-
-.mini-card__rating {
-  display: flex;
-  flex-shrink: 0;
-  align-items: center;
-  gap: 0.5rem;
-  color: hsl(var(--fg));
-}
 
 .stars{
   letter-spacing: 1px;
   font-size: 0.95rem;
   line-height: 1;
-  color: hsl(var(--muted));
-}
-
-.mini-card__score {
-  font-size: 1rem;
-  line-height: 1.5rem;
-  font-weight: 600;
-}
-
-.mini-card__count {
-  font-size: 0.875rem;
-  line-height: 1.25rem;
   color: hsl(var(--muted));
 }
 
@@ -2056,3 +1986,4 @@ body {
    SEMANTIC COMPONENT CLASSES
    (use these in templates)
    ========================= */
+

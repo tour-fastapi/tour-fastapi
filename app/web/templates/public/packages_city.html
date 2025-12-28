@@ -89,49 +89,54 @@
       <span class="meta-chip">Breakfast</span>
     </div>
 
-    <!-- Dates: start / return -->
-    <div class="package-flights">
+    
+    <div class="package-rows">
       <!-- Onward -->
-      <div class="flight-card">
-        <div class="flight-avatar">SV</div>
-
-        <div class="flight-body">
-          <div class="flight-top">
-            <div class="flight-label">Onward</div>
-            <div class="flight-primary">
-              <span class="flight-airline">Saudia</span>
-              <span class="meta-sep">•</span>
-              <span class="flight-date">12 Jan 2026</span>
-            </div>
+      <div class="package-row">
+        <div class="package-row__label">Onward</div>
+        <div class="package-row__main">
+          <div class="package-row__icon" aria-hidden="true">✈️</div>
+          <div class="package-row__content">
+            
+            <div class="package-row__title">Saudia • 12 Jan 2026</div>
+            <div class="package-row__meta">BOM → JED • Direct</div>
           </div>
-
-          <div class="flight-sub">BOM → JED • Direct</div>
-        </div>
+        </div>  
       </div>
 
       <!-- Return -->
-      <div class="flight-card">
-        <div class="flight-avatar">AI</div>
-
-        <div class="flight-body">
-          <div class="flight-top">
-            <div class="flight-label">Return</div>
-            <div class="flight-primary">
-              <span class="flight-airline">Air India</span>
-              <span class="meta-sep">•</span>
-              <span class="flight-date">22 Jan 2026</span>
-            </div>
+      <div class="package-row">
+        <div class="package-row__label">Return</div>
+        <div class="package-row__main">
+          <div class="package-row__icon" aria-hidden="true">🛬</div>
+          <div class="package-row__content">
+            
+            <div class="package-row__title">Air India • 22 Jan 2026</div>
+            <div class="package-row__meta">JED → BOM • Via DEL</div>
           </div>
+        </div>  
+      </div>
 
-          <div class="flight-sub">JED → BOM • Via DEL</div>
-        </div>
+      <!-- Operator -->
+      <div class="package-row">
+        <div class="package-row__label">Operator</div>
+        <div class="package-row__main">
+
+          <div class="package-row__icon" aria-hidden="true">🏷️</div>
+          <div class="package-row__content">
+            
+            <div class="package-row__title">Al Abaya</div>
+            <div class="package-row__meta">★★★★★ 4.6 (120)</div>
+          </div>
+        </div>  
       </div>
     </div>
 
 
 
+
     <!-- Stay blocks -->
-     <div class="package-stays">
+     <div class="package-stays is-hidden">
       <!-- Stay in Makkah -->
       <div class="stay-card">
         <div class="stay-thumb">M</div>
@@ -171,30 +176,13 @@
 
 
     <!-- Description -->
-    <p class="package-description">
-      A carefully curated package with premium hotel stays near Haram, direct flights, and guided support throughout your pilgrimage...
+    {% if p.description %}
+    <p class="package-description is-hidden">
+      {{ p.description }}
     </p>
+  {% endif %}
 
-    <!-- Operator strip (not clickable) -->
-
-    <div class="package-operator">
-      <div class="mini-card">
-        <div class="mini-card__label">Operator</div>
-
-        <div class="mini-card__row">
-          <div class="mini-card__title">
-            {{ ag.agencies_name if ag and ag.agencies_name else '—' }}
-          </div>
-
-          <div class="mini-card__rating">
-            <span class="stars" aria-hidden="true">★★★★★</span>
-            <span class="mini-card__score">4.6</span>
-            <span class="mini-card__count">(120)</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
+   
 
   </div>
 </a>

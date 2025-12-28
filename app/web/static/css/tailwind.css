@@ -492,6 +492,56 @@
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
+.package-rows{
+  @apply mt-4 flex flex-col gap-3;
+}
+
+.package-row{
+  @apply   gap-3 py-2;
+  border-top: 1px solid hsl(var(--border));
+}
+
+.package-row:first-child{
+  border-top: 0;
+}
+
+/* Label on top (lighter) */
+.package-row__label {
+  @apply text-xs font-medium uppercase tracking-wide;
+  color: hsl(var(--muted));
+}
+
+/* Main row (icon + text aligned) */
+.package-row__main {
+  @apply flex items-start gap-3;
+}
+
+.package-row__icon{
+  @apply shrink-0 grid place-items-center rounded-xl;
+  width: 40px;
+  height: 40px;
+  background: hsl(var(--surface-2));
+  border: 1px solid hsl(var(--border));
+  font-size: 18px;
+  line-height: 1;
+}
+
+.package-row__content{
+  @apply flex-1;
+}
+
+
+
+.package-row__title{
+  @apply text-base font-semibold leading-snug;
+  color: hsl(var(--fg));
+}
+
+.package-row__meta{
+  @apply text-sm;
+  color: hsl(var(--muted));
+}
+
 
   /* ======================================================
    Package – Operator mini card (supplier)
@@ -855,3 +905,4 @@
     display: none !important;
   }
 }
+
