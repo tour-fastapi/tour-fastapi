@@ -1,30 +1,9 @@
 {% extends "base.html" %}
 {% block title %}{{ city }} • Operators{% endblock %}
+{% import "shared/_macros.html" as ui %}
 {% block content %}
-<style>
-  :root{
-    --bg:#f6f8fb; --card:#fff; --text:#1f2937; --muted:#6b7280;
-    --border:#e5e7eb; --radius:14px; --shadow:0 8px 24px rgba(17,24,39,.08);
-    --link:#2563eb;
-  }
-  body{background:var(--bg);}
-  .wrap{max-width:1100px;margin:28px auto;padding:0 16px}
-  .head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
-  .head h1{margin:0;font-size:1.5rem;color:var(--text);font-weight:800}
-  .badge{background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;border-radius:999px;padding:6px 10px;font-size:.8rem;font-weight:700}
-  .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow)}
-  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;padding:14px}
-  @media (max-width: 980px){ .grid{grid-template-columns:repeat(2,1fr);} }
-  @media (max-width: 680px){ .grid{grid-template-columns:1fr;} }
-  .agency{border:1px solid var(--border);border-radius:12px;padding:14px;background:#fff}
-  .agency h3{margin:0 0 6px 0;font-size:1.15rem}
-  .agency h3 a{text-decoration:none;color:var(--text)}
-  .agency h3 a:hover{color:var(--link)}
-  .meta{color:var(--muted);font-size:.92rem}
-  .desc{margin-top:8px;color:var(--text);font-size:.95rem}
-  .chip{display:inline-block;margin-top:8px;padding:6px 10px;border:1px solid var(--border);border-radius:999px;font-size:.78rem;color:#374151;background:#fff;text-decoration:none}
-  .empty{padding:36px;text-align:center;color:var(--muted)}
-</style>
+
+
 
 <div class="wrap">
   <div class="head">
@@ -32,20 +11,75 @@
     <div class="badge">{{ total }} found</div>
   </div>
 
-  <div class="card">
-    {% if agencies %}
-      <div class="grid">
+  <div class="">
+    {% if agencies and agencies|length > 0 %}
+      <section class="operator-list">
         {% for a in agencies %}
-          <div class="agency">
-            <h3><a href="/operators/{{ a.registration_id }}">{{ a.agencies_name }}</a></h3>
-            <div class="meta">{{ a.city or '-' }}, {{ a.country or '-' }}</div>
-            {% if a.description %}
-              <div class="desc">{{ a.description }}</div>
-            {% endif %}
-            <a class="chip" href="/operators/{{ a.registration_id }}">View details →</a>
+          <a
+          href="/umrah_operators/{{ a.registration_id }}"
+          class="operator-card entity-card"
+        >
+          <!-- Avatar -->
+          <div class="operator-avatar" data-tone="{{ (loop.index0 + (a.agencies_name|length)) % 12 }}">
+            {{ ui.agency_badge(a, 56, True) }}
           </div>
+
+          <!-- Content -->
+          <div class="operator-body">
+            <h2 class="operator-name">
+              {{ a.agencies_name }}
+            </h2>
+
+            <p class="operator-location">
+              {{ a.city or '-' }}, {{ a.country or '-' }}
+            </p>
+
+            {% if a.description %}
+              <p class="operator-description">
+                {{ a.description }}
+              </p>
+            {% endif %}
+
+            <div class="operator-meta-primary">
+              <span class="meta-item">
+                <span class="meta-icon">📦</span>
+                <span>3 upcoming packages</span>
+              </span>
+
+              <span class="meta-sep">•</span>
+
+              <span class="meta-item">
+                <span>Starting from ₹45,000</span>
+              </span>
+
+              <span class="meta-sep">•</span>
+
+              <span class="meta-item">
+                <span class="meta-icon">⭐</span>
+                <span>4.6</span>
+              </span>
+            </div>
+            <div class="operator-meta-primary operator-meta-muted is-hidden">
+              <span>No upcoming packages</span>
+            </div>
+            <div class="operator-meta-secondary">
+              <span>In business since 2019</span>
+              <span class="meta-sep">•</span>
+              <span>120+ tours</span>
+              <span class="meta-sep">•</span>
+              <span>3,500+ pilgrims</span>
+            </div>
+
+
+            {% if a.min_package_price %}
+              <p class="operator-meta">
+                Packages from <strong>₹ {{ a.min_package_price }}</strong>
+              </p>
+            {% endif %}
+          </div>
+        </a>
         {% endfor %}
-      </div>
+        </section>
     {% else %}
       <div class="empty">No operators found in {{ city }}.</div>
     {% endif %}

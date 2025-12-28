@@ -86,23 +86,75 @@
         <a class="btn btn-primary" href="/city/{{ city|urlencode }}/umrah_operators">View all operators</a>
       </div>
     </div>
-    <div class="card">
+    <div class="">
       {% if agencies and agencies|length > 0 %}
-        <div class="grid3">
+        <section class="operator-list">
           {% for a in agencies %}
-            <div class="agency">
-              <div class="rowline">
-                {{ ui.agency_badge(a, 48, True) }}
-                <div>
-                  <h3><a href="/umrah_operators/{{ a.registration_id }}">{{ a.agencies_name }}</a></h3>
-                  <div class="meta">{{ a.city or '-' }}, {{ a.country or '-' }}</div>
-                </div>
+             <a
+              href="/umrah_operators/{{ a.registration_id }}"
+              class="operator-card entity-card"
+            >
+              <!-- Avatar -->
+              <div class="operator-avatar" data-tone="{{ (loop.index0 + (a.agencies_name|length)) % 12 }}">
+                {{ ui.agency_badge(a, 56, True) }}
               </div>
-              {% if a.description %}<div class="desc">{{ a.description }}</div>{% endif %}
-              <a class="chip" href="/umrah_operators/{{ a.registration_id }}">View details →</a>
-            </div>
+
+              <!-- Content -->
+              <div class="operator-body">
+                <h2 class="operator-name">
+                  {{ a.agencies_name }}
+                </h2>
+
+                <p class="operator-location">
+                  {{ a.city or '-' }}, {{ a.country or '-' }}
+                </p>
+
+                {% if a.description %}
+                  <p class="operator-description">
+                    {{ a.description }}
+                  </p>
+                {% endif %}
+
+                <div class="operator-meta-primary">
+                  <span class="meta-item">
+                    <span class="meta-icon">📦</span>
+                    <span>3 upcoming packages</span>
+                  </span>
+
+                  <span class="meta-sep">•</span>
+
+                  <span class="meta-item">
+                    <span>Starting from ₹45,000</span>
+                  </span>
+
+                  <span class="meta-sep">•</span>
+
+                  <span class="meta-item">
+                    <span class="meta-icon">⭐</span>
+                    <span>4.6</span>
+                  </span>
+                </div>
+                <div class="operator-meta-primary operator-meta-muted is-hidden">
+                  <span>No upcoming packages</span>
+                </div>
+                <div class="operator-meta-secondary">
+                  <span>In business since 2019</span>
+                  <span class="meta-sep">•</span>
+                  <span>120+ tours</span>
+                  <span class="meta-sep">•</span>
+                  <span>3,500+ pilgrims</span>
+                </div>
+
+
+                {% if a.min_package_price %}
+                  <p class="operator-meta">
+                    Packages from <strong>₹ {{ a.min_package_price }}</strong>
+                  </p>
+                {% endif %}
+              </div>
+            </a>
           {% endfor %}
-        </div>
+          </section>
       {% else %}
         <div class="empty">No operators found in {{ city }}.</div>
       {% endif %}
@@ -117,43 +169,172 @@
         <a class="btn btn-primary" href="/city/{{ city|urlencode }}/umrah_packages">View all packages</a>
       </div>
     </div>
-    <div class="card">
+    <section class="package-list">
       {% if packages and packages|length > 0 %}
-        <div class="grid3">
+        
           {% for p in packages %}
             {% set ag = agency_by_id.get(p.registration_id) %}
             {% set href = "/umrah_packages/" ~ p.package_id %}
-            <a class="pkg" href="{{ href }}">
-              <div class="pkg-media"></div>
-              <div class="pkg-body">
-                <div class="rowline">
-                  {{ ui.agency_badge(ag, 40, True) }}
-                  <div>
-                    <h3 class="pkg-name">{{ p.package_name }}</h3>
-                    <div class="meta">{{ ag.city if ag and ag.city else '—' }}, {{ ag.country if ag and ag.country else '—' }}</div>
-                  </div>
-                </div>
+             <a class="package-card entity-card" href="{{ href }}">
 
-                <div class="pkg-sub">
-                  {% if p.days %}<span class="chip">{{ p.days }} day{{ 's' if p.days != 1 else '' }}</span>{% endif %}
-                  {% if p.price is not none %}<span class="chip">₹ {{ '%0.2f'|format(p.price) }}</span>{% endif %}
-                  {% if ag and ag.agencies_name %}<span class="chip">{{ ag.agencies_name }}</span>{% endif %}
-                  {% if ag and ag.country %}<span class="chip">{{ ag.country }}</span>{% endif %}
-                </div>
+  <!-- Left: placeholder avatar / image later -->
+  <div
+    class="package-avatar operator-avatar is-hidden"
+    data-tone="{{ (loop.index0 + (ag.agencies_name|length if ag else 0)) % 12 }}"
+  >
+    {% if ag %}
+      {{ ui.agency_badge(ag, 56, True) }}
+    {% endif %}
+  </div>
 
-                {% if p.description %}<div class="pkg-desc">{{ p.description }}</div>{% endif %}
-                <div class="pkg-foot">
-                  <div>{{ ag.city if ag and ag.city else '—' }}, {{ ag.country if ag and ag.country else '—' }}</div>
-                  <div class="cta">View details →</div>
-                </div>
-              </div>
-            </a>
-          {% endfor %}
+  <div class="package-body">
+    <div class="package-banner">
+      <img src="/media/packages-banners/haram-sharif.jpg" />
+    </div>
+
+    <!-- Top row: title + price -->
+    <div class="package-top">
+      <div class="package-top__left">
+        <div class="package-title-row">
+          <h2 class="package-name">{{ p.package_name }}</h2>
+
+          <!-- Nudges next to title -->
+          <div class="package-nudges-inline">
+            <span class="nudge nudge--good">Refundable</span>
+            <span class="nudge nudge--warn">Filling fast</span>
+            <!-- only render 1–2 usually -->
+          </div>
         </div>
+
+        <div class="package-route-line">
+          <span class="package-route">Mumbai → Jeddah → Mumbai</span>
+          <span class="meta-sep">•</span>
+          <span class="package-duration">10D / 9N</span>
+        </div>
+      </div>
+
+
+      <div class="package-price">
+        <div class="package-price__value">₹ 45,000</div>
+        <div class="package-price__label">Starting</div>
+      </div>
+    </div>
+
+   
+
+    
+
+    <!-- Chips / inclusions -->
+    <div class="package-meta">
+      <span class="meta-chip">Direct Flight</span>
+      <span class="meta-chip">Visa Included</span>
+      <span class="meta-chip">Transfers</span>
+      <span class="meta-chip">Breakfast</span>
+    </div>
+
+    
+    <div class="package-rows">
+      <!-- Onward -->
+      <div class="package-row">
+        <div class="package-row__label">Onward</div>
+        <div class="package-row__main">
+          <div class="package-row__icon" aria-hidden="true">✈️</div>
+          <div class="package-row__content">
+            
+            <div class="package-row__title">Saudia • 12 Jan 2026</div>
+            <div class="package-row__meta">BOM → JED • Direct</div>
+          </div>
+        </div>  
+      </div>
+
+      <!-- Return -->
+      <div class="package-row">
+        <div class="package-row__label">Return</div>
+        <div class="package-row__main">
+          <div class="package-row__icon" aria-hidden="true">🛬</div>
+          <div class="package-row__content">
+            
+            <div class="package-row__title">Air India • 22 Jan 2026</div>
+            <div class="package-row__meta">JED → BOM • Via DEL</div>
+          </div>
+        </div>  
+      </div>
+
+      <!-- Operator -->
+      <div class="package-row">
+        <div class="package-row__label">Operator</div>
+        <div class="package-row__main">
+
+          <div class="package-row__icon" aria-hidden="true">🏷️</div>
+          <div class="package-row__content">
+            
+            <div class="package-row__title">Al Abaya</div>
+            <div class="package-row__meta">★★★★★ 4.6 (120)</div>
+          </div>
+        </div>  
+      </div>
+    </div>
+
+
+
+
+    <!-- Stay blocks -->
+     <div class="package-stays is-hidden">
+      <!-- Stay in Makkah -->
+      <div class="stay-card">
+        <div class="stay-thumb">M</div>
+
+        <div class="stay-body">
+          <div class="stay-label">Stay in Makkah</div>
+
+          <div class="stay-primary">
+            <span class="stay-hotel">Anjum Hotel</span>
+            <span class="meta-sep">•</span>
+            <span class="stay-nights">6 nights</span>
+          </div>
+
+          <div class="stay-sub">0.6 km from Haram</div>
+        </div>
+      </div>
+
+      <!-- Stay in Madinah -->
+      <div class="stay-card">
+        <div class="stay-thumb">D</div>
+
+        <div class="stay-body">
+          <div class="stay-label">Stay in Madinah</div>
+
+          <div class="stay-primary">
+            <span class="stay-hotel">Province Al Sham</span>
+            <span class="meta-sep">•</span>
+            <span class="stay-nights">3 nights</span>
+          </div>
+
+          <div class="stay-sub">0.4 km from Masjid Nabawi</div>
+        </div>
+      </div>
+    </div>
+
+    
+
+
+    <!-- Description -->
+    {% if p.description %}
+    <p class="package-description is-hidden">
+      {{ p.description }}
+    </p>
+  {% endif %}
+
+   
+
+  </div>
+</a>
+          {% endfor %}
+        
       {% else %}
         <div class="empty">No packages found in {{ city }}.</div>
       {% endif %}
-    </div>
+      </section>
   </div>
 
 </div>
