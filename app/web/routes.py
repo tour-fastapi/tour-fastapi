@@ -1686,8 +1686,10 @@ def package_new_submit(
     med_link: str = Form(""),
     med_distance_m: str = Form(""),
     med_distance_text: str = Form(""),
-    mecca_similar: Optional[List[int]] = Form(None),
-    medinah_similar: Optional[List[int]] = Form(None),
+    mecca_similar: Optional[str] = Form(None),
+    medinah_similar: Optional[str] = Form(None),
+
+
 
     incl_meals_enabled: Optional[str] = Form(None),
     incl_meals_desc: str = Form(""),
@@ -1713,8 +1715,38 @@ def package_new_submit(
 ):
     require_csrf(request, csrf_token)
     user = require_user(request, db)
-    print("DEBUG mecca_similar:", mecca_similar)
-    print("DEBUG medinah_similar:", medinah_similar)
+    def _to_int_list(v) -> list[int]:
+        """
+        Supports:
+        - None
+        - "2"
+        - "2,3,4"
+        - ["2","3"] (in case Starlette gives list)
+        """
+        if v is None:
+            return []
+        if isinstance(v, list):
+            parts = v
+        else:
+            s = str(v).strip()
+            if not s:
+                return []
+            # SlimSelect / custom JS sometimes sends comma-separated string
+            parts = [p.strip() for p in s.split(",")]
+
+        out: list[int] = []
+        for p in parts:
+            if str(p).strip().isdigit():
+                out.append(int(p))
+        return out
+
+    mecca_similar_list = _to_int_list(mecca_similar)
+    medinah_similar_list = _to_int_list(medinah_similar)
+
+    print("DEBUG mecca_similar_list:", mecca_similar_list)
+    print("DEBUG medinah_similar_list:", medinah_similar_list)
+
+
 
 
     # ----- Validate agency ownership -----
@@ -1926,7 +1958,7 @@ def package_new_submit(
             mecca_distance_m,
             mecca_distance_text,
         )
-        similar_ids = ",".join(map(str, mecca_similar)) if mecca_similar else None,
+        similar_ids = ",".join(map(str, mecca_similar)) if mecca_similar else None
         mecca_stay = PackageStay(
             
             package_id=pkg.package_id,
@@ -1970,23 +2002,24 @@ def package_new_submit(
         db.add(med_stay)
 
         # ----------------------------------------------------------------------
-    # 7.5) Auto-compute "or similar" hotels for each stay
-    # ----------------------------------------------------------------------
-    if mecca_stay and mecca_stay.hotel_id:
-        mecca_stay.similar_hotel_ids = find_similar_hotel_ids(
-            db=db,
-            base_hotel_id=mecca_stay.hotel_id,
-            city="Mecca",
-            limit=4,
-        ) or None
+        # 7.5) Auto-compute "or similar" hotels ONLY if user didn't select any
+        # ----------------------------------------------------------------------
+        if mecca_stay and mecca_stay.hotel_id and not mecca_stay.similar_hotel_ids:
+            mecca_stay.similar_hotel_ids = find_similar_hotel_ids(
+                db=db,
+                base_hotel_id=mecca_stay.hotel_id,
+                city="Mecca",
+                limit=4,
+            ) or None
 
-    if med_stay and med_stay.hotel_id:
-        med_stay.similar_hotel_ids = find_similar_hotel_ids(
-            db=db,
-            base_hotel_id=med_stay.hotel_id,
-            city="Medinah",
-            limit=4,
-        ) or None
+        if med_stay and med_stay.hotel_id and not med_stay.similar_hotel_ids:
+            med_stay.similar_hotel_ids = find_similar_hotel_ids(
+                db=db,
+                base_hotel_id=med_stay.hotel_id,
+                city="Medinah",
+                limit=4,
+            ) or None
+
 
 
 
