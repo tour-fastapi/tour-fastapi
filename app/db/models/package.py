@@ -93,3 +93,5 @@ class Package(Base):
         CheckConstraint("travel_month BETWEEN 1 AND 12", name="ck_packages_month"),
         CheckConstraint("travel_year >= 2026", name="ck_packages_year"),
     )
+    status: Mapped[str] = mapped_column(String(20), nullable=False, server_default="draft")
+

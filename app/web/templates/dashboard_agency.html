@@ -9,21 +9,18 @@
     </div>
   </div>
 
-<div class="d-flex gap-2">
-  {# Show “Switch agency” only if the user has more than one agency #}
-  {% if user.agencies|length > 1 %}
-    <a href="/select-agency" class="btn btn-outline-secondary btn-sm">Switch agency</a>
-  {% else %}
-    {# Otherwise show a link to create a new agency #}
-    <a href="/agency/new" class="btn btn-outline-secondary btn-sm">+ Add agency</a>
-  {% endif %}
+  <div class="d-flex gap-2">
+    {# Show “Switch agency” only if the user has more than one agency #}
+    {% if user.agencies|length > 1 %}
+      <a href="/select-agency" class="btn btn-outline-secondary btn-sm">Switch agency</a>
+    {% else %}
+      {# Otherwise show a link to create a new agency #}
+      <a href="/agency/new" class="btn btn-outline-secondary btn-sm">+ Add agency</a>
+    {% endif %}
 
-  {# Existing buttons remain unchanged #}
-  <a href="/agency/{{ agency.registration_id }}/edit" class="btn btn-outline-secondary btn-sm">Edit agency</a>
-  <a href="/package/new?agency_id={{ agency.registration_id }}" class="btn btn-primary btn-sm">+ Add package</a>
-</div>
-
-
+    <a href="/agency/{{ agency.registration_id }}/edit" class="btn btn-outline-secondary btn-sm">Edit agency</a>
+    <a href="/package/new?agency_id={{ agency.registration_id }}" class="btn btn-primary btn-sm">+ Add package</a>
+  </div>
 </div>
 
 {% if flashes %}
@@ -52,23 +49,33 @@
   {% if packages %}
     <ul class="list-group list-group-flush">
       {% for p in packages %}
-        <li class="list-group-item d-flex justify-content-between align-items-center">
-          <div>
-            <div class="fw-semibold">{{ p.package_name }}</div>
-            <div class="small text-muted">{{ p.days }} days • ₹{{ '%.2f'|format(p.price) }}</div>
-            {% if p.description %}
-              <div class="small mt-1">{{ p.description }}</div>
-            {% endif %}
-          </div>
-          <div class="d-flex gap-2">
-            <a href="/package/{{ p.package_id }}/edit" class="btn btn-outline-secondary btn-sm">Edit</a>
-            <form method="post" action="/package/{{ p.package_id }}/delete" onsubmit="return confirm('Delete this package?')">
-              <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-              <button class="btn btn-outline-danger btn-sm">Delete</button>
-            </form>
-          </div>
-        </li>
-      {% endfor %}
+<li class="list-group-item d-flex justify-content-between align-items-center">
+  <div>
+    <div class="fw-semibold">
+      {{ p.package_name }}
+
+      {% if p.status == "draft" %}
+        <span class="badge bg-secondary ms-2">Draft</span>
+      {% elif p.status == "archived" %}
+        <span class="badge bg-dark ms-2">Archived</span>
+      {% else %}
+        <span class="badge bg-success ms-2">Active</span>
+      {% endif %}
+    </div>
+
+    <div class="small text-muted">{{ p.days }} days • ₹{{ '%.2f'|format(p.price) }}</div>
+  </div>
+
+  <div class="d-flex gap-2">
+    <a href="/package/{{ p.package_id }}/edit" class="btn btn-outline-secondary btn-sm">Edit</a>
+    <form method="post" action="/package/{{ p.package_id }}/delete" onsubmit="return confirm('Delete this package?')">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <button class="btn btn-outline-danger btn-sm">Delete</button>
+    </form>
+  </div>
+</li>
+{% endfor %}
+
     </ul>
   {% else %}
     <div class="card-body text-muted small">
@@ -76,9 +83,11 @@
     </div>
   {% endif %}
 </div>
+
 <!-- Inquiry button (owner-facing) -->
 <a href="/inquiries"
-   style="display:inline-block; padding:8px 12px; background:#007bff; color:#fff; text-decoration:none; border-radius:4px; margin:8px 0;">
+   class="btn btn-primary mt-3">
    View Inquiries
 </a>
+
 {% endblock %}
