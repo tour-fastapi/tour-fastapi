@@ -29,9 +29,45 @@
       .is-premium .theme-badge{background:linear-gradient(135deg,#9333ea,#2563eb);color:#fff}
       .theme-card:has(input:checked){border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.15)}
       .theme-desc{font-size:.8rem;color:#64748b;margin-top:8px;line-height:1.25rem}
+      is-hidden{disable:none !important}
+
+      .banner-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+  @media (min-width: 768px) { .banner-grid { grid-template-columns: repeat(3, 1fr); } }
+
+  .banner-card {
+    position: relative;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    background: #fff;
+    cursor: pointer;
+    overflow: hidden;
+    transition: box-shadow .15s, border-color .15s, transform .15s;
+  }
+  .banner-card:hover { box-shadow: 0 10px 28px rgba(2,6,23,.10); transform: translateY(-1px); }
+  .banner-card input[type="radio"] { position: absolute; top: 10px; left: 10px; z-index: 2; }
+  .banner-thumb {
+    height: 120px;
+    background: #f8fafc;
+    border-bottom: 1px solid #eef2f7;
+  }
+  .banner-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .banner-meta { padding: 10px 12px; }
+  .banner-title { font-weight: 700; font-size: .9rem; margin: 0; }
+  .banner-hint { font-size: .8rem; color: #64748b; margin-top: 4px; }
+
+  .banner-card:has(input:checked) {
+    border-color: #0d6efd; /* bootstrap primary */
+    box-shadow: 0 0 0 3px rgba(13,110,253,.20);
+  }
+
     </style>
 
-    <div class="mb-3">
+    <div class="mb-3 is-hidden">
       <label class="form-label d-block">Package Detail Theme *</label>
       <div class="theme-grid">
         <label class="theme-card">
@@ -63,14 +99,91 @@
     <div class="mb-3">
       <label class="form-label d-block">Package Type *</label>
       <div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio" name="package_type" id="type_umrah" value="umrah" required checked>
+        <label class="form-check-label" for="type_umrah">Umrah</label>
+      </div>
+      <div class="form-check form-check-inline">
         <input class="form-check-input" type="radio" name="package_type" id="type_haj" value="haj" required>
         <label class="form-check-label" for="type_haj">Haj</label>
       </div>
-      <div class="form-check form-check-inline">
-        <input class="form-check-input" type="radio" name="package_type" id="type_umrah" value="umrah" required>
-        <label class="form-check-label" for="type_umrah">Umrah</label>
+    </div>
+    <!-- Package banner -->
+    <div class="mb-3">
+      <label class="form-label d-block">Select Banner *</label>
+
+      <div class="banner-grid">
+
+        <!-- 1 (default selected) -->
+        <label class="banner-card">
+          <input class="form-check-input" type="radio" name="banner_image" value="dynamic-tawaf-at-night.jpg" required checked>
+          <div class="banner-thumb">
+            <img src="/media/packages-banners/dynamic-tawaf-at-night.jpg" alt="Dynamic Tawaf at Night">
+          </div>
+          <div class="banner-meta">
+            <p class="banner-title">Dynamic Tawaf at Night in Haram Sharif</p>
+            
+          </div>
+        </label>
+
+        <!-- 2 -->
+        <label class="banner-card">
+          <input class="form-check-input" type="radio" name="banner_image" value="eternal-peace-at-masjid-an-nabawi.jpg" required>
+          <div class="banner-thumb">
+            <img src="/media/packages-banners/eternal-peace-at-masjid-an-nabawi.jpg" alt="Eternal Peace at Masjid an-Nabawi">
+          </div>
+          <div class="banner-meta">
+            <p class="banner-title">Eternal Peace at Masjid an-Nabawi</p>
+            
+          </div>
+        </label>
+
+        <!-- 3 -->
+        <label class="banner-card">
+          <input class="form-check-input" type="radio" name="banner_image" value="golden-hour-panorama-of-makkah.jpg" required>
+          <div class="banner-thumb">
+            <img src="/media/packages-banners/golden-hour-panorama-of-makkah.jpg" alt="Golden Hour Panorama of Makkah">
+          </div>
+          <div class="banner-meta">
+            <p class="banner-title">Golden Hour Panorama of Makkah</p>
+          </div>
+        </label>
+
+        <!-- 4 -->
+        <label class="banner-card">
+          <input class="form-check-input" type="radio" name="banner_image" value="grand-view-of-masjid-al-haram.jpg" required>
+          <div class="banner-thumb">
+            <img src="/media/packages-banners/grand-view-of-masjid-al-haram.jpg" alt="Grand View of Masjid al-Haram">
+          </div>
+          <div class="banner-meta">
+            <p class="banner-title">Grand View of Masjid al-Haram</p>
+          </div>
+        </label>
+
+        <!-- 5 -->
+        <label class="banner-card">
+          <input class="form-check-input" type="radio" name="banner_image" value="serene-dawn-at-the-prophets-mosque.jpg" required>
+          <div class="banner-thumb">
+            <img src="/media/packages-banners/serene-dawn-at-the-prophets-mosque.jpg" alt="Serene Dawn at the Prophet's Mosque">
+          </div>
+          <div class="banner-meta">
+            <p class="banner-title">Serene Dawn at the Prophet's Mosque</p>
+          </div>
+        </label>
+
+        <!-- 6 -->
+        <label class="banner-card">
+          <input class="form-check-input" type="radio" name="banner_image" value="the-umbrellas-of-the-prophets-mosque.jpg" required>
+          <div class="banner-thumb">
+            <img src="/media/packages-banners/the-umbrellas-of-the-prophets-mosque.jpg" alt="The Umbrellas of the Prophet's Mosque">
+          </div>
+          <div class="banner-meta">
+            <p class="banner-title">The Umbrellas of the Prophet's Mosque</p>
+          </div>
+        </label>
+
       </div>
-      <div class="form-text">Choose exactly one.</div>
+
+      <div class="form-text mt-1">This banner will appear on the package detail page.</div>
     </div>
 
     <!-- Basics -->
@@ -83,7 +196,7 @@
       <label class="form-label">Package Class</label>
       <select class="form-select" name="package_class">
         <option value="">-- select class (optional) --</option>
-        <option value="economy">Economy</option>
+        <option value="economy" selected>Economy</option>
         <option value="business">Business</option>
         <option value="first">First Class</option>
       </select>
@@ -166,9 +279,14 @@
           <div class="border rounded-3 p-3 h-100">
             <h3 class="h6 mb-3">Onward</h3>
 
-            <label class="form-label">Date</label>
-            <input type="date" name="onward_date" class="form-control" value="{{ onward.flight_date if onward else '' }}">
-
+            <div>
+              <label class="form-label">Date</label>
+              <input type="date" name="onward_date" class="form-control" value="{{ onward.flight_date if onward else '' }}">
+            </div>  
+            <div class="mt-3">
+              <label class="form-label">Airline</label>
+              <input type="text" name="onward_airline" class="form-control" placeholder="e.g., Qatar Airways" value="{{ onward.airline_name if onward else '' }}">
+            </div>
             <div class="mt-3">
               <div class="form-label mb-2">Type</div>
 
@@ -207,11 +325,9 @@
                 </span>
               </div>
             </div>
+            
 
-            <div class="mt-3">
-              <label class="form-label">Airline</label>
-              <input type="text" name="onward_airline" class="form-control" placeholder="e.g., Qatar Airways" value="{{ onward.airline_name if onward else '' }}">
-            </div>
+            
           </div>
         </div>
 
@@ -220,8 +336,14 @@
           <div class="border rounded-3 p-3 h-100">
             <h3 class="h6 mb-3">Return</h3>
 
-            <label class="form-label">Date</label>
-            <input type="date" name="return_date" class="form-control" value="{{ ret.flight_date if ret else '' }}">
+            <div>
+              <label class="form-label">Date</label>
+              <input type="date" name="return_date" class="form-control" value="{{ ret.flight_date if ret else '' }}">
+            </div>
+            <div class="mt-3">
+              <label class="form-label">Airline</label>
+              <input type="text" name="return_airline" class="form-control" placeholder="e.g., Oman Air" value="{{ ret.airline_name if ret else '' }}">
+            </div>
 
             <div class="mt-3">
               <div class="form-label mb-2">Type</div>
@@ -262,10 +384,7 @@
               </div>
             </div>
 
-            <div class="mt-3">
-              <label class="form-label">Airline</label>
-              <input type="text" name="return_airline" class="form-control" placeholder="e.g., Oman Air" value="{{ ret.airline_name if ret else '' }}">
-            </div>
+            
           </div>
         </div>
 

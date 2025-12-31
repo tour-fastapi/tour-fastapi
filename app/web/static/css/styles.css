@@ -1656,6 +1656,23 @@ body {
 
 /* Inputs */
 
+.\!input {
+  width: 100%;
+  border-radius: 0.5rem;
+  border-width: 1px;
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
 .input {
   width: 100%;
   border-radius: 0.5rem;
@@ -1671,8 +1688,21 @@ body {
   transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   transition-duration: 150ms;
+}
+
+.\!input {
+  background: hsl(var(--border)) !important;
+  border-color: hsl(var(--border)) !important;
+}
+
+.input {
   background: hsl(var(--border));
   border-color: hsl(var(--border));
+}
+
+.\!input:focus {
+  border-color: hsl(var(--primary)) !important;
+  box-shadow: 0 0 0 3px hsl(var(--primary) / 0.18) !important;
 }
 
 .input:focus {
@@ -1724,6 +1754,14 @@ body {
 
 .static {
   position: static;
+}
+
+.absolute {
+  position: absolute;
+}
+
+.relative {
+  position: relative;
 }
 
 .sticky {
@@ -1840,6 +1878,10 @@ body {
   gap: 0.75rem;
 }
 
+.gap-4 {
+  gap: 1rem;
+}
+
 .rounded {
   border-radius: 0.25rem;
 }
@@ -1859,6 +1901,10 @@ body {
 
 .p-0 {
   padding: 0px;
+}
+
+.p-2 {
+  padding: 0.5rem;
 }
 
 .p-3 {
