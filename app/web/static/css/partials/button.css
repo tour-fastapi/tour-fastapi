@@ -1,0 +1,90 @@
+/* ============================================================================
+   BUTTONS - Reusable button components
+   ============================================================================ */
+
+@layer components {
+
+  /* Base Button */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2;
+    @apply px-4 py-2 rounded-lg text-sm;
+    @apply font-semibold transition-all;
+    cursor: pointer;
+    border: none;
+    text-decoration: none;
+  }
+
+  .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  /* Primary Button (Green) */
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2;
+    @apply px-4 py-2 rounded-lg text-sm;
+    @apply font-semibold transition-all;
+    background: hsl(var(--primary));
+    color: white;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+  }
+
+  .btn-primary:hover:not(:disabled) {
+    opacity: 0.9;
+  }
+
+  .btn-primary:active:not(:disabled) {
+    opacity: 0.85;
+  }
+
+  /* Text Button (No background) */
+  .btn-text {
+    @apply inline-flex items-center justify-center gap-2;
+    @apply px-4 py-2 rounded-lg text-sm;
+    @apply font-semibold transition-all;
+    background: transparent;
+    color: hsl(var(--fg));
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+  }
+
+  .btn-text:hover:not(:disabled) {
+    color: hsl(var(--primary));
+  }
+
+  /* Outline Button */
+  .btn-outline {
+    @apply inline-flex items-center justify-center gap-2;
+    @apply px-4 py-2 rounded-lg text-sm;
+    @apply font-semibold transition-all;
+    background: transparent;
+    color: hsl(var(--fg));
+    border: 1px solid hsl(var(--border));
+    cursor: pointer;
+    text-decoration: none;
+  }
+
+  .btn-outline:hover:not(:disabled) {
+    background: hsl(var(--surface-2));
+  }
+
+  /* Ghost Button */
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2;
+    @apply px-4 py-2 rounded-lg text-sm;
+    @apply font-semibold transition-all;
+    background: hsl(var(--surface-2));
+    color: hsl(var(--fg));
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+  }
+
+  .btn-ghost:hover:not(:disabled) {
+    background: hsl(var(--surface));
+    border: 1px solid hsl(var(--border));
+  }
+}

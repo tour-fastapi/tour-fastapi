@@ -1,0 +1,218 @@
+/* ============================================================================
+   FOOTER - Site footer
+   ============================================================================ */
+
+@layer components {
+
+  /* Footer Container */
+  .site-footer {
+    border-top: 1px solid hsl(var(--border));
+    background: hsl(var(--surface));
+  }
+
+  .site-footer__container {
+    @apply max-w-7xl mx-auto px-6;
+    padding-top: 32px;
+    padding-bottom: 32px;
+  }
+
+  @media (min-width: 768px) {
+    .site-footer__container {
+      padding-top: 48px;
+      padding-bottom: 48px;
+    }
+  }
+
+  /* Footer Grid - Main Sections */
+  .footer-grid {
+    @apply grid gap-6;
+    grid-template-columns: repeat(2, 1fr);
+    margin-bottom: 24px;
+  }
+
+  @media (min-width: 768px) {
+    .footer-grid {
+      grid-template-columns: repeat(4, 1fr);
+      gap: 32px;
+      margin-bottom: 32px;
+    }
+  }
+
+  /* Footer Section */
+  .footer-section {
+    /* Each column */
+  }
+
+  /* Footer Logo */
+  .footer-logo {
+    @apply flex items-center mb-3;
+    gap: 8px;
+    text-decoration: none;
+  }
+
+  .footer-logo__icon {
+    @apply flex items-center justify-center;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: hsl(var(--primary));
+    color: white;
+    font-weight: 700;
+    font-size: 14px;
+  }
+
+  .footer-logo__text {
+    font-size: 18px;
+    font-weight: 700;
+    color: hsl(var(--fg));
+  }
+
+  .footer-about {
+    @apply text-sm;
+    color: hsl(var(--muted));
+    line-height: 1.6;
+  }
+
+  /* Footer Heading */
+  .footer-heading {
+    @apply text-sm mb-3;
+    font-weight: 700;
+    color: hsl(var(--fg));
+  }
+
+  /* Footer Links */
+  .footer-links {
+    @apply space-y-2.5;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .footer-links li {
+    /* Each link item */
+  }
+
+  .footer-link {
+    @apply text-sm;
+    color: hsl(var(--muted));
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+
+  .footer-link:hover {
+    text-decoration: underline;
+    color: hsl(var(--primary));
+  }
+
+  /* SEO Section */
+  .footer-seo {
+    border-top: 1px solid hsl(var(--border));
+    padding-top: 24px;
+    padding-bottom: 24px;
+  }
+
+  @media (min-width: 768px) {
+    .footer-seo {
+      padding-top: 32px;
+      padding-bottom: 32px;
+    }
+  }
+
+  .footer-seo__grid {
+    @apply grid gap-6;
+    grid-template-columns: 1fr;
+  }
+
+  @media (min-width: 768px) {
+    .footer-seo__grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 32px;
+    }
+  }
+
+  .footer-seo__heading {
+    @apply text-sm mb-3;
+    font-weight: 700;
+    color: hsl(var(--fg));
+  }
+
+  .footer-seo__links {
+    @apply grid gap-x-4 gap-y-2.5;
+    grid-template-columns: repeat(2, 1fr);
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .footer-seo__link {
+    @apply text-sm;
+    color: hsl(var(--primary));
+    text-decoration: none;
+    transition: text-decoration 0.2s;
+  }
+
+  .footer-seo__link:hover {
+    text-decoration: underline;
+  }
+
+  /* Footer Bottom */
+  .footer-bottom {
+    @apply flex flex-col items-center gap-4;
+    border-top: 1px solid hsl(var(--border));
+    margin-top: 24px;
+    padding-top: 24px;
+  }
+
+  @media (min-width: 768px) {
+    .footer-bottom {
+      @apply flex-row justify-between;
+      margin-top: 32px;
+      padding-top: 32px;
+    }
+  }
+
+  /* Social Links */
+  .footer-social {
+    @apply flex items-center;
+    gap: 12px;
+    order: 1;
+  }
+
+  @media (min-width: 768px) {
+    .footer-social {
+      order: 2;
+    }
+  }
+
+  .footer-social__link {
+    @apply w-9 h-9 rounded-lg flex items-center justify-center;
+    color: hsl(var(--muted));
+    border: 1px solid hsl(var(--border));
+    text-decoration: none;
+    transition: all 0.2s;
+  }
+
+  .footer-social__link:hover {
+    color: hsl(var(--primary));
+    border-color: hsl(var(--primary));
+  }
+
+  .footer-social__icon {
+    width: 16px;
+    height: 16px;
+  }
+
+  /* Copyright */
+  .footer-copyright {
+    @apply text-sm text-center;
+    color: hsl(var(--muted));
+    order: 2;
+  }
+
+  @media (min-width: 768px) {
+    .footer-copyright {
+      @apply text-left;
+      order: 1;
+    }
+  }
+}

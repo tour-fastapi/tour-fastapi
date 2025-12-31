@@ -1,0 +1,44 @@
+@layer base {
+  :root {
+    /* Brand Primary (Green – Trust & Faith) */
+    --primary-h: 145;
+    --primary-s: 62%;
+    --primary-l: 34%;
+    --primary: var(--primary-h) var(--primary-s) var(--primary-l);
+    --primary-fg: 0 0% 100%;
+
+    /* Core Palette */
+    --bg: 220 18% 97%;
+    --fg: 222 22% 12%;
+    --muted: 215 12% 40%;
+    --card: 0 0% 100%;
+    --surface: var(--card);
+    --surface-2: 220 18% 96%;
+    --border: 220 13% 90%;
+
+    /* System */
+    --radius: 0.75rem;
+  }
+
+  /* Dark Theme */
+  [data-theme="dark"] {
+    --bg: 222 18% 10%;
+    --fg: 220 18% 95%;
+    --muted: 220 10% 70%;
+    --card: 222 16% 14%;
+    --border: 220 12% 22%;
+    --surface: var(--card);
+    --surface-2: 222 16% 18%;
+    --primary-l: 45%; /* Brighter green for dark mode */
+  }
+
+  /* Base Typography */
+  body {
+    background-color: hsl(var(--bg));
+    color: hsl(var(--fg));
+    font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont,
+      "Segoe UI", Roboto, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
