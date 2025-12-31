@@ -46,3 +46,7 @@ __pycache__/
 .env.*
 EOF
 .env
+
+__pycache__/
+*.pyc
+
