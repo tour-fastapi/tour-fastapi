@@ -1708,6 +1708,8 @@ def package_new_submit(
     package_class: str = Form(""),
     travel_month: str = Form(""),
     travel_year: str = Form(""),
+    banner_image: str = Form("dynamic-tawaf-at-night.jpg"),
+
 
     airline_ids: Optional[List[int]] = Form(None),
 
@@ -1778,6 +1780,20 @@ def package_new_submit(
 ):
     require_csrf(request, csrf_token)
     user = require_user(request, db)
+
+    ALLOWED_BANNERS = {
+        "dynamic-tawaf-at-night.jpg",
+        "eternal-peace-at-masjid-an-nabawi.jpg",
+        "golden-hour-panorama-of-makkah.jpg",
+        "grand-view-of-masjid-al-haram.jpg",
+        "serene-dawn-at-the-prophets-mosque.jpg",
+        "the-umbrellas-of-the-prophets-mosque.jpg",
+    }
+    banner_image = (banner_image or "").strip()
+
+    if banner_image not in ALLOWED_BANNERS:
+        banner_image = "dynamic-tawaf-at-night.jpg"
+
     def _to_int_list(v) -> list[int]:
         """
         Supports:
@@ -1855,11 +1871,11 @@ def package_new_submit(
     # Normalize selected theme text
     selected_theme = (detail_theme or theme_key or "basic").strip() or "basic"
     # ✅ NEW: status from buttons
-    action = (submit_action or "next").strip().lower()
-    if action == "finish":
-        pkg.status = "active"
-    elif action == "draft":
-        pkg.status = "draft"
+    #action = (submit_action or "next").strip().lower()
+    #if action == "finish":
+     #   pkg.status = "active"
+    #elif action == "draft":
+     #   pkg.status = "draft"
     
 
 
@@ -1877,6 +1893,7 @@ def package_new_submit(
         travel_month=tm,
         travel_year=ty,
         status=("draft" if submit_action == "draft" else "active"),
+        banner_image=banner_image,
 
         # DO NOT set theme=... here — it collides with relationship named "theme"
     )
@@ -2421,6 +2438,8 @@ def package_edit_page(request: Request, package_id: int, db: Session = Depends(g
 def package_edit_submit(
     request: Request,
     package_id: int,
+    banner_image: str = Form(""),
+
 
     submit_action: str = Form("save"),  # ✅ NEW
     detail_theme: str = Form("basic"),
@@ -2491,6 +2510,23 @@ def package_edit_submit(
     if not pkg:
         flash(request, "Package not found", "error")
         return RedirectResponse(url="/select-agency", status_code=303)
+    
+    ALLOWED_BANNERS = {
+        "dynamic-tawaf-at-night.jpg",
+        "eternal-peace-at-masjid-an-nabawi.jpg",
+        "golden-hour-panorama-of-makkah.jpg",
+        "grand-view-of-masjid-al-haram.jpg",
+        "serene-dawn-at-the-prophets-mosque.jpg",
+        "the-umbrellas-of-the-prophets-mosque.jpg",
+    }
+
+
+    chosen_banner = (banner_image or "").strip()
+    if chosen_banner not in ALLOWED_BANNERS:
+        chosen_banner = "dynamic-tawaf-at-night.jpg"
+
+    pkg.banner_image = chosen_banner
+
 
     agency = (
         db.query(Agency)

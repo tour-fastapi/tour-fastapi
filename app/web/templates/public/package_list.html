@@ -56,9 +56,16 @@
                   {% endif %}
                 </div>
                 <div class="package-body">
-    <div class="package-banner">
-      <img src="/media/packages-banners/larger-ones/golden-hour-panorama-of-makkah.jpg" />
-    </div>
+    {% set banner = (p.banner_image or "dynamic-tawaf-at-night.jpg") %}
+<div class="package-banner">
+  <img
+    src="/media/packages-banners/{{ banner }}"
+    alt="{{ p.package_name }}"
+    loading="lazy"
+    onerror="this.onerror=null;this.src='/media/packages-banners/larger-ones/dynamic-tawaf-at-night.jpg';"
+  />
+</div>
+
 
     <!-- Top row: title + price -->
     <div class="package-top">
