@@ -1,63 +1,428 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="py-4">
-  <h1 class="h4 mb-3">Welcome to the Tour App</h1>
-  <p class="text-muted">Browse public listings below:</p>
 
-  <div class="d-flex gap-3">
-    <a class="btn btn-primary" href="/umrah_operators">List Operators</a>
-    <a class="btn btn-primary" href="/umrah_packages">List Packages</a>
+<!-- ============================================================================
+     HOMEPAGE
+     Main landing page with hero, stats, tabs, and dual audience content
+     ============================================================================ -->
+
+<!-- Hero Section - Edge to Edge with Image -->
+
+<section class="hero">
+  <!-- Background Image -->
+  <div class="hero__image" style="background-image: url('https://images.unsplash.com/photo-1591604129939-f1efa4d9f7fa?w=1600&q=80');"></div>
+  
+  <!-- Black Gradient Overlay -->
+  <div class="hero__overlay"></div>
+
+  <!-- Hero Content -->
+  <div class="hero__content">
+    <h1 class="hero__title">
+      Your Gateway to Umrah Excellence
+    </h1>
+    <p class="hero__subtitle">
+      Connecting pilgrims with trusted operators worldwide
+    </p>
   </div>
-{% if user %}
-  <hr class="my-4">
-  <p class="mb-0">
-    Signed in as <strong>{{ user.email }}</strong>.
-    {% if agency %}
-      Go to your <a href="/agency/{{ agency.registration_id }}/dashboard">Dashboard</a>.
-    {% else %}
-      <a href="/select-agency">Select an agency</a> to go to your dashboard.
-    {% endif %}
-  </p>
-{% endif %}
-
-
-  {% if popular_cities %}
-  <section style="margin:28px 0">
-    <style>
-      .loc-wrap{max-width:1100px;margin:0 auto;padding:0 16px}
-      .loc-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
-      .loc-head h2{margin:0;font-size:1.4rem;font-weight:800}
-      .loc-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
-      @media (max-width: 980px){ .loc-grid{grid-template-columns:repeat(3,1fr);} }
-      @media (max-width: 680px){ .loc-grid{grid-template-columns:repeat(2,1fr);} }
-      .loc-card{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:16px;text-decoration:none;display:block;transition:box-shadow .2s,border-color .2s,transform .08s}
-      .loc-card:hover{border-color:#c7d2fe;box-shadow:0 8px 24px rgba(37,99,235,.12);transform:translateY(-1px)}
-      .loc-name{font-weight:800;color:#111827;margin:0 0 6px 0}
-      .loc-meta{color:#6b7280;font-size:.92rem}
-      .loc-more{text-decoration:none;color:#2563eb}
-    </style>
-    <div class="loc-wrap">
-      <div class="loc-head">
-        <h2>Browse by location</h2>
-        <a href="/umrah_operators" class="loc-more">View all operators →</a>
+</section>
+  <section class="home__container">
+  <!-- Stats Bar - Glassmorphic -->
+  {% if metrics %}
+  <section class="stats-bar">
+    <div class="stats-bar__container">
+      
+      <div class="stats-bar__item">
+        <div class="stats-bar__value">{{ metrics.cities }}+</div>
+        <div class="stats-bar__label">Cities</div>
       </div>
-      <div class="loc-grid">
-          {% for c in popular_cities %}
-            <a class="card" href="/city/{{ c.name | urlencode }}">
-              <div class="card-header">{{ c.name }}</div>
-              <div class="loc-meta">{{ c.count }} operator{{ 's' if c.count != 1 else '' }}</div>
-            </a>
-            <div style="margin: 16px 0;">
-            <button class="t-btn-primary">TAILWIND TEST BUTTON</button>
-          </div>
-
-            
-          {% endfor %}
+      
+      <div class="stats-bar__item stats-bar__item--bordered">
+        <div class="stats-bar__value">{{ metrics.agencies }}+</div>
+        <div class="stats-bar__label">Registered Operators</div>
       </div>
+      
+      <div class="stats-bar__item">
+        <div class="stats-bar__value">{{ metrics.packages }}+</div>
+        <div class="stats-bar__label">Packages Listed</div>
+      </div>
+       <div class="stats-bar__item is-hidden">
+        <div class="stats-bar__value">{{ metrics.inquiries }}+</div>
+        <div class="stats-bar__label">Leads Generated</div>
+      </div>
+      
     </div>
   </section>
   {% endif %}
+
+  <!-- Tab Switcher - Segmented Control -->
+  <section class="tab-switcher">
+    <div class="tab-switcher__container">
+      
+      <button 
+        class="tab-switcher__button tab-switcher__button--active" 
+        data-tab="pilgrim"
+        id="tab-btn-pilgrim"
+      >
+        <!-- Package Icon (SVG) -->
+        <svg class="tab-switcher__icon" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+          <path d="M20 7h-9M14 17H5m14-8v11a2 2 0 01-2 2H7a2 2 0 01-2-2V8m16-1a2 2 0 00-2-2h-5M7 7V5a2 2 0 012-2h1"/>
+        </svg>
+        <span class="tab-switcher__label">Pilgrims</span>
+      </button>
+      
+      <button 
+        class="tab-switcher__button" 
+        data-tab="operator"
+        id="tab-btn-operator"
+      >
+        <!-- Building Icon (SVG) -->
+        <svg class="tab-switcher__icon" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+          <path d="M3 21h18M9 8h10M10 11h7M10 14h7M10 17h7M3 3h6v18H3V3z"/>
+        </svg>
+        <span class="tab-switcher__label">Tour Operators</span>
+      </button>
+      
+    </div>
+  </section>
+
+  <!-- Tab Content - Pilgrim View -->
+  <section class="tab-content" id="tab-content-pilgrim" data-active="true">
+    
+    <!-- Header -->
+    <div class="tab-content__header">
+      <h2 class="tab-content__title">Find Your Perfect Umrah Package</h2>
+      <p class="tab-content__description">
+        Compare packages, read reviews, and book with confidence from verified operators worldwide.
+      </p>
+    </div>
+
+    <!-- Features Grid - Horizontal Scroll on Mobile -->
+    <div class="features-grid">
+      
+      <!-- Feature 1 -->
+      <div class="feature-card">
+        <div class="feature-card__content">
+          <div class="feature-card__icon">
+            <!-- Search Icon (SVG) -->
+            <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+              <circle cx="11" cy="11" r="8"/>
+              <path d="M21 21l-4.35-4.35"/>
+            </svg>
+          </div>
+          <h3 class="feature-card__title">Easy Search & Filter</h3>
+          <p class="feature-card__description">
+            Find packages by budget, duration, hotel ratings, departure city, and travel dates.
+          </p>
+        </div>
+      </div>
+      
+      <!-- Feature 2 -->
+      <div class="feature-card">
+        <div class="feature-card__content">
+          <div class="feature-card__icon">
+            <!-- Shield Icon (SVG) -->
+            <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+          </div>
+          <h3 class="feature-card__title">Verified Operators</h3>
+          <p class="feature-card__description">
+            All operators are verified with real reviews from pilgrims who traveled with them.
+          </p>
+        </div>
+      </div>
+      
+      <!-- Feature 3 -->
+      <div class="feature-card">
+        <div class="feature-card__content">
+          <div class="feature-card__icon">
+            <!-- Star Icon (SVG) -->
+            <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+            </svg>
+          </div>
+          <h3 class="feature-card__title">Compare & Save</h3>
+          <p class="feature-card__description">
+            Compare packages side-by-side and get the best value for your sacred journey.
+          </p>
+        </div>
+      </div>
+      
+    </div>
+
+    <!-- How It Works -->
+    <div class="how-it-works">
+      <h3 class="how-it-works__title">How It Works</h3>
+      <div class="how-it-works__grid">
+        
+        <!-- Step 1 -->
+        <div class="how-it-works__step">
+          <div class="how-it-works__number">1</div>
+          <h4 class="how-it-works__step-title">Search Packages</h4>
+          <p class="how-it-works__step-description">
+            Browse hundreds of packages from verified operators
+          </p>
+        </div>
+        
+        <!-- Step 2 -->
+        <div class="how-it-works__step">
+          <div class="how-it-works__number">2</div>
+          <h4 class="how-it-works__step-title">Compare & Choose</h4>
+          <p class="how-it-works__step-description">
+            Read reviews, compare prices and select your ideal package
+          </p>
+        </div>
+        
+        <!-- Step 3 -->
+        <div class="how-it-works__step">
+          <div class="how-it-works__number">3</div>
+          <h4 class="how-it-works__step-title">Book Directly</h4>
+          <p class="how-it-works__step-description">
+            Contact the operator and book your spiritual journey
+          </p>
+        </div>
+        
+      </div>
+    </div>
+
+    <!-- Pilgrim CTA -->
+    <div class="cta-section">
+      <a href="/packages" class="cta-button">
+        <!-- Search Icon (SVG) -->
+        <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+          <circle cx="11" cy="11" r="8"/>
+          <path d="M21 21l-4.35-4.35"/>
+        </svg>
+        Start Exploring Packages
+        <!-- Arrow Right Icon (SVG) -->
+        <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+          <path d="M5 12h14m-7-7l7 7-7 7"/>
+        </svg>
+      </a>
+    </div>
+    
+  </section>
+
+  <!-- Tab Content - Operator View -->
+  <section class="tab-content" id="tab-content-operator" data-active="false">
+    
+    <!-- Header -->
+    <div class="tab-content__header">
+      <h2 class="tab-content__title">Grow Your Umrah Business</h2>
+      <p class="tab-content__description">
+        Join hundreds of operators who trust us to connect with pilgrims worldwide.
+      </p>
+    </div>
+
+    <!-- Benefits Grid - 2 Columns -->
+    <div class="benefits-grid">
+      
+      <!-- Benefit 1 -->
+      <div class="benefit-card">
+        <div class="benefit-card__icon">
+          <!-- Users Icon (SVG) -->
+          <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+            <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
+          </svg>
+        </div>
+        <div>
+          <h3 class="benefit-card__title">Reach More Pilgrims</h3>
+          <p class="benefit-card__description">
+            Get discovered by thousands of travelers actively searching for Umrah packages every month.
+          </p>
+        </div>
+      </div>
+      
+      <!-- Benefit 2 -->
+      <div class="benefit-card">
+        <div class="benefit-card__icon">
+          <!-- Trending Up Icon (SVG) -->
+          <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+            <polyline points="17 6 23 6 23 12"/>
+          </svg>
+        </div>
+        <div>
+          <h3 class="benefit-card__title">Increase Bookings</h3>
+          <p class="benefit-card__description">
+            Showcase your packages to a targeted audience ready to book their spiritual journey.
+          </p>
+        </div>
+      </div>
+      
+      <!-- Benefit 3 -->
+      <div class="benefit-card">
+        <div class="benefit-card__icon">
+          <!-- Globe Icon (SVG) -->
+          <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="2" y1="12" x2="22" y2="12"/>
+            <path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/>
+          </svg>
+        </div>
+        <div>
+          <h3 class="benefit-card__title">Global Presence</h3>
+          <p class="benefit-card__description">
+            Expand beyond your local market and connect with pilgrims from around the world.
+          </p>
+        </div>
+      </div>
+      
+      <!-- Benefit 4 -->
+      <div class="benefit-card">
+        <div class="benefit-card__icon">
+          <!-- Shield Icon (SVG) -->
+          <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+        </div>
+        <div>
+          <h3 class="benefit-card__title">Build Trust & Credibility</h3>
+          <p class="benefit-card__description">
+            Verified badge, customer reviews, and detailed profiles help build your reputation.
+          </p>
+        </div>
+      </div>
+      
+    </div>
+
+    <!-- Operator Features List - Green Gradient Box -->
+    <div class="features-box">
+      <h3 class="features-box__title">What's Included in Your Profile</h3>
+      <div class="features-box__grid">
+        
+        <div class="features-box__item">
+          <!-- Check Circle Icon (SVG) -->
+          <svg class="features-box__icon" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+            <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
+            <polyline points="22 4 12 14.01 9 11.01"/>
+          </svg>
+          <span class="features-box__text">Dedicated operator profile page</span>
+        </div>
+        
+        <div class="features-box__item">
+          <svg class="features-box__icon" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+            <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
+            <polyline points="22 4 12 14.01 9 11.01"/>
+          </svg>
+          <span class="features-box__text">Unlimited package listings</span>
+        </div>
+        
+        <div class="features-box__item">
+          <svg class="features-box__icon" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+            <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
+            <polyline points="22 4 12 14.01 9 11.01"/>
+          </svg>
+          <span class="features-box__text">Lead management dashboard</span>
+        </div>
+        
+        <div class="features-box__item">
+          <svg class="features-box__icon" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+            <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
+            <polyline points="22 4 12 14.01 9 11.01"/>
+          </svg>
+          <span class="features-box__text">Customer review system</span>
+        </div>
+        
+        <div class="features-box__item">
+          <svg class="features-box__icon" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+            <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
+            <polyline points="22 4 12 14.01 9 11.01"/>
+          </svg>
+          <span class="features-box__text">Analytics and insights</span>
+        </div>
+        
+        <div class="features-box__item">
+          <svg class="features-box__icon" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+            <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
+            <polyline points="22 4 12 14.01 9 11.01"/>
+          </svg>
+          <span class="features-box__text">Priority customer support</span>
+        </div>
+        
+      </div>
+    </div>
+
+    <!-- Operator CTA -->
+    <div class="cta-section">
+      <a href="/register" class="cta-button">
+        <!-- Building Icon (SVG) -->
+        <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+          <path d="M3 21h18M9 8h10M10 11h7M10 14h7M10 17h7M3 3h6v18H3V3z"/>
+        </svg>
+        Sign Up as Operator
+        <!-- Arrow Right Icon (SVG) -->
+        <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+          <path d="M5 12h14m-7-7l7 7-7 7"/>
+        </svg>
+      </a>
+      <p class="cta-subtext">
+        Free 30-day trial • No credit card required
+      </p>
+    </div>
+    
+  </section>
+  </section>
+
+
+
+<script>
+  /**
+ * Tab Switcher - Minimal Vanilla JavaScript
+ * Toggles between Pilgrim and Operator content on homepage
+ */
+
+(function() {
+  'use strict';
   
-</div>
+  // Get all tab buttons
+  const tabButtons = document.querySelectorAll('[data-tab]');
+  
+  // Get all tab content sections
+  const tabContents = {
+    pilgrim: document.getElementById('tab-content-pilgrim'),
+    operator: document.getElementById('tab-content-operator')
+  };
+  
+  // Function to switch tabs
+  function switchTab(tabName) {
+    // Update buttons
+    tabButtons.forEach(function(button) {
+      const buttonTab = button.getAttribute('data-tab');
+      
+      if (buttonTab === tabName) {
+        button.classList.add('tab-switcher__button--active');
+      } else {
+        button.classList.remove('tab-switcher__button--active');
+      }
+    });
+    
+    // Update content visibility
+    if (tabContents.pilgrim && tabContents.operator) {
+      if (tabName === 'pilgrim') {
+        tabContents.pilgrim.setAttribute('data-active', 'true');
+        tabContents.operator.setAttribute('data-active', 'false');
+      } else if (tabName === 'operator') {
+        tabContents.pilgrim.setAttribute('data-active', 'false');
+        tabContents.operator.setAttribute('data-active', 'true');
+      }
+    }
+  }
+  
+  // Add click event listeners to all tab buttons
+  tabButtons.forEach(function(button) {
+    button.addEventListener('click', function() {
+      const tabName = this.getAttribute('data-tab');
+      switchTab(tabName);
+    });
+  });
+  
+  // Initialize - Set pilgrim as default active tab
+  switchTab('pilgrim');
+  
+})();
+</script>
 {% endblock %}

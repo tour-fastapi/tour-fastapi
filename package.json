@@ -4,8 +4,12 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build:css": "tailwindcss -i ./app/web/static/css/tailwind.css -o ./app/web/static/css/styles.css",
-    "dev:css": "tailwindcss -i ./app/web/static/css/tailwind.css -o ./app/web/static/css/styles.css --watch"
+    
+    "build:css": "tailwindcss -i ./app/web/static/css/tailwind.css -o ./app/web/static/css/styles.css --postcss",
+
+    
+    "dev:css": "tailwindcss -i ./app/web/static/css/tailwind.css -o ./app/web/static/css/styles.css --watch --postcss"
+
   },
   "repository": {
     "type": "git",
@@ -22,6 +26,7 @@
   "devDependencies": {
     "autoprefixer": "^10.4.23",
     "postcss": "^8.5.6",
+    "postcss-import": "^16.1.1",
     "tailwindcss": "^3.4.19"
   }
 }
