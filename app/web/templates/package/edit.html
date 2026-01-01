@@ -176,13 +176,17 @@
     <div class="mb-3">
       <label class="form-label d-block">Package Type *</label>
       <div class="form-check form-check-inline">
-        <input class="form-check-input" type="radio" name="package_type" id="type_haj" value="haj" required>
+        <input class="form-check-input" type="radio" name="package_type" id="type_haj" value="haj" required
+              {% if (pkg.package_type or '') == 'haj' %}checked{% endif %}>
         <label class="form-check-label" for="type_haj">Haj</label>
       </div>
+
       <div class="form-check form-check-inline">
-        <input class="form-check-input" type="radio" name="package_type" id="type_umrah" value="umrah" required>
+        <input class="form-check-input" type="radio" name="package_type" id="type_umrah" value="umrah" required
+              {% if (pkg.package_type or '') == 'umrah' %}checked{% endif %}>
         <label class="form-check-label" for="type_umrah">Umrah</label>
       </div>
+
       <div class="form-text">Choose exactly one.</div>
     </div>
 
@@ -200,10 +204,11 @@
       <label class="form-label">Package Class</label>
       <select class="form-select" name="package_class">
         <option value="">-- select class (optional) --</option>
-        <option value="economy">Economy</option>
-        <option value="business">Business</option>
-        <option value="first">First Class</option>
+        <option value="economy" {% if (pkg.package_class or '') == 'economy' %}selected{% endif %}>Economy</option>
+        <option value="business" {% if (pkg.package_class or '') == 'business' %}selected{% endif %}>Business</option>
+        <option value="first" {% if (pkg.package_class or '') == 'first' %}selected{% endif %}>First Class</option>
       </select>
+
     </div>
 
     <div class="row g-3">
@@ -218,15 +223,18 @@
       <div class="col-md-12">
         <label class="form-label">Variant prices</label>
         <div class="row g-2">
-          <div class="col-md-4">
-            <input class="form-control" type="number" step="0.01" name="price_double" placeholder="Double / Couple price">
-          </div>
-          <div class="col-md-4">
-            <input class="form-control" type="number" step="0.01" name="price_triple" placeholder="Triple price">
-          </div>
-          <div class="col-md-4">
-            <input class="form-control" type="number" step="0.01" name="price_quad" placeholder="Quad/Quint price">
-          </div>
+          <input class="form-control" type="number" step="0.01" name="price_double"
+                placeholder="Double / Couple price" value="{{ pkg.price_double or '' }}">
+
+          <input class="form-control" type="number" step="0.01" name="price_triple"
+                placeholder="Triple price" value="{{ pkg.price_triple or '' }}">
+
+          <input class="form-control" type="number" step="0.01" name="price_quad"
+                placeholder="Quad/Quint price" value="{{ pkg.price_quad or '' }}">
+
+          <input class="form-control mt-2" type="text" name="price_note"
+                placeholder="Note / label (optional)" value="{{ pkg.price_note or '' }}">
+
         </div>
         <input class="form-control mt-2" type="text" name="price_note" placeholder="Note / label (optional)">
       </div>
@@ -245,7 +253,8 @@
           <option value="">-- select month --</option>
           {% set month_names = ['January','February','March','April','May','June','July','August','September','October','November','December'] %}
           {% for i in range(1, 13) %}
-            <option value="{{ i }}">{{ month_names[i-1] }}</option>
+            <option value="{{ i }}" {% if pkg.travel_month == i %}selected{% endif %}>{{ month_names[i-1] }}</option>
+
           {% endfor %}
         </select>
       </div>
@@ -254,7 +263,7 @@
         <select class="form-select" name="travel_year">
           <option value="">-- select year --</option>
           {% for y in years %}
-            <option value="{{ y }}">{{ y }}</option>
+           <option value="{{ y }}" {% if pkg.travel_year == y %}selected{% endif %}>{{ y }}</option>
           {% endfor %}
         </select>
       </div>
@@ -263,11 +272,16 @@
     <!-- Airlines -->
     <div class="mb-3">
       <label class="form-label">Airlines (you can select multiple)</label>
-      <select class="form-select" name="airline_ids" multiple size="6">
-        {% for a in airlines %}
-          <option value="{{ a.airline_id }}">{{ a.name }}</option>
-        {% endfor %}
-      </select>
+     {% set selected_airline_ids = selected_airline_ids or [] %}
+
+    <select class="form-select" name="airline_ids" multiple size="6">
+      {% for a in airlines %}
+        <option value="{{ a.airline_id }}"
+          {% if a.airline_id in selected_airline_ids %}selected{% endif %}>
+          {{ a.name }}
+        </option>
+      {% endfor %}
+    </select>
     </div>
 
     <hr class="my-4">
