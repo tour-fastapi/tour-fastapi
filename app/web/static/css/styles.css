@@ -2057,6 +2057,42 @@ body {
   }
 }
 
+/* Main Page Container */
+
+/* Page Header */
+
+.listing-page__title {
+  margin-bottom: 0.5rem;
+  font-weight: 700;
+  font-size: 24px;
+  color: hsl(var(--fg));
+  line-height: 1.2;
+}
+
+@media (min-width: 768px) {
+  .listing-page__title {
+    font-size: 32px;
+  }
+}
+
+.listing-page__description {
+  font-size: 14px;
+  color: hsl(var(--muted));
+  line-height: 1.5;
+}
+
+@media (min-width: 768px) {
+  .listing-page__description {
+    font-size: 16px;
+  }
+}
+
+/* Filter Bar */
+
+/* Listing Grid */
+
+/* Legacy styles below - kept for backward compatibility */
+
 /* Page Header - Title & Subtitle */
 
 .listing-header {
@@ -2377,49 +2413,6 @@ body {
 }
 
 /* Section Header (Optional - "Umrah Packages by City") */
-
-.section-header {
-  margin-bottom: 1.5rem;
-}
-
-.section-header__title {
-  margin-bottom: 0.5rem;
-  color: hsl(var(--fg));
-  font-weight: 700;
-  font-size: 18px;
-  line-height: 1.3;
-}
-
-@media (min-width: 768px) {
-  .section-header__title {
-    font-size: 24px;
-  }
-}
-
-.section-header__description {
-  margin-bottom: 0.75rem;
-  color: hsl(var(--muted));
-  font-size: 14px;
-  line-height: 1.5;
-}
-
-@media (min-width: 768px) {
-  .section-header__description {
-    font-size: 16px;
-  }
-}
-
-.section-header__meta {
-  color: hsl(var(--muted));
-  font-size: 13px;
-  font-weight: 500;
-}
-
-@media (min-width: 768px) {
-  .section-header__meta {
-    font-size: 14px;
-  }
-}
 
 /* City Group Header */
 
@@ -3087,6 +3080,7 @@ body {
   transition-duration: 150ms;
   background: white;
   border-color: hsl(var(--border));
+  display: block;
 }
 
 .operator-card:hover {

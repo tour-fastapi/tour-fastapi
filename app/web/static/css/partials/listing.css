@@ -4,6 +4,118 @@
 
 @layer components {
 
+  /* Main Page Container */
+  .listing-page {
+    background: hsl(var(--bg));
+    min-height: 100vh;
+  }
+
+  .listing-page__container {
+    @apply max-w-7xl mx-auto px-4 py-8;
+  }
+
+  @media (min-width: 768px) {
+    .listing-page__container {
+      @apply px-6 py-12;
+    }
+  }
+
+  /* Page Header */
+  .listing-page__header {
+    @apply mb-8;
+  }
+
+  @media (min-width: 768px) {
+    .listing-page__header {
+      @apply mb-10;
+    }
+  }
+
+  .listing-page__title {
+    @apply mb-2;
+    font-weight: 700;
+    font-size: 24px;
+    color: hsl(var(--fg));
+    line-height: 1.2;
+  }
+
+  @media (min-width: 768px) {
+    .listing-page__title {
+      font-size: 32px;
+    }
+  }
+
+  .listing-page__description {
+    font-size: 14px;
+    color: hsl(var(--muted));
+    line-height: 1.5;
+  }
+
+  @media (min-width: 768px) {
+    .listing-page__description {
+      font-size: 16px;
+    }
+  }
+
+  /* Filter Bar */
+  .filter-bar {
+    @apply flex items-center justify-between mb-6 pb-4 border-b;
+    border-color: hsl(var(--border));
+    gap: 16px;
+  }
+
+  @media (min-width: 768px) {
+    .filter-bar {
+      @apply mb-8 pb-5;
+    }
+  }
+
+  .filter-bar__left {
+    @apply flex items-center;
+    gap: 12px;
+  }
+
+  .filter-bar__right {
+    @apply shrink-0;
+  }
+
+  .filter-toggle {
+    /* Uses btn styles from buttons.css */
+  }
+
+  .filter-select {
+    @apply px-4 py-2 rounded-lg text-sm border;
+    background: white;
+    border-color: hsl(var(--border));
+    color: hsl(var(--fg));
+    font-weight: 500;
+    cursor: pointer;
+  }
+
+  .filter-select:focus {
+    outline: none;
+    border-color: hsl(var(--primary));
+  }
+
+  /* Listing Grid */
+  .listing-grid {
+    @apply grid grid-cols-1 gap-6;
+  }
+
+  @media (min-width: 768px) {
+    .listing-grid {
+      @apply grid-cols-2 gap-8;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .listing-grid {
+      @apply grid-cols-3;
+    }
+  }
+
+  /* Legacy styles below - kept for backward compatibility */
+
   /* Page Header - Title & Subtitle */
   .listing-header {
     border-bottom: 1px solid hsl(var(--border));
