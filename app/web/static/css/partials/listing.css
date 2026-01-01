@@ -1,0 +1,238 @@
+/* ============================================================================
+   LISTING PAGES - Common styles for Packages & Operators listing pages
+   ============================================================================ */
+
+@layer components {
+
+  /* Page Header - Title & Subtitle */
+  .listing-header {
+    border-bottom: 1px solid hsl(var(--border));
+    background: hsl(var(--bg));
+  }
+
+  .listing-header__container {
+    @apply max-w-3xl mx-auto px-6;
+    padding-top: 48px;
+    padding-bottom: 48px;
+  }
+
+  @media (min-width: 768px) {
+    .listing-header__container {
+      padding-top: 64px;
+      padding-bottom: 64px;
+    }
+  }
+
+  .listing-header__title {
+    @apply text-3xl mb-3;
+    font-weight: 700;
+    color: hsl(var(--fg));
+  }
+
+  @media (min-width: 768px) {
+    .listing-header__title {
+      @apply text-4xl;
+    }
+  }
+
+  .listing-header__subtitle {
+    @apply text-base;
+    color: hsl(var(--muted));
+  }
+
+  @media (min-width: 768px) {
+    .listing-header__subtitle {
+      @apply text-lg;
+    }
+  }
+
+  /* Filters Section */
+  .listing-filters {
+    border-bottom: 1px solid hsl(var(--border));
+    background: hsl(var(--bg));
+  }
+
+  .listing-filters__container {
+    @apply max-w-3xl mx-auto px-6 py-6;
+  }
+
+  .listing-filters__row {
+    @apply flex flex-col gap-4;
+  }
+
+  @media (min-width: 768px) {
+    .listing-filters__row {
+      @apply flex-row;
+    }
+  }
+
+  /* Filter Input Group */
+  .filter-group {
+    @apply flex-1;
+  }
+
+  .filter-group__label {
+    @apply text-xs mb-2 block;
+    color: hsl(var(--muted));
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .filter-group__input-wrapper {
+    @apply relative;
+  }
+
+  .filter-group__icon {
+    @apply absolute top-1/2 pointer-events-none;
+    left: 12px;
+    transform: translateY(-50%);
+    width: 16px;
+    height: 16px;
+    color: hsl(var(--muted));
+  }
+
+  .filter-group__input {
+    @apply w-full text-sm rounded-lg border;
+    padding: 10px 16px;
+    background: white;
+    border-color: hsl(var(--border));
+    color: hsl(var(--fg));
+  }
+
+  .filter-group__input--with-icon {
+    padding-left: 40px;
+  }
+
+  .filter-group__input::placeholder {
+    color: hsl(var(--muted));
+  }
+
+  .filter-group__input:focus {
+    outline: none;
+    border-color: hsl(var(--primary));
+    box-shadow: 0 0 0 3px hsl(var(--primary) / 0.1);
+  }
+
+  /* More Filters Button */
+  .filter-button {
+    @apply flex items-center;
+  }
+
+  .filter-button button {
+    @apply px-5 rounded-lg text-sm border flex items-center;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    gap: 8px;
+    background: white;
+    border-color: hsl(var(--border));
+    color: hsl(var(--fg));
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .filter-button button:hover {
+    background: hsl(var(--surface-2));
+  }
+
+  .filter-button svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  /* Category Chips */
+  .category-chips {
+    @apply flex items-center gap-2 mt-4 overflow-x-auto pb-2;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .category-chips::-webkit-scrollbar {
+    display: none;
+  }
+
+  .category-chip {
+    @apply px-4 py-2 rounded-full text-sm border shrink-0;
+    background: white;
+    color: hsl(var(--fg));
+    border-color: hsl(var(--border));
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .category-chip--active {
+    background: hsl(var(--primary));
+    color: white;
+    border-color: hsl(var(--primary));
+  }
+
+  .category-chip:hover:not(.category-chip--active) {
+    background: hsl(var(--surface-2));
+  }
+
+  /* Results Section */
+  .listing-results {
+    @apply max-w-3xl mx-auto px-6 py-8;
+  }
+
+  .listing-results__header {
+    @apply mb-6 flex items-center justify-between;
+    gap: 16px;
+  }
+
+  .listing-results__count {
+    @apply text-sm;
+    color: hsl(var(--muted));
+  }
+
+  .listing-results__sort {
+    @apply px-4 py-2 rounded-lg text-sm border;
+    background: white;
+    border-color: hsl(var(--border));
+    color: hsl(var(--fg));
+    cursor: pointer;
+  }
+
+  .listing-results__sort:focus {
+    outline: none;
+    border-color: hsl(var(--primary));
+  }
+
+  /* Cards Container */
+  .listing-cards {
+    @apply flex flex-col;
+    gap: 24px;
+  }
+
+  /* Pagination */
+  .listing-pagination {
+    @apply mt-8 flex items-center justify-center;
+    gap: 8px;
+  }
+
+  .pagination-button {
+    @apply px-4 py-2 rounded-lg text-sm border;
+    background: white;
+    border-color: hsl(var(--border));
+    color: hsl(var(--fg));
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .pagination-button--active {
+    background: hsl(var(--primary));
+    color: white;
+    border: none;
+  }
+
+  .pagination-button:hover:not(.pagination-button--active) {
+    background: hsl(var(--surface-2));
+  }
+
+  .pagination-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}

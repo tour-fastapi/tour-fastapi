@@ -20,6 +20,7 @@
     .site-footer__container {
       padding-top: 48px;
       padding-bottom: 48px;
+      max-width: 48rem;
     }
   }
 

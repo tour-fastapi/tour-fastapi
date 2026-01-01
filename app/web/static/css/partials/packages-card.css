@@ -1,0 +1,417 @@
+/* ============================================================================
+   PACKAGE CARD - Package listing card component
+   ============================================================================ */
+
+@layer components {
+
+  /* Card Container */
+  .package-card {
+    @apply rounded-xl overflow-hidden border transition-shadow cursor-pointer;
+    background: white;
+    border-color: hsl(var(--border));
+  }
+
+  .package-card:hover {
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Banner Section */
+  .package-card__banner {
+    @apply relative;
+    height: 280px;
+    background: #000;
+  }
+
+  @media (min-width: 768px) {
+    .package-card__banner {
+      height: 220px;
+    }
+  }
+
+  .package-card__banner-image {
+    @apply w-full h-full object-cover;
+  }
+
+  .package-card__banner-gradient {
+    @apply absolute inset-0;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.4) 50%, transparent);
+  }
+
+  .package-card__banner-content {
+    @apply absolute inset-0 flex flex-col justify-between p-5;
+  }
+
+  /* Nudges (Top Badges) */
+  .package-card__nudges {
+    @apply flex items-start justify-start;
+    gap: 8px;
+  }
+
+  .package-nudge {
+    @apply text-xs px-3 rounded-full border;
+    padding-top: 6px;
+    padding-bottom: 6px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(8px);
+    border-color: rgba(255, 255, 255, 0.3);
+    font-weight: 600;
+  }
+
+  .package-nudge--discount {
+    color: hsl(145, 45%, 35%);
+  }
+
+  .package-nudge--exclusive {
+    color: hsl(280, 55%, 35%);
+  }
+
+  .package-nudge--deal {
+    color: hsl(220, 55%, 35%);
+  }
+
+  /* Package Info (Bottom of Banner) */
+  .package-card__info {
+    color: white;
+  }
+
+  .package-card__header {
+    @apply flex items-start justify-between mb-2;
+    gap: 16px;
+  }
+
+  .package-card__name {
+    @apply text-xl flex-1;
+    font-weight: 700;
+    color: white;
+    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3));
+  }
+
+  .package-card__price-box {
+    @apply shrink-0 px-3 py-2 rounded-xl border;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(12px);
+    border-color: rgba(255, 255, 255, 0.3);
+  }
+
+  .package-card__price {
+    @apply text-lg;
+    color: white;
+    font-weight: 800;
+  }
+
+  /* Meta Line */
+  .package-card__meta {
+    @apply text-sm mb-2 flex items-center flex-wrap;
+    gap: 8px;
+    color: rgba(255, 255, 255, 0.9);
+    font-weight: 500;
+    filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.3));
+  }
+
+  .package-card__category {
+    @apply inline-flex items-center px-2.5 py-1 rounded-full border;
+    gap: 4px;
+    background: rgba(16, 185, 129, 0.2);
+    border-color: rgba(16, 185, 129, 0.3);
+    backdrop-filter: blur(4px);
+  }
+
+  .package-card__meta-item {
+    @apply inline-flex items-center;
+    gap: 6px;
+  }
+
+  .package-card__meta-item svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .package-card__meta-separator {
+    /* Bullet separator */
+  }
+
+  /* Departure Date */
+  .package-card__departure {
+    @apply text-sm mb-3 inline-flex items-center px-3 rounded-lg border;
+    padding-top: 6px;
+    padding-bottom: 6px;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(4px);
+    color: white;
+    font-weight: 600;
+    filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.3));
+  }
+
+  .package-card__departure svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  /* Inclusions Icons Strip */
+  .package-card__inclusions {
+    @apply flex items-center overflow-x-auto;
+    gap: 8px;
+  }
+
+  .package-card__inclusions::-webkit-scrollbar {
+    display: none;
+  }
+
+  .package-inclusion {
+    @apply relative shrink-0 flex items-center justify-center rounded-lg border;
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(4px);
+    cursor: help;
+  }
+
+  .package-inclusion svg {
+    width: 20px;
+    height: 20px;
+    color: white;
+  }
+
+  /* Tooltip for Inclusions */
+  .package-inclusion__tooltip {
+    @apply absolute bottom-full left-1/2 mb-2 opacity-0 pointer-events-none z-10;
+    transform: translateX(-50%);
+    transition: opacity 0.2s;
+  }
+
+  .package-inclusion:hover .package-inclusion__tooltip {
+    opacity: 1;
+  }
+
+  .package-inclusion__tooltip-content {
+    @apply text-xs rounded-lg px-3 py-2;
+    background: #1a1a1a;
+    color: white;
+    white-space: nowrap;
+    max-width: 200px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+
+  .package-inclusion__tooltip-title {
+    font-weight: 600;
+    margin-bottom: 2px;
+  }
+
+  .package-inclusion__tooltip-detail {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 11px;
+    white-space: normal;
+  }
+
+  .package-inclusion__tooltip-arrow {
+    @apply absolute top-full left-1/2;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 4px solid #1a1a1a;
+  }
+
+  /* Flight Details Section */
+  .package-card__flights {
+    @apply p-5 border-b;
+    border-color: hsl(var(--border));
+  }
+
+  .package-card__flights-grid {
+    @apply grid grid-cols-1 gap-3;
+  }
+
+  @media (min-width: 768px) {
+    .package-card__flights-grid {
+      @apply grid-cols-2;
+    }
+  }
+
+  .flight-detail {
+    /* Each flight (onward/return) */
+  }
+
+  .flight-detail__label {
+    @apply text-xs mb-2;
+    color: hsl(var(--muted));
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .flight-detail__content {
+    @apply flex items-center;
+    gap: 8px;
+  }
+
+  .flight-detail__icon {
+    @apply shrink-0 flex items-center justify-center rounded-lg;
+    width: 32px;
+    height: 32px;
+    background: hsl(var(--surface-2));
+  }
+
+  .flight-detail__icon svg {
+    width: 16px;
+    height: 16px;
+    color: hsl(var(--primary));
+  }
+
+  .flight-detail__icon--onward svg {
+    transform: rotate(45deg);
+  }
+
+  .flight-detail__icon--return svg {
+    transform: rotate(-45deg);
+  }
+
+  .flight-detail__info {
+    @apply flex-1 min-w-0;
+  }
+
+  .flight-detail__airline {
+    @apply text-sm;
+    color: hsl(var(--fg));
+    font-weight: 700;
+  }
+
+  .flight-detail__type {
+    @apply text-xs;
+    color: hsl(var(--muted));
+  }
+
+  /* Accommodation Section */
+  .package-card__accommodation {
+    @apply p-5 border-b;
+    border-color: hsl(var(--border));
+  }
+
+  .package-card__accommodation-grid {
+    @apply grid grid-cols-1 gap-3;
+  }
+
+  @media (min-width: 768px) {
+    .package-card__accommodation-grid {
+      @apply grid-cols-2;
+    }
+  }
+
+  .accommodation-detail {
+    /* Each hotel (Makkah/Madinah) */
+  }
+
+  .accommodation-detail__label {
+    @apply text-xs mb-2;
+    color: hsl(var(--muted));
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .accommodation-detail__content {
+    @apply flex items-start;
+    gap: 8px;
+  }
+
+  .accommodation-detail__icon {
+    @apply shrink-0 flex items-center justify-center rounded-lg;
+    width: 32px;
+    height: 32px;
+    background: hsl(var(--surface-2));
+  }
+
+  .accommodation-detail__icon svg {
+    width: 16px;
+    height: 16px;
+    color: hsl(var(--primary));
+  }
+
+  .accommodation-detail__info {
+    @apply flex-1 min-w-0;
+  }
+
+  .accommodation-detail__name {
+    @apply text-sm mb-0.5;
+    color: hsl(var(--fg));
+    font-weight: 700;
+  }
+
+  .accommodation-detail__distance {
+    @apply text-xs;
+    color: hsl(var(--muted));
+  }
+
+  /* Operator Section */
+  .package-card__operator {
+    @apply p-5;
+  }
+
+  .package-card__operator-content {
+    @apply flex items-center justify-between;
+  }
+
+  .package-card__operator-info {
+    @apply flex items-center;
+    gap: 12px;
+  }
+
+  .operator-avatar {
+    @apply shrink-0 rounded-lg grid place-items-center;
+    width: 32px;
+    height: 32px;
+    background: hsl(var(--surface-2));
+    font-weight: 700;
+    font-size: 14px;
+    color: hsl(var(--primary));
+  }
+
+  @media (min-width: 768px) {
+    .operator-avatar {
+      @apply rounded-xl;
+      width: 44px;
+      height: 44px;
+      font-size: 16px;
+    }
+  }
+
+  .operator-details {
+    @apply flex-1 min-w-0;
+  }
+
+  .operator-details__name {
+    @apply text-sm mb-0.5;
+    color: hsl(var(--fg));
+    font-weight: 700;
+  }
+
+  .operator-details__location {
+    @apply text-xs flex items-center;
+    gap: 8px;
+    color: hsl(var(--muted));
+  }
+
+  .operator-details__location svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  .operator-rating {
+    @apply text-right shrink-0;
+  }
+
+  .operator-rating__value {
+    @apply text-sm;
+    color: hsl(var(--fg));
+    font-weight: 700;
+  }
+
+  .operator-rating__count {
+    @apply text-xs;
+    color: hsl(var(--muted));
+  }
+}

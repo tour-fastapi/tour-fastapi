@@ -5,6 +5,11 @@
 @import "./partials/home.css";
 @import "./partials/footer.css";
 
+
+@import "./partials/listing.css";
+@import "./partials/group-header.css";
+@import "./partials/packages-card.css";
+
 @tailwind base;
 
 @tailwind components;
