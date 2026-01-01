@@ -6,7 +6,6 @@
     --fg: #0f172a;
     --muted: #64748b;
     --card: #ffffff;
-    --band: #ffffff;
     --bg-grad: linear-gradient(180deg, #f7fafc, #ffffff);
     --border: #e5e7eb;
     --hair: #eef2f6;
@@ -40,57 +39,129 @@
   .theme-basic .muted { color: var(--muted); }
   .theme-basic .sep { height:1px; background: var(--hair); margin:.5rem 0 1rem; border-radius:1px; }
   .theme-basic .block { border:1px dashed var(--border); border-radius:12px; padding:.85rem 1rem; background:#fbfcfe; }
-  .theme-basic .img-brd { border:1px solid var(--border); }
+  .theme-basic .img-brd { border:1px solid var(--border); border-radius: 12px; }
+
+  .theme-basic .hero-img {
+    width: 100%;
+    max-height: 340px;
+    object-fit: cover;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    display: block;
+  }
+
+  .theme-basic .hero-top {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .theme-basic .hero-meta {
+    flex: 1;
+    min-width: 0;
+  }
+  .theme-basic .hero-price {
+    text-align: right;
+    min-width: 180px;
+  }
+
+  @media (max-width: 768px) {
+    .theme-basic .hero-top { flex-direction: column; }
+    .theme-basic .hero-price { text-align: left; min-width: auto; }
+  }
+
+  .btn-primary {
+    background: linear-gradient(90deg, #2563eb, #1d4ed8);
+    color: #fff;
+    border: none;
+    transition: all .25s ease;
+  }
+  .btn-primary:hover {
+    background: linear-gradient(90deg, #1e3a8a, #1d4ed8);
+    transform: translateY(-2px);
+  }
 </style>
 
+{% set month_names = {
+  1:'January',2:'February',3:'March',4:'April',5:'May',6:'June',
+  7:'July',8:'August',9:'September',10:'October',11:'November',12:'December'
+} %}
+
+{# ---- Banner (with fallback + cache-buster to avoid "same banner" bug) ---- #}
+{% set banner_name = pkg.banner_image or 'dynamic-tawaf-at-night.jpg' %}
+{% set banner_url = '/media/packages-banners/' ~ banner_name ~ '?v=' ~ (pkg.package_id|string) ~ '-' ~ banner_name %}
+
 <div class="theme-basic">
+
   <!-- Header -->
   <div class="band mb-3">
-    <div class="d-flex align-items-start gap-3">
-      <img src="/media/agency/{{ agency.registration_id }}/logo"
-           alt="{{ agency.agencies_name }} logo"
-           width="56" height="56"
-           class="rounded img-brd"
-           onerror="this.style.display='none'"/>
-      {% set banner = pkg.banner_image %}
-      <img
-        src="/media/packages-banners/{{ banner }}"
-        alt="{{ pkg.package_name }}"
-        style="width:100%; max-height:340px; object-fit:cover; border-radius:12px;"
-      >
 
-      <div class="flex-grow-1">
+    <!-- Banner first (full width) -->
+    <img
+      src="{{ banner_url }}"
+      alt="{{ pkg.package_name }}"
+      class="hero-img"
+      loading="lazy"
+    >
+
+    <div class="mt-3 hero-top">
+      <!-- Agency logo -->
+      <img
+        src="/media/agency/{{ agency.registration_id }}/logo"
+        alt="{{ agency.agencies_name }} logo"
+        width="56" height="56"
+        class="rounded img-brd"
+        onerror="this.style.display='none'"
+      />
+
+      <div class="hero-meta">
         <h1 class="h4 mb-1">{{ pkg.package_name }}</h1>
+
         <div class="d-flex flex-wrap align-items-center gap-2 small muted">
           <span>{{ pkg.days }} days</span>
+
           {% if pkg.travel_month or pkg.travel_year %}
-            <span>• {{ pkg.travel_month and (pkg.travel_month | int) | default('', true)
-              | replace('1','January') | replace('2','February') | replace('3','March')
-              | replace('4','April') | replace('5','May') | replace('6','June')
-              | replace('7','July') | replace('8','August') | replace('9','September')
-              | replace('10','October') | replace('11','November') | replace('12','December') }}
-              {{ pkg.travel_year or '' }}</span>
+            <span>
+              •
+              {{ month_names.get((pkg.travel_month or 0)|int, '') }}
+              {{ pkg.travel_year or '' }}
+            </span>
           {% endif %}
-          {% if pkg.package_class %}<span>• {{ pkg.package_class | title }}</span>{% endif %}
-          {% if pkg.package_type %}<span class="chip">{{ pkg.package_type | title }}</span>{% endif %}
-          {% if pkg.description %}<span class="ms-2 text-body">{{ pkg.description }}</span>{% endif %}
+
+          {% if pkg.package_class %}
+            <span>• {{ pkg.package_class | title }}</span>
+          {% endif %}
+
+          {% if pkg.package_type %}
+            <span class="chip">{{ pkg.package_type | title }}</span>
+          {% endif %}
         </div>
+
+        {% if pkg.description %}
+          <div class="small mt-2">{{ pkg.description }}</div>
+        {% endif %}
+
         {% if agency and agency.agencies_name %}
-          <div class="small muted mt-1">
+          <div class="small muted mt-2">
             {{ agency.agencies_name }}{% if agency.city %}, {{ agency.city }}{% endif %}
           </div>
         {% endif %}
       </div>
 
-      <div class="text-end">
+      <!-- Price -->
+      <div class="hero-price">
         <div class="kicker mb-1">Starting</div>
         <div class="price-lg">₹{{ "%.2f"|format(pkg.price or 0) }}</div>
+
         {% if price_row and (price_row.price_double or price_row.price_triple or price_row.price_quad) %}
-          <div class="small muted mt-1">
+          <div class="small muted mt-2">
             {% if price_row.price_double %}Double/Couple • ₹{{ "%.2f"|format(price_row.price_double) }}<br>{% endif %}
             {% if price_row.price_triple %}Triple • ₹{{ "%.2f"|format(price_row.price_triple) }}<br>{% endif %}
             {% if price_row.price_quad %}Quad/Quint • ₹{{ "%.2f"|format(price_row.price_quad) }}{% endif %}
           </div>
+        {% endif %}
+
+        {% if price_row and price_row.price_note %}
+          <div class="small muted mt-1">{{ price_row.price_note }}</div>
         {% endif %}
       </div>
     </div>
@@ -100,17 +171,19 @@
   <div class="card-soft p-3 p-md-4 mb-3">
     <h2 class="h6 mb-3">Flights</h2>
     <div class="sep"></div>
+
     <div class="row g-3">
       <div class="col-md-6">
         <div class="block h-100">
           <div class="label-m mb-1">Onward</div>
-          <div>{{ onward_text }}</div>
+          <div>{{ onward_text or '—' }}</div>
         </div>
       </div>
+
       <div class="col-md-6">
         <div class="block h-100">
           <div class="label-m mb-1">Return</div>
-          <div>{{ return_text }}</div>
+          <div>{{ return_text or '—' }}</div>
         </div>
       </div>
     </div>
@@ -120,24 +193,32 @@
   <div class="card-soft p-3 p-md-4 mb-3">
     <h2 class="h6 mb-3">Stays</h2>
     <div class="sep"></div>
+
     <div class="row g-3">
+      <!-- Mecca -->
       <div class="col-md-6">
         <div class="block h-100">
           <div class="fw-semibold mb-2">Mecca</div>
+
           <div class="label-m">Dates</div>
-          <div class="mb-2">{{ mecca_dates }}</div>
+          <div class="mb-2">{{ mecca_dates or '—' }}</div>
+
           <div class="label-m">Distance</div>
-          <div class="mb-2">{{ mecca_distance_label }}</div>
+          <div class="mb-2">{{ mecca_distance_label or '—' }}</div>
+
           <div class="label-m">Hotel</div>
           <div>
             {% if mecca_hotel_name %}
               {% if mecca_hotel_link %}
                 <a href="{{ mecca_hotel_link }}" target="_blank" rel="noopener">{{ mecca_hotel_name }}</a>
-              {% else %}{{ mecca_hotel_name }}{% endif %}
-            {% else %}—{% endif %}
+              {% else %}
+                {{ mecca_hotel_name }}
+              {% endif %}
+            {% else %}
+              —
+            {% endif %}
           </div>
 
-          {# --- OR SIMILAR (MECCA) --- #}
           {% if mecca_similar_hotels %}
             <div class="label-m mt-2">Or similar</div>
             <div class="small">
@@ -154,23 +235,30 @@
         </div>
       </div>
 
+      <!-- Medinah -->
       <div class="col-md-6">
         <div class="block h-100">
           <div class="fw-semibold mb-2">Medinah</div>
+
           <div class="label-m">Dates</div>
-          <div class="mb-2">{{ med_dates }}</div>
+          <div class="mb-2">{{ med_dates or '—' }}</div>
+
           <div class="label-m">Distance</div>
-          <div class="mb-2">{{ med_distance_label }}</div>
+          <div class="mb-2">{{ med_distance_label or '—' }}</div>
+
           <div class="label-m">Hotel</div>
           <div>
             {% if med_hotel_name %}
               {% if med_hotel_link %}
                 <a href="{{ med_hotel_link }}" target="_blank" rel="noopener">{{ med_hotel_name }}</a>
-              {% else %}{{ med_hotel_name }}{% endif %}
-            {% else %}—{% endif %}
+              {% else %}
+                {{ med_hotel_name }}
+              {% endif %}
+            {% else %}
+              —
+            {% endif %}
           </div>
 
-          {# --- OR SIMILAR (MEDINAH) --- #}
           {% if med_similar_hotels %}
             <div class="label-m mt-2">Or similar</div>
             <div class="small">
@@ -193,28 +281,44 @@
   <div class="card-soft p-3 p-md-4">
     <h2 class="h6 mb-3">Inclusions</h2>
     <div class="sep" style="margin-top:-.25rem;"></div>
+
     {% set incl = pkg.inclusion %}
-    <ul class="mb-0">
-      {% if incl and (incl.meals_desc or incl.meals_enabled) %}<li>Meals: {{ incl.meals_desc or "Included" }}</li>{% endif %}
-      {% if incl and (incl.laundry_desc or incl.laundry_enabled) %}<li>Laundry: {{ incl.laundry_desc or "Included" }}</li>{% endif %}
-      {% if incl and (incl.transport_desc or incl.transport_enabled) %}<li>Transport: {{ incl.transport_desc or "Included" }}</li>{% endif %}
-      {% if incl and (incl.zamzam_desc or incl.zamzam_enabled) %}<li>Zam Zam: {{ incl.zamzam_desc or "Included" }}</li>{% endif %}
-      {% if incl and (incl.welcome_kit_desc or incl.welcome_kit_enabled) %}<li>Welcome Kit: {{ incl.welcome_kit_desc or "Included" }}</li>{% endif %}
-      {% if incl and (incl.insurance_desc or incl.insurance_enabled) %}<li>Insurance: {{ incl.insurance_desc or "Included" }}</li>{% endif %}
-      {% if incl and incl.other %}<li>{{ incl.other }}</li>{% endif %}
-      {% if not incl %}<li>No inclusions listed.</li>{% endif %}
-    </ul>
+
+<ul class="mb-0">
+  {% if incl %}
+    {% set has_any = (
+      incl.meals_enabled or incl.meals_desc or
+      incl.laundry_enabled or incl.laundry_desc or
+      incl.transport_enabled or incl.transport_desc or
+      incl.zamzam_enabled or incl.zamzam_desc or
+      incl.welcome_kit_enabled or incl.welcome_kit_desc or
+      incl.insurance_enabled or incl.insurance_desc or
+      incl.visa_enabled or incl.visa_desc or
+      incl.ziyarat_enabled or incl.ziyarat_desc or
+      incl.other
+    ) %}
+
+    {% if incl.meals_enabled or incl.meals_desc %}<li>Meals: {{ incl.meals_desc or "Included" }}</li>{% endif %}
+    {% if incl.laundry_enabled or incl.laundry_desc %}<li>Laundry: {{ incl.laundry_desc or "Included" }}</li>{% endif %}
+    {% if incl.transport_enabled or incl.transport_desc %}<li>Transport: {{ incl.transport_desc or "Included" }}</li>{% endif %}
+    {% if incl.zamzam_enabled or incl.zamzam_desc %}<li>Zam Zam: {{ incl.zamzam_desc or "Included" }}</li>{% endif %}
+    {% if incl.welcome_kit_enabled or incl.welcome_kit_desc %}<li>Welcome Kit: {{ incl.welcome_kit_desc or "Included" }}</li>{% endif %}
+    {% if incl.insurance_enabled or incl.insurance_desc %}<li>Insurance: {{ incl.insurance_desc or "Included" }}</li>{% endif %}
+
+    {# ✅ NEW #}
+    {% if incl.visa_enabled or incl.visa_desc %}<li>VISA: {{ incl.visa_desc or "Included" }}</li>{% endif %}
+    {% if incl.ziyarat_enabled or incl.ziyarat_desc %}<li>Ziyarat: {{ incl.ziyarat_desc or "Included" }}</li>{% endif %}
+
+    {% if incl.other %}<li>{{ incl.other }}</li>{% endif %}
+
+    {% if not has_any %}
+      <li>No inclusions listed.</li>
+    {% endif %}
+  {% else %}
+    <li>No inclusions listed.</li>
+  {% endif %}
+</ul>
+
   </div>
+
 </div>
-<style>
-  .btn-primary {
-    background: linear-gradient(90deg, #2563eb, #1d4ed8);
-    color: #fff;
-    border: none;
-    transition: all .25s ease;
-  }
-  .btn-primary:hover {
-    background: linear-gradient(90deg, #1e3a8a, #1d4ed8);
-    transform: translateY(-2px);
-  }
-</style>

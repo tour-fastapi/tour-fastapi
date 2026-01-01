@@ -2433,16 +2433,16 @@ def package_edit_page(request: Request, package_id: int, db: Session = Depends(g
         },
     )
 
-
 @router.post("/package/{package_id}/edit")
 def package_edit_submit(
     request: Request,
     package_id: int,
+
     banner_image: str = Form(""),
 
-
-    submit_action: str = Form("save"),  # ✅ NEW
+    submit_action: str = Form("save"),
     detail_theme: str = Form("basic"),
+
     package_type: str = Form(...),
     package_name: str = Form(...),
     days: int = Form(...),
@@ -2489,10 +2489,12 @@ def package_edit_submit(
     incl_welcome_kit_desc: str = Form(""),
     incl_insurance_enabled: Optional[str] = Form(None),
     incl_insurance_desc: str = Form(""),
+
     incl_visa_enabled: Optional[str] = Form(None),
     incl_visa_desc: str = Form(""),
     incl_ziyarat_enabled: Optional[str] = Form(None),
     incl_ziyarat_desc: str = Form(""),
+
     incl_other: str = Form(""),
 
     price_double: str = Form(""),
@@ -2510,23 +2512,6 @@ def package_edit_submit(
     if not pkg:
         flash(request, "Package not found", "error")
         return RedirectResponse(url="/select-agency", status_code=303)
-    
-    ALLOWED_BANNERS = {
-        "dynamic-tawaf-at-night.jpg",
-        "eternal-peace-at-masjid-an-nabawi.jpg",
-        "golden-hour-panorama-of-makkah.jpg",
-        "grand-view-of-masjid-al-haram.jpg",
-        "serene-dawn-at-the-prophets-mosque.jpg",
-        "the-umbrellas-of-the-prophets-mosque.jpg",
-    }
-
-
-    chosen_banner = (banner_image or "").strip()
-    if chosen_banner not in ALLOWED_BANNERS:
-        chosen_banner = "dynamic-tawaf-at-night.jpg"
-
-    pkg.banner_image = chosen_banner
-
 
     agency = (
         db.query(Agency)
@@ -2536,6 +2521,22 @@ def package_edit_submit(
     if not agency:
         flash(request, "Not allowed to edit this package", "error")
         return RedirectResponse(url="/select-agency", status_code=303)
+
+    # ----------------------------
+    # Banner
+    # ----------------------------
+    ALLOWED_BANNERS = {
+        "dynamic-tawaf-at-night.jpg",
+        "eternal-peace-at-masjid-an-nabawi.jpg",
+        "golden-hour-panorama-of-makkah.jpg",
+        "grand-view-of-masjid-al-haram.jpg",
+        "serene-dawn-at-the-prophets-mosque.jpg",
+        "the-umbrellas-of-the-prophets-mosque.jpg",
+    }
+    chosen_banner = (banner_image or "").strip()
+    if chosen_banner not in ALLOWED_BANNERS:
+        chosen_banner = "dynamic-tawaf-at-night.jpg"
+    pkg.banner_image = chosen_banner
 
     # ----------------------------
     # Basics
@@ -2582,7 +2583,7 @@ def package_edit_submit(
     pkg.travel_year = ty
 
     # ----------------------------
-    # Airlines
+    # Airlines (reset + insert)
     # ----------------------------
     from app.db.models.package_airline import PackageAirline
     db.query(PackageAirline).filter(PackageAirline.package_id == pkg.package_id).delete(synchronize_session=False)
@@ -2593,7 +2594,7 @@ def package_edit_submit(
             db.add(PackageAirline(package_id=pkg.package_id, airline_id=aid))
 
     # ----------------------------
-    # Flights (as you already had)
+    # Flights
     # ----------------------------
     onward = db.query(PackageFlight).filter_by(package_id=pkg.package_id, leg="onward").first()
     if any([onward_date, onward_type, onward_via, onward_airline]):
@@ -2620,7 +2621,7 @@ def package_edit_submit(
         db.delete(ret)
 
     # ----------------------------
-    # Stays (unchanged - your correct version)
+    # Stays
     # ----------------------------
     def resolve_hotel_id_by_name(name_txt: str, link_txt: str, city: str) -> int | None:
         name = (name_txt or "").strip()
@@ -2650,11 +2651,7 @@ def package_edit_submit(
             stay.distance_text = _norm(dist_txt)
             stay.distance_m = int(dist_m) if (dist_m and dist_m.strip().isdigit()) else None
 
-            stay.hotel_id = resolve_hotel_id_by_name(
-                hotel_name_txt,
-                hotel_link_txt,
-                which_city,
-            )
+            stay.hotel_id = resolve_hotel_id_by_name(hotel_name_txt, hotel_link_txt, which_city)
         elif stay:
             db.delete(stay)
 
@@ -2662,7 +2659,7 @@ def package_edit_submit(
     upsert_stay("Medinah", med_check_in, med_check_out, med_hotel, med_link, med_distance_m, med_distance_text)
 
     # ----------------------------
-    # Variant prices (unchanged)
+    # Variant prices
     # ----------------------------
     from typing import Optional as _Optional
 
@@ -2679,7 +2676,11 @@ def package_edit_submit(
     pt = _to_float_or_none(price_triple)
     pq = _to_float_or_none(price_quad)
 
+    # ----------------------------
+    # ✅ Inclusions (FIXED: visa + ziyarat saved)
+    # ----------------------------
     incl = db.query(PackageInclusion).filter_by(package_id=pkg.package_id).first()
+
     any_incl = any([
         incl_meals_enabled, (incl_meals_desc or "").strip(),
         incl_laundry_enabled, (incl_laundry_desc or "").strip(),
@@ -2696,22 +2697,40 @@ def package_edit_submit(
         if not incl:
             incl = PackageInclusion(package_id=pkg.package_id)
             db.add(incl)
+
         incl.meals_enabled = 1 if incl_meals_enabled == "on" else 0
         incl.meals_desc = _norm(incl_meals_desc)
+
         incl.laundry_enabled = 1 if incl_laundry_enabled == "on" else 0
         incl.laundry_desc = _norm(incl_laundry_desc)
+
         incl.transport_enabled = 1 if incl_transport_enabled == "on" else 0
         incl.transport_desc = _norm(incl_transport_desc)
+
         incl.zamzam_enabled = 1 if incl_zamzam_enabled == "on" else 0
         incl.zamzam_desc = _norm(incl_zamzam_desc)
+
         incl.welcome_kit_enabled = 1 if incl_welcome_kit_enabled == "on" else 0
         incl.welcome_kit_desc = _norm(incl_welcome_kit_desc)
+
         incl.insurance_enabled = 1 if incl_insurance_enabled == "on" else 0
         incl.insurance_desc = _norm(incl_insurance_desc)
+
+        # ✅ THESE TWO LINES WERE MISSING IN YOUR CODE
+        incl.visa_enabled = 1 if incl_visa_enabled == "on" else 0
+        incl.visa_desc = _norm(incl_visa_desc)
+
+        incl.ziyarat_enabled = 1 if incl_ziyarat_enabled == "on" else 0
+        incl.ziyarat_desc = _norm(incl_ziyarat_desc)
+
         incl.other_notes = _norm(incl_other)
+
     elif incl:
         db.delete(incl)
 
+    # ----------------------------
+    # Price row
+    # ----------------------------
     price_row = db.query(PackagePrice).filter(PackagePrice.package_id == pkg.package_id).first()
     note_val = (price_note or "").strip() or None
 
@@ -2731,7 +2750,7 @@ def package_edit_submit(
             ))
 
     # ----------------------------
-    # ✅ NEW: Status control from buttons
+    # Status control
     # ----------------------------
     old_status = (pkg.status or "").lower()
     action = (submit_action or "save").strip().lower()
@@ -2744,22 +2763,19 @@ def package_edit_submit(
         if (pkg.status or "").lower() == "draft":
             pkg.status = "active"
 
-
-    # else: keep existing pkg.status
-
     db.commit()
-    new_status = (pkg.status or "").lower()
-    if old_status != new_status:
-        flash(request, f"Status changed: {old_status} → {new_status}", "success")
-    else:
-        flash(request, "Package updated ✅", "success")
-    # ✅ messages + redirect
+
+    # messages + redirect
     if action == "finish":
         flash(request, "Package is now Active ✅", "success")
     elif action == "draft":
         flash(request, "Saved as Draft ✅", "success")
     else:
         flash(request, "Package updated ✅", "success")
+
+    new_status = (pkg.status or "").lower()
+    if old_status != new_status:
+        flash(request, f"Status changed: {old_status} → {new_status}", "success")
 
     return RedirectResponse(url=f"/agency/{agency.registration_id}/dashboard", status_code=303)
 
