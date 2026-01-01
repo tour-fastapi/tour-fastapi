@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import Optional, List
 
-from sqlalchemy import Integer, String, Text, DECIMAL, ForeignKey, DateTime, SmallInteger, CheckConstraint
+from sqlalchemy import Integer, String, Text, DECIMAL, ForeignKey, DateTime, SmallInteger, CheckConstraint, Column
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
@@ -94,4 +94,5 @@ class Package(Base):
         CheckConstraint("travel_year >= 2026", name="ck_packages_year"),
     )
     status: Mapped[str] = mapped_column(String(20), nullable=False, server_default="draft")
+    banner_image = Column(String(255), nullable=True)
 
