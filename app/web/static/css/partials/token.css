@@ -7,6 +7,10 @@
     --primary: var(--primary-h) var(--primary-s) var(--primary-l);
     --primary-fg: 0 0% 100%;
 
+    /* Accent Colors */
+    --yellow: 45 100% 51%;
+    --yellow-light: 45 100% 96%;
+
     /* Core Palette */
     --bg: 220 18% 97%;
     --fg: 222 22% 12%;

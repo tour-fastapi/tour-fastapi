@@ -118,20 +118,20 @@
 
   /* Page Header - Title & Subtitle */
   .listing-header {
-    border-bottom: 1px solid hsl(var(--border));
+    /* border-bottom: 1px solid hsl(var(--border)); */
     background: hsl(var(--bg));
   }
 
   .listing-header__container {
     @apply max-w-3xl mx-auto px-6;
-    padding-top: 48px;
-    padding-bottom: 48px;
+    padding-top: 24px;
+    padding-bottom: 24px;
   }
 
   @media (min-width: 768px) {
     .listing-header__container {
-      padding-top: 64px;
-      padding-bottom: 64px;
+      padding-top: 32px;
+      padding-bottom: 32px;
     }
   }
 

@@ -1,0 +1,640 @@
+/* ============================================================================
+   OPERATOR DETAILS PAGE - Individual operator details page
+   ============================================================================ */
+
+@layer components {
+
+  /* Main Container */
+  .operator-details {
+    background: hsl(var(--bg));
+    min-height: 60vh;
+  }
+
+
+  /* Banner Content */
+  /* Banner Wrapper with Gradient */
+  .operator-banner {
+    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(145, 50%, 40%) 100%);
+        background: linear-gradient(135deg, hsl(145, 50%, 15%) 0%, hsl(145, 55%, 22%) 50%, hsl(145, 60%, 28%) 100%);
+
+    position: relative;
+  }
+  .operator-banner__content {
+    padding: 24px 24px;
+  }
+
+  @media (min-width: 768px) {
+    .operator-banner__content {
+      padding: 32px 32px;
+    }
+  }
+
+  .operator-banner__container {
+    max-width: 768px;
+    margin: 0 auto;
+    padding: 0 0px;
+  }
+   @media (min-width: 768px) {
+    .operator-banner__container {
+      padding: 0px 32px;
+    }
+  }
+
+  /* Badges */
+  .operator-banner__badges {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .operator-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: 9999px;
+    font-size: 12px;
+    font-weight: 600;
+    backdrop-filter: blur(12px);
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+  }
+
+  .operator-badge--verified {
+    /* Uses base styles */
+  }
+
+  .operator-badge--specialty {
+    /* Uses base styles */
+  }
+
+  /* Title */
+  .operator-banner__title {
+    font-size: 30px;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 10px;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    line-height: 1.2;
+  }
+
+  @media (min-width: 768px) {
+    .operator-banner__title {
+      font-size: 36px;
+    }
+  }
+
+  /* Meta Info */
+  .operator-banner__meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 12px;
+  }
+
+  .operator-banner__location {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 14px;
+  }
+
+  .operator-banner__rating {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .operator-banner__rating .icon {
+    color: #f59e0b;
+  }
+
+  .operator-banner__rating-value {
+    font-size: 14px;
+    font-weight: 700;
+    color: white;
+  }
+
+  .operator-banner__rating-count {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  /* Quick Stats */
+  .operator-banner__stats {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  @media (min-width: 768px) {
+    .operator-banner__stats {
+      gap: 24px;
+    }
+  }
+
+  .operator-banner__stat {
+    /* Base stat item */
+  }
+
+  .operator-banner__stat-value {
+    font-weight: 700;
+    color: white;
+  }
+
+  
+
+  /* ============================================================================
+   OPERATOR CONTACT INFO - Contact details and CTA section
+   ============================================================================ */
+
+  .operator-contact {
+    background: hsl(var(--yellow-light));
+  }
+  .operator-contact__container {
+    max-width: 768px;
+    margin: 0 auto;
+    padding: 16px 24px;
+  }
+   
+  .operator-contact__wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  @media (min-width: 768px) {
+    .operator-contact__wrapper {
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+    }
+  }
+
+  /* Contact Links */
+  .operator-contact__links {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .operator-contact__link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: hsl(var(--fg));
+    text-decoration: none;
+    transition: opacity 0.2s;
+  }
+
+  .operator-contact__link:hover {
+    opacity: 0.8;
+  }
+
+  /* Actions */
+  .operator-contact__actions {
+    display: flex;
+    gap: 12px;
+  }
+
+  .operator-contact__button {
+    flex: 1;
+    padding: 10px 20px;
+  }
+
+  @media (min-width: 768px) {
+    .operator-contact__button {
+      flex: none;
+    }
+  }
+
+  /* ============================================================================
+   OPERATOR PACKAGES - Available packages section for operator details
+   ============================================================================ */
+
+   /* Container - Center Aligned Mobile First */
+  .operator-packages {
+    padding: 32px 0;
+  }
+
+  .operator-packages__container {
+    max-width: 768px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+
+  /* Section Header */
+  .operator-packages__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+    font-size: 24px;
+font-weight: 700;
+  }
+
+  .operator-packages__title {
+    color: hsl(var(--fg));
+  }
+
+  .operator-packages__count {
+    font-size: 14px;
+    color: hsl(var(--muted));
+  }
+
+  /* Package Cards List */
+  .operator-packages__list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  /* Package Card */
+  .operator-package-card {
+    background: white;
+    border: 1px solid hsl(var(--border));
+    border-radius: 12px;
+    padding: 16px;
+    transition: box-shadow 0.2s;
+    cursor: pointer;
+  }
+
+  .operator-package-card:hover {
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  }
+
+  @media (min-width: 768px) {
+    .operator-package-card {
+      padding: 20px;
+    }
+  }
+
+  .operator-package-card__inner {
+    display: flex;
+    align-items: start;
+    gap: 12px;
+  }
+
+  @media (min-width: 768px) {
+    .operator-package-card__inner {
+      gap: 16px;
+    }
+  }
+
+  /* Date Badge - Calendar Style */
+  .operator-package-card__date {
+    flex-shrink: 0;
+    min-width: 64px;
+    text-align: center;
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid hsl(var(--border));
+    background: hsl(var(--surface));
+  }
+
+  .operator-package-card__date-day {
+    font-size: 12px;
+    font-weight: 600;
+    color: hsl(var(--muted));
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 2px;
+  }
+
+  .operator-package-card__date-num {
+    font-size: 16px;
+    font-weight: 700;
+    color: hsl(var(--fg));
+    line-height: 1;
+    margin-bottom: 2px;
+  }
+
+  .operator-package-card__date-month {
+    font-size: 12px;
+    font-weight: 500;
+    color: hsl(var(--muted));
+  }
+
+  /* Package Content */
+  .operator-package-card__content {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .operator-package-card__header {
+    display: flex;
+    align-items: start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+
+  .operator-package-card__primary {
+  flex: 1;
+  }
+  .operator-package-card__name {
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    line-height: 1.3;
+    color: hsl(var(--fg));
+  }
+
+  /* Price */
+  .operator-package-card__price {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+
+  .operator-package-card__price--desktop {
+    display: none;
+    flex-shrink: 0;
+    flex-direction: column;
+    align-items: end;
+    gap: 0;
+  }
+
+  @media (min-width: 768px) {
+    .operator-package-card__price--desktop {
+      display: flex;
+    }
+  }
+
+  .operator-package-card__price--mobile {
+    display: flex;
+    margin-top: 12px;
+  }
+
+  @media (min-width: 768px) {
+    .operator-package-card__price--mobile {
+      display: none;
+    }
+  }
+
+  .operator-package-card__price-amount {
+    font-size: 24px;
+    font-weight: 700;
+    color: hsl(var(--fg));
+  }
+
+  .operator-package-card__price-label {
+    font-size: 12px;
+    color: hsl(var(--muted));
+  }
+
+  /* Meta Info */
+  .operator-package-card__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: hsl(var(--muted));
+  }
+
+  .operator-package-card__badge {
+    background: hsl(var(--surface));
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+  /* Badge Variants */
+  .operator-package-card__badge--economy {
+    background: rgba(16, 185, 129, 0.1);
+    border-color: rgba(16, 185, 129, 0.3);
+    color: hsl(145, 45%, 35%);
+  }
+
+  .operator-package-card__badge--premium {
+    background: rgba(59, 130, 246, 0.1);
+    border-color: rgba(59, 130, 246, 0.3);
+    color: hsl(220, 55%, 35%);
+  }
+
+  .operator-package-card__badge--luxury {
+    background: rgba(168, 85, 247, 0.1);
+    border-color: rgba(168, 85, 247, 0.3);
+    color: hsl(280, 55%, 35%);
+  }
+
+  .operator-package-card__meta-item {
+    font-size: 13px;
+  }
+
+  .operator-package-card__meta-divider {
+    font-size: 13px;
+  }
+
+  /* Description */
+  .operator-package-card__description {
+    font-size: 14px;
+    color: hsl(var(--muted));
+    margin-top: 8px;
+  }
+
+  /* Empty State */
+  .operator-packages__empty {
+    text-align: center;
+    padding: 48px 24px;
+    background: white;
+    border: 1px solid hsl(var(--border));
+    border-radius: 12px;
+  }
+
+  .operator-packages__empty-icon {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: hsl(var(--surface));
+    color: hsl(var(--muted));
+  }
+
+  .operator-packages__empty-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: hsl(var(--fg));
+    margin-bottom: 8px;
+  }
+
+  .operator-packages__empty-text {
+    font-size: 14px;
+    color: hsl(var(--muted));
+    line-height: 1.6;
+    max-width: 400px;
+    margin: 0 auto;
+  }
+
+  /* ============================================================================
+   OPERATOR REVIEWS - Customer reviews section for operator details
+   ============================================================================ */
+  /* Container - Center Aligned Mobile First */
+  .operator-reviews {
+    padding: 32px 0;
+  }
+
+  .operator-reviews__container {
+    max-width: 768px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  /* Section Header */
+  .operator-reviews__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+  }
+
+  .operator-reviews__title {
+    color: hsl(var(--fg));
+  }
+
+  .operator-reviews__count {
+    font-size: 14px;
+    color: hsl(var(--muted));
+  }
+
+  /* Reviews List */
+  .operator-reviews__list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  /* Review Card */
+  .operator-review-card {
+    background: white;
+    border: 1px solid hsl(var(--border));
+    border-radius: 12px;
+    padding: 20px;
+  }
+
+  /* Card Header - Author & Rating */
+  .operator-review-card__header {
+    display: flex;
+    align-items: start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 12px;
+  }
+
+  /* Author Info */
+  .operator-review-card__author-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .operator-review-card__author-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: hsl(var(--fg));
+    margin-bottom: 4px;
+  }
+
+  .operator-review-card__package-name {
+    font-size: 12px;
+    color: hsl(var(--muted));
+  }
+
+  /* Meta - Rating & Date */
+  .operator-review-card__meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+
+  .operator-review-card__rating {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+  }
+
+  .operator-review-card__star {
+    width: 14px;
+    height: 14px;
+    color: hsl(var(--border));
+    fill: none;
+  }
+
+  .operator-review-card__star--filled {
+    color: #f59e0b;
+    fill: #f59e0b;
+  }
+
+  .operator-review-card__date {
+    font-size: 12px;
+    color: hsl(var(--muted));
+  }
+
+  /* Review Comment */
+  .operator-review-card__comment {
+    font-size: 14px;
+    color: hsl(var(--muted));
+    line-height: 1.6;
+  }
+
+  /* ============================================================================
+   OPERATOR ABOUT - About and description section for operator details
+   ============================================================================ */
+
+   /* Container - Center Aligned Mobile First */
+  .operator-about {
+    padding: 32px 0;
+  }
+
+  .operator-about__container {
+    max-width: 768px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  /* Section Header */
+  .operator-about__header {
+    margin-bottom: 16px;
+    font-size: 24px;
+    font-weight: 700;
+  }
+
+  .operator-about__title {
+    color: hsl(var(--fg));
+  }
+
+  /* Description Content */
+  .operator-about__content {
+    /* Container for description text */
+  }
+
+  .operator-about__description {
+    font-size: 14px;
+    color: hsl(var(--muted));
+    line-height: 1.7;
+  }
+
+  /* No Description State */
+  .operator-about__empty {
+    font-size: 14px;
+    color: hsl(var(--muted));
+    font-style: italic;
+    opacity: 0.7;
+  }
+
+}

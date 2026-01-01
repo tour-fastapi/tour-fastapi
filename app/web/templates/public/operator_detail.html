@@ -1,136 +1,385 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="py-3">
-
-  <!-- Back link -->
-  <a href="{{ back_href }}" class="btn btn-link p-0 mb-3">
-    ← Back to Operators in {{ display_city if display_city != 'Unknown' else 'All Cities' }}
-  </a>
-
-  <!-- Header -->
-<!-- Header -->
-<div class="card mb-3">
-  <div class="card-body d-flex flex-column align-items-center gap-2">
-
-    {% if agency.logo_path %}
-      <img
-        src="/media/agency/{{ agency.registration_id }}/logo?v={{ agency.logo_uploaded_at or 0 }}"
-        alt="{{ agency.agencies_name }} logo"
-        style="max-height:100px; max-width:280px; object-fit:contain; border:1px solid #eee; background:#fff; padding:8px; border-radius:8px;">
-    {% endif %}
-
-    <h1 class="h4 mb-1 text-center w-100">{{ agency.agencies_name }}</h1>
-    <div class="text-muted mb-2 text-center w-100">
-      {{ display_city }}{% if agency.country %}, {{ agency.country }}{% endif %}
-    </div>
-
-    {% if agency.description %}
-      <p class="mb-0 text-center">{{ agency.description }}</p>
-    {% else %}
-      <p class="mb-0 text-muted text-center">No description provided.</p>
-    {% endif %}
-  </div>
-</div>
-
-
-  {# ---------- At a glance (agency stats + registration) ---------- #}
-  {% set has_any_stat = (
-      agency.public_registration_code or
-      agency.operating_since is not none or
-      agency.num_umrah_tours is not none or
-      agency.num_hajj_tours is not none or
-      agency.num_pilgrims_sent is not none
-  ) %}
-  {% if has_any_stat %}
-  <div class="card mb-3">
-    <div class="card-header"><strong>At a glance</strong></div>
-    <div class="card-body">
-      <div class="row gy-3">
-        {% if agency.public_registration_code %}
-          <div class="col-12 col-sm-6 col-lg-4">
-            <div class="small text-muted">Registration Code</div>
-            <div class="fw-semibold">{{ agency.public_registration_code }}</div>
+ <main class="operator-details">
+    
+  <div class="operator-banner">
+    <div class="operator-banner__content">
+      <div class="operator-banner__container">
+        
+        <!-- Badges -->
+        <div class="operator-banner__badges is-hidden">
+          <div class="operator-badge operator-badge--verified">
+            <i data-lucide="award" class="icon icon--xs"></i>
+            Verified Operator
           </div>
-        {% endif %}
+          <div class="operator-badge operator-badge--specialty">
+            Premium Umrah Packages
+          </div>
+        </div>
+        
+        <!-- Title -->
+        <h1 class="operator-banner__title">{{ agency.agencies_name }}</h1>
+        
+        <!-- Meta Info -->
+        <div class="operator-banner__meta">
+          <div class="operator-banner__location">
+            <i data-lucide="map-pin" class="icon icon--sm"></i>
+            <span>{% set loc_city = branch.city or agency.city %}
+            {% set loc_country = branch.country or agency.country %}
+            {% if loc_city or loc_country %}
+              {{ loc_city }}{% if loc_country %}, {{ loc_country }}{% endif %}
+            {% else %}
+              —
+            {% endif %}</span>
+          </div>
+          <div class="operator-banner__rating is-hidden">
+            <i data-lucide="star" class="icon icon--sm icon--filled"></i>
+            <span class="operator-banner__rating-value">4.9</span>
+            <span class="operator-banner__rating-count">(324 reviews)</span>
+          </div>
+        </div>
+         {% set has_any_stat = (
+            agency.public_registration_code or
+            agency.operating_since is not none or
+            agency.num_umrah_tours is not none or
+            agency.num_hajj_tours is not none or
+            agency.num_pilgrims_sent is not none
+        ) %}
+        {% if has_any_stat %}
 
-        <div class="col-12 col-sm-6 col-lg-4">
-          <div class="small text-muted">Operating Since</div>
-          <div class="fw-semibold">
-            {{ agency.operating_since if agency.operating_since is not none else "—" }}
+  <!-- Quick Stats -->
+        <div class="operator-banner__stats">
+          <div class="operator-banner__stat">
+            <span class="operator-banner__stat-value">{{ agency.num_umrah_tours if agency.num_umrah_tours is not none else "—" }}+</span> Tours Completed
+          </div>
+          <div class="operator-banner__stat">
+            <span class="operator-banner__stat-value">{{ agency.num_pilgrims_sent if agency.num_pilgrims_sent is not none else "—" }}+</span> Pilgrims Served
+          </div>
+          <div class="operator-banner__stat">
+            Since <span class="operator-banner__stat-value">{{ agency.operating_since if agency.operating_since is not none else "—" }}</span>
           </div>
         </div>
 
-        <div class="col-12 col-sm-6 col-lg-4">
-          <div class="small text-muted">Umrah Tours Conducted</div>
-          <div class="fw-semibold">
-            {{ agency.num_umrah_tours if agency.num_umrah_tours is not none else "—" }}
-          </div>
-        </div>
 
-        <div class="col-12 col-sm-6 col-lg-4">
-          <div class="small text-muted">Hajj Tours Conducted</div>
-          <div class="fw-semibold">
-            {{ agency.num_hajj_tours if agency.num_hajj_tours is not none else "—" }}
-          </div>
-        </div>
-
-        <div class="col-12 col-sm-6 col-lg-4">
-          <div class="small text-muted">Pilgrims Served</div>
-          <div class="fw-semibold">
-            {{ agency.num_pilgrims_sent if agency.num_pilgrims_sent is not none else "—" }}
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+  
   {% endif %}
 
-  {# ---------- Contacts & Online presence ---------- #}
-  {% set has_email = agency.agency_email %}
-  {% set has_links = agency.website_url or agency.instagram_url or agency.facebook_url %}
-  {% if has_email or has_links %}
-  <div class="row g-3 mb-3">
-    {% if has_email %}
-    <div class="col-md-6">
-      <div class="card h-100">
-        <div class="card-header"><strong>Contact</strong></div>
-        <div class="card-body">
-          <div class="mb-2">
-            <div class="small text-muted">Email</div>
-            <a href="mailto:{{ agency.agency_email }}">{{ agency.agency_email }}</a>
-          </div>
-        </div>
+        
       </div>
     </div>
-    {% endif %}
+  </div> 
+  <div class="operator-contact">
+    <div class="operator-contact__container">
+      <div class="operator-contact__wrapper">
+        {# ---------- Contacts & Online presence ---------- #}
+      {% set has_email = agency.agency_email %}
+      {% set has_links = agency.website_url or agency.instagram_url or agency.facebook_url %}
+      {% if has_email or has_links %}
+     
+    
 
-    {% if has_links %}
-    <div class="col-md-6">
-      <div class="card h-100">
-        <div class="card-header"><strong>Online</strong></div>
-        <div class="card-body">
-          <div class="d-flex flex-wrap gap-3">
+  
+        <!-- Contact Links -->
+        <div class="operator-contact__links">
+
+         
+          {% if branch.contact_person %}
+          <span  class="operator-contact__link">
+             <i data-lucide="user" class="icon icon--sm icon--primary"></i>
+            <span>{{branch.contact_person}}</span>
+          </span>
+          {% endif %}
+            {% if branch.contact_number %}
+          <a href="tel:{{branch.contact_number}}" class="operator-contact__link">
+            <i data-lucide="phone" class="icon icon--sm icon--primary"></i>
+            <span>{{branch.contact_number}}</span>
+          </a>
+           {% endif %}
+          {% if has_email %}
+          <a href="mailto:{{ agency.agency_email }}" class="operator-contact__link">
+            <i data-lucide="mail" class="icon icon--sm icon--primary"></i>
+            <span>{{ agency.agency_email }}</span>
+          </a>
+          {% endif %}
+          {% if has_links %}
             {% if agency.website_url %}
-              <a href="{{ agency.website_url }}" target="_blank" rel="noopener" class="link-primary">Website</a>
-            {% endif %}
-            {% if agency.instagram_url %}
-              <a href="{{ agency.instagram_url }}" target="_blank" rel="noopener" class="link-primary">Instagram</a>
+            <a href="{{ agency.website_url }}" target="_blank" rel="noopener noreferrer" class="operator-contact__link">
+              <i data-lucide="globe" class="icon icon--sm icon--primary"></i>
+              <span>{{ agency.website_url }}</span>
+            </a>
+             {% if agency.instagram_url %}
+              
+              <a href="{{ agency.instagram_url }}" target="_blank" rel="noopener" class="link-primary">
+                <i data-lucide="instagram" class="icon icon--sm icon--primary"></i>
+                <span>{{ agency.instagram_url }}</span>
+              </a>
             {% endif %}
             {% if agency.facebook_url %}
-              <a href="{{ agency.facebook_url }}" target="_blank" rel="noopener" class="link-primary">Facebook</a>
+              
+              <a href="{{ agency.facebook_url }}" target="_blank" rel="noopener" class="link-primary">
+                <i data-lucide="facebook" class="icon icon--sm icon--primary"></i>
+                <span>{{ agency.facebook_url }}</span>
+              </a>
             {% endif %}
-          </div>
+
+            {% endif %}
+          {% endif %}
         </div>
+      {% endif %}  
+
+        <!-- CTA Button -->
+        <div class="operator-contact__actions">
+          <button class="btn-primary operator-contact__button">
+            Contact Operator
+          </button>
+        </div>
+
       </div>
     </div>
-    {% endif %}
   </div>
-  {% endif %}
+  <!-- ============================================================================
+     OPERATOR PACKAGES - Available packages section for operator details
+     ============================================================================ -->
+
+
+  <div class="operator-packages">
+    <div class="operator-packages__container">
+      
+      <!-- Section Header -->
+      <div class="operator-packages__header">
+        <h2 class="operator-packages__title">Available Packages</h2>
+         {% if packages|length > 0 %}
+        <span class="operator-packages__count">{{packages|length}} packages</span>
+        {% endif %}
+      </div>
+
+      <!-- Package Cards List -->
+        {% if packages and packages|length > 0 %}
+      <div class="operator-packages__list">
+        {% for p in packages %}
+        <!-- Package Card 1 -->
+        <a class="operator-package-card" href="/umrah_packages/{{ p.package_id }}">
+          <div class="operator-package-card__inner">
+            
+            <!-- Date Badge -->
+            <div class="operator-package-card__date">
+              <div class="operator-package-card__date-day">MON</div>
+              <div class="operator-package-card__date-num">12</div>
+              <div class="operator-package-card__date-month">Jan</div>
+            </div>
+
+            <!-- Package Info -->
+            <div class="operator-package-card__content">
+              <div class="operator-package-card__header">
+                <div class="operator-package-primary">
+                  <h3 class="operator-package-card__name">{{ p.package_name }}</h3>
+                  <div class="operator-package-card__meta">
+                  <span class="operator-package-card__badge operator-package-card__badge--luxury">economy</span>
+                  <span class="operator-package-card__meta-item">{% if p.days %}{{ p.days }} day{{ 's' if p.days != 1 else '' }}{% endif %}</span>
+                  <span class="operator-package-card__meta-divider">•</span>
+                  <span class="operator-package-card__meta-item">Air India</span>
+                </div>
+                </div>
+                
+                <!-- Price - Desktop -->
+                <div class="operator-package-card__price operator-package-card__price--desktop">
+                  <div class="operator-package-card__price-amount">{% if p.price is not none %}₹{{ '%.2f'|format(p.price) }}{% endif %}</div>
+                  <div class="operator-package-card__price-label">Starting</div>
+                </div>
+              </div>
+
+              <!-- Meta Info -->
+              
+
+              <!-- Price - Mobile -->
+              <div class="operator-package-card__price operator-package-card__price--mobile">
+                <div class="operator-package-card__price-amount">{% if p.price is not none %}₹{{ '%.2f'|format(p.price) }}{% endif %}</div>
+                <div class="operator-package-card__price-label">Starting</div>
+              </div>
+            </div>
+
+          </div>
+        </a>
+          {% endfor %}
+
+        
+
+      </div>
+      {% else %}
+        <div class="operator-packages__empty">
+        <div class="operator-packages__empty-icon">
+          <i data-lucide="package" class="icon icon--xl"></i>
+        </div>
+        <div class="operator-packages__empty-title">No Packages Available</div>
+        <div class="operator-packages__empty-text">
+          This operator currently has no packages listed. Please check back later or contact them directly for availability.
+        </div>
+      </div>
+      {% endif %}
+
+    </div>
+  </div>
+
+  <!-- ============================================================================
+     OPERATOR REVIEWS - Customer reviews section for operator details
+     ============================================================================ -->
+
+  <div class="operator-reviews is-hidden">
+    <div class="operator-reviews__container">
+      
+      <!-- Section Header -->
+      <div class="operator-reviews__header">
+        <h2 class="operator-reviews__title">Customer Reviews</h2>
+        <span class="operator-reviews__count">24 reviews</span>
+      </div>
+
+      <!-- Reviews List -->
+      <div class="operator-reviews__list">
+        
+        <!-- Review Card 1 -->
+        <div class="operator-review-card">
+          <div class="operator-review-card__header">
+            <div class="operator-review-card__author-info">
+              <div class="operator-review-card__author-name">Mohammed Farhan</div>
+              <div class="operator-review-card__package-name">JANUARY 15 DAYS PACKAGE UMRAH</div>
+            </div>
+            <div class="operator-review-card__meta">
+              <div class="operator-review-card__rating">
+                <i data-lucide="star" class="icon icon--xs operator-review-card__star operator-review-card__star--filled"></i>
+                <i data-lucide="star" class="icon icon--xs operator-review-card__star operator-review-card__star--filled"></i>
+                <i data-lucide="star" class="icon icon--xs operator-review-card__star operator-review-card__star--filled"></i>
+                <i data-lucide="star" class="icon icon--xs operator-review-card__star operator-review-card__star--filled"></i>
+                <i data-lucide="star" class="icon icon--xs operator-review-card__star operator-review-card__star--filled"></i>
+              </div>
+              <div class="operator-review-card__date">2 weeks ago</div>
+            </div>
+          </div>
+          <p class="operator-review-card__comment">
+            Excellent service from start to finish. The hotels were very close to Haram and the arrangements were smooth. Highly recommend Al Warsi Tours for Umrah packages.
+          </p>
+        </div>
+
+        <!-- Review Card 2 -->
+        <div class="operator-review-card">
+          <div class="operator-review-card__header">
+            <div class="operator-review-card__author-info">
+              <div class="operator-review-card__author-name">Ayesha Khan</div>
+              <div class="operator-review-card__package-name">Al Abaya Special</div>
+            </div>
+            <div class="operator-review-card__meta">
+              <div class="operator-review-card__rating">
+                <i data-lucide="star" class="icon icon--xs operator-review-card__star operator-review-card__star--filled"></i>
+                <i data-lucide="star" class="icon icon--xs operator-review-card__star operator-review-card__star--filled"></i>
+                <i data-lucide="star" class="icon icon--xs operator-review-card__star operator-review-card__star--filled"></i>
+                <i data-lucide="star" class="icon icon--xs operator-review-card__star operator-review-card__star--filled"></i>
+                <i data-lucide="star" class="icon icon--xs operator-review-card__star"></i>
+              </div>
+              <div class="operator-review-card__date">3 weeks ago</div>
+            </div>
+          </div>
+          <p class="operator-review-card__comment">
+            Good experience overall. The team was very helpful and responsive. Only minor issue was the flight timing but everything else was perfect.
+          </p>
+        </div>
+
+        <!-- Review Card 3 -->
+        <div class="operator-review-card">
+          <div class="operator-review-card__header">
+            <div class="operator-review-card__author-info">
+              <div class="operator-review-card__author-name">Abdul Rahman</div>
+              <div class="operator-review-card__package-name">Luxury Umrah - 10 Days</div>
+            </div>
+            <div class="operator-review-card__meta">
+              <div class="operator-review-card__rating">
+                <i data-lucide="star" class="icon icon--xs operator-review-card__star operator-review-card__star--filled"></i>
+                <i data-lucide="star" class="icon icon--xs operator-review-card__star operator-review-card__star--filled"></i>
+                <i data-lucide="star" class="icon icon--xs operator-review-card__star operator-review-card__star--filled"></i>
+                <i data-lucide="star" class="icon icon--xs operator-review-card__star operator-review-card__star--filled"></i>
+                <i data-lucide="star" class="icon icon--xs operator-review-card__star operator-review-card__star--filled"></i>
+              </div>
+              <div class="operator-review-card__date">1 month ago</div>
+            </div>
+          </div>
+          <p class="operator-review-card__comment">
+            Outstanding luxury experience! The 5-star hotels, VIP transport, and personalized service made our Umrah journey truly memorable. Worth every rupee.
+          </p>
+        </div>
+
+        <!-- Review Card 4 -->
+        <div class="operator-review-card">
+          <div class="operator-review-card__header">
+            <div class="operator-review-card__author-info">
+              <div class="operator-review-card__author-name">Fatima Begum</div>
+              <div class="operator-review-card__package-name">JANUARY 15 DAYS PACKAGE UMRAH</div>
+            </div>
+            <div class="operator-review-card__meta">
+              <div class="operator-review-card__rating">
+                <i data-lucide="star" class="icon icon--xs operator-review-card__star operator-review-card__star--filled"></i>
+                <i data-lucide="star" class="icon icon--xs operator-review-card__star operator-review-card__star--filled"></i>
+                <i data-lucide="star" class="icon icon--xs operator-review-card__star operator-review-card__star--filled"></i>
+                <i data-lucide="star" class="icon icon--xs operator-review-card__star operator-review-card__star--filled"></i>
+                <i data-lucide="star" class="icon icon--xs operator-review-card__star"></i>
+              </div>
+              <div class="operator-review-card__date">1 month ago</div>
+            </div>
+          </div>
+          <p class="operator-review-card__comment">
+            Very satisfied with the service. The guide was knowledgeable and the group size was manageable. Will definitely book with them again for our next Umrah.
+          </p>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ============================================================================
+     OPERATOR ABOUT - About and description section for operator details
+     ============================================================================ -->
+
+    <div class="operator-about">
+      <div class="operator-about__container">
+        
+        <!-- Section Header -->
+        <div class="operator-about__header">
+          <h2 class="operator-about__title">About  {{ agency.agencies_name }}</h2>
+        </div>
+       {% if agency.description %}  
+      <!-- Description Content -->
+        <div class="operator-about__content">
+          <p class="operator-about__description">
+            {{ agency.description }}
+          </p>
+        </div>
+    {% else %}
+   <!-- No Description State -->
+    <div class="operator-about__content">
+      <p class="operator-about__empty">
+        No description available for this operator.
+      </p>
+    </div>
+    {% endif %}
+        
+
+      </div>
+    </div>
+
+
+  </main>
+<div class="py-3 is-hidden">
+
+  
+  
+
+
+
+
+ 
 
   {# ---------- Main Branch (address / contact person / number / location) ---------- #}
   {% if branch %}
-  <div class="card mb-3">
+  <div class="card mb-3 is">
     <div class="card-header"><strong>Main Branch</strong></div>
     <div class="card-body">
       <div class="row gy-3">
@@ -180,28 +429,6 @@
   </div>
   {% endif %}
 
-  <!-- Packages -->
-  <h2 class="h5 mb-2">Packages</h2>
-  {% if packages and packages|length > 0 %}
-    <div class="list-group">
-      {% for p in packages %}
-        <a class="list-group-item list-group-item-action" href="/umrah_packages/{{ p.package_id }}">
-          <div class="d-flex w-100 justify-content-between">
-            <strong>{{ p.package_name }}</strong>
-            <small class="text-muted">
-              {% if p.days %}{{ p.days }} day{{ 's' if p.days != 1 else '' }}{% endif %}
-              {% if p.days and p.price is not none %} • {% endif %}
-              {% if p.price is not none %}₹{{ '%.2f'|format(p.price) }}{% endif %}
-            </small>
-          </div>
-          {% if p.description %}
-            <div class="small text-muted mt-1">{{ p.description }}</div>
-          {% endif %}
-        </a>
-      {% endfor %}
-    </div>
-  {% else %}
-    <div class="alert alert-light border">This operator has no packages yet.</div>
-  {% endif %}
+  
 </div>
 {% endblock %}

@@ -1,5 +1,6 @@
 @import "./partials/token.css";
 @import "./partials/buttons.css";
+@import "./partials/icons.css";
 
 @import "./partials/header.css";
 @import "./partials/home.css";
@@ -10,6 +11,8 @@
 @import "./partials/group-header.css";
 @import "./partials/packages-card.css";
 @import "./partials/operators-card.css";
+
+@import "./partials/operators-details.css";
 
 @tailwind base;
 

@@ -1,0 +1,95 @@
+/* ============================================================================
+   ICONS - Lucide icons styling
+   ============================================================================ */
+
+@layer components {
+
+  /* Base Icon */
+  .icon {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    stroke-width: 2;
+    flex-shrink: 0;
+  }
+
+  /* Icon Sizes */
+  .icon--xs {
+    width: 14px;
+    height: 14px;
+  }
+
+  .icon--sm {
+    width: 16px;
+    height: 16px;
+  }
+
+  .icon--md {
+    width: 20px;
+    height: 20px;
+  }
+
+  .icon--lg {
+    width: 24px;
+    height: 24px;
+  }
+
+  .icon--xl {
+    width: 32px;
+    height: 32px;
+  }
+
+  .icon--2xl {
+    width: 40px;
+    height: 40px;
+  }
+
+  /* Icon Fills */
+  .icon--filled {
+    fill: currentColor;
+    stroke: none;
+  }
+
+  .icon--outline {
+    fill: none;
+    stroke: currentColor;
+  }
+
+  /* Stroke Widths */
+  .icon--stroke-1 {
+    stroke-width: 1;
+  }
+
+  .icon--stroke-2 {
+    stroke-width: 2;
+  }
+
+  .icon--stroke-3 {
+    stroke-width: 3;
+  }
+
+  /* Icon Colors */
+  .icon--primary {
+    color: hsl(var(--primary));
+  }
+
+  .icon--muted {
+    color: hsl(var(--muted));
+  }
+
+  .icon--white {
+    color: white;
+  }
+
+  .icon--success {
+    color: hsl(145, 45%, 35%);
+  }
+
+  .icon--warning {
+    color: hsl(45, 100%, 50%);
+  }
+
+  .icon--danger {
+    color: hsl(0, 70%, 50%);
+  }
+}

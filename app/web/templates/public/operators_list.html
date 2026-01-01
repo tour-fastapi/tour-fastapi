@@ -10,8 +10,8 @@
     
     <!-- Page Header -->
     <div class="listing-header__container">
-      <h1 class="listing-page__title">Umrah Tour Operators</h1>
-      <p class="listing-page__description">Browse trusted and verified Umrah tour operators across India</p>
+      <h1 class="listing-header__title">Umrah Tour Operators</h1>
+      <p class="listing-header__subtitle">Browse trusted and verified Umrah tour operators across India</p>
     </div>
    </div> 
    
@@ -27,8 +27,8 @@
     {% for group in cities %}
     <div class="listing-results">
       <div class="group-header">
-      <h3 class="group-header__title">{{ group.city }}</h3>
-        <span class="group-header__count">{{ group.agencies|length }} operator{{ 's' if agencies|length != 1 else '' }}</span>
+      <h3 class="group-header__title">{{ group.agencies|length }} operator{{ 's' if agencies|length != 1 else '' }} in {{ group.city }}</h3>
+        <span class="group-header__count is-hidden">{{ group.agencies|length }} operator{{ 's' if agencies|length != 1 else '' }}</span>
       </div>
       {% if group.agencies and group.agencies|length > 0 %} 
       <div class="listing-cards">
@@ -175,7 +175,7 @@
                 </div>
                 {% endif %}
               <div class="operator-card__action-secondary">
-                <button class="btn btn-outline">View Details</button>
+                <a class="btn btn-outline" href="/umrah_operators/{{ a.registration_id }}">View Details</a>
               </div>
             </div>
           </div>

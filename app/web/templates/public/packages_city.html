@@ -15,7 +15,7 @@
 <div class="listing-header">
   <div class="listing-header__container">
     <h1 class="listing-header__title">Umrah Packages in {{ city }}</h1>
-    <p class="listing-header__subtitle">Available Umrah packages departing from {{ city }}</p>
+    <p class="listing-header__subtitle">{{ count }} Umrah package{{ 's' if count != 1 else '' }} departing from {{ city }}</p>
   </div>
 </div>
   
@@ -31,7 +31,7 @@
         </h1>
 
         <p class="page-subtitle">
-          Available Umrah packages departing from {{ city }}
+          {{ count }} package{{ 's' if count != 1 else '' }} Umrah packages departing from {{ city }}
         </p>
       </div>
 
@@ -118,7 +118,7 @@
   <div class="listing-results">
   
     <!-- Results Header - Count & Sort -->
-    <div class="listing-results__header">
+    <div class="listing-results__header is-hidden">
       <p class="listing-results__count">Showing {{ count }} package{{ 's' if count != 1 else '' }}</p>
       <select class="listing-results__sort is-hidden">
         <option>Sort by: Recommended</option>
