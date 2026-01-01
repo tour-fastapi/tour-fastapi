@@ -1,0 +1,364 @@
+/* ============================================================================
+   OPERATOR CARD - Tour operator/agency card component
+   ============================================================================ */
+
+@layer components {
+
+  /* Card Container */
+  .operator-card {
+    @apply rounded-xl overflow-hidden border transition-shadow cursor-pointer;
+    background: white;
+    border-color: hsl(var(--border));
+  }
+
+  .operator-card:hover {
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Header Section */
+  .operator-card__header {
+    @apply p-5 border-b;
+    border-color: hsl(var(--border));
+  }
+
+  .operator-card__header-top {
+    @apply flex items-start justify-between mb-4;
+    gap: 16px;
+  }
+
+  .operator-card__logo-section {
+    @apply flex items-start;
+    gap: 12px;
+  }
+
+  /* Logo/Avatar */
+  .operator-card__logo {
+    @apply shrink-0 rounded-xl overflow-hidden;
+    width: 64px;
+    height: 64px;
+    background: hsl(var(--surface-2));
+  }
+
+  @media (min-width: 768px) {
+    .operator-card__logo {
+      width: 72px;
+      height: 72px;
+    }
+  }
+
+  .operator-card__logo img {
+    @apply w-full h-full object-cover;
+  }
+
+  /* Avatar Fallback (Letter) */
+  .operator-card__avatar {
+    @apply w-full h-full grid place-items-center;
+    font-weight: 700;
+    font-size: 24px;
+    color: hsl(var(--primary));
+  }
+
+  @media (min-width: 768px) {
+    .operator-card__avatar {
+      font-size: 28px;
+    }
+  }
+
+  /* Operator Info */
+  .operator-card__info {
+    @apply flex-1 min-w-0;
+  }
+
+  .operator-card__name {
+    @apply mb-1;
+    color: hsl(var(--fg));
+    font-weight: 700;
+    font-size: 16px;
+    line-height: 1.3;
+  }
+
+  @media (min-width: 768px) {
+    .operator-card__name {
+      font-size: 18px;
+    }
+  }
+
+  .operator-card__location {
+    @apply flex items-center mb-2;
+    gap: 6px;
+    color: hsl(var(--muted));
+    font-size: 13px;
+  }
+
+  @media (min-width: 768px) {
+    .operator-card__location {
+      font-size: 14px;
+    }
+  }
+
+  .operator-card__location svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  /* Badges */
+  .operator-card__badges {
+    @apply flex items-center flex-wrap;
+    gap: 6px;
+  }
+
+  .operator-badge {
+    @apply inline-flex items-center px-2.5 py-1 rounded-full border text-xs;
+    gap: 4px;
+    font-weight: 600;
+  }
+
+  .operator-badge--verified {
+    background: rgba(16, 185, 129, 0.1);
+    border-color: rgba(16, 185, 129, 0.3);
+    color: hsl(145, 45%, 35%);
+  }
+
+  .operator-badge--verified svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  .operator-badge--years {
+    background: rgba(59, 130, 246, 0.1);
+    border-color: rgba(59, 130, 246, 0.3);
+    color: hsl(220, 55%, 35%);
+  }
+
+  .operator-badge--atol {
+    background: rgba(168, 85, 247, 0.1);
+    border-color: rgba(168, 85, 247, 0.3);
+    color: hsl(280, 55%, 35%);
+  }
+
+  /* Rating */
+  .operator-card__rating {
+    @apply shrink-0 text-right;
+  }
+
+  .operator-card__rating-value {
+    @apply flex items-center justify-end mb-1;
+    gap: 4px;
+    color: hsl(var(--fg));
+    font-weight: 700;
+    font-size: 16px;
+  }
+
+  .operator-card__rating-value svg {
+    width: 16px;
+    height: 16px;
+    color: hsl(45, 100%, 50%);
+  }
+
+  .operator-card__rating-count {
+    color: hsl(var(--muted));
+    font-size: 12px;
+  }
+
+  /* Description */
+  .operator-card__description {
+    color: hsl(var(--muted));
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  @media (min-width: 768px) {
+    .operator-card__description {
+      font-size: 15px;
+    }
+  }
+
+  /* Stats Section */
+  .operator-card__stats {
+    @apply p-5 border-b;
+    border-color: hsl(var(--border));
+  }
+
+  .operator-card__stats-grid {
+    @apply grid grid-cols-3 gap-4;
+  }
+
+  .operator-stat {
+    @apply text-center;
+  }
+
+  .operator-stat__value {
+    @apply mb-1;
+    color: hsl(var(--fg));
+    font-weight: 700;
+    font-size: 18px;
+  }
+
+  @media (min-width: 768px) {
+    .operator-stat__value {
+      font-size: 20px;
+    }
+  }
+
+  .operator-stat__label {
+    color: hsl(var(--muted));
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  @media (min-width: 768px) {
+    .operator-stat__label {
+      font-size: 13px;
+    }
+  }
+
+  /* Services Section */
+  .operator-card__services {
+    @apply p-5 border-b;
+    border-color: hsl(var(--border));
+  }
+
+  .operator-card__services-title {
+    @apply mb-3;
+    color: hsl(var(--fg));
+    font-weight: 600;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .operator-card__services-list {
+    @apply flex flex-wrap;
+    gap: 8px;
+  }
+
+  .service-tag {
+    @apply inline-flex items-center px-3 py-1.5 rounded-lg border;
+    gap: 6px;
+    background: hsl(var(--surface-2));
+    border-color: hsl(var(--border));
+    color: hsl(var(--fg));
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  .service-tag svg {
+    width: 14px;
+    height: 14px;
+    color: hsl(var(--primary));
+  }
+
+  /* Contact Section */
+  .operator-card__contact {
+    @apply p-5 border-b;
+    border-color: hsl(var(--border));
+  }
+
+  .operator-card__contact-title {
+    @apply mb-3;
+    color: hsl(var(--fg));
+    font-weight: 600;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .operator-card__contact-list {
+    @apply space-y-2;
+  }
+
+  .contact-item {
+    @apply flex items-center;
+    gap: 8px;
+  }
+
+  .contact-item__icon {
+    @apply shrink-0 flex items-center justify-center rounded-lg;
+    width: 32px;
+    height: 32px;
+    background: hsl(var(--surface-2));
+  }
+
+  .contact-item__icon svg {
+    width: 16px;
+    height: 16px;
+    color: hsl(var(--primary));
+  }
+
+  .contact-item__text {
+    color: hsl(var(--fg));
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  .contact-item__text a {
+    color: hsl(var(--primary));
+    text-decoration: none;
+  }
+
+  .contact-item__text a:hover {
+    text-decoration: underline;
+  }
+
+  /* Footer/Actions */
+  .operator-card__footer {
+    @apply p-5;
+  }
+
+  .operator-card__actions {
+    @apply flex items-center;
+    gap: 12px;
+  }
+
+  .operator-card__action-primary {
+    @apply flex-1;
+  }
+
+  .operator-card__action-secondary {
+    @apply shrink-0;
+  }
+
+  /* Quick Info Pills (Alternative compact layout) */
+  .operator-card__quick-info {
+    @apply flex items-center flex-wrap;
+    gap: 12px;
+  }
+
+  .quick-info-item {
+    @apply flex items-center;
+    gap: 6px;
+    color: hsl(var(--muted));
+    font-size: 13px;
+  }
+
+  .quick-info-item svg {
+    width: 14px;
+    height: 14px;
+    color: hsl(var(--primary));
+  }
+
+  .quick-info-item__value {
+    color: hsl(var(--fg));
+    font-weight: 600;
+  }
+
+  /* Compact Variant */
+  .operator-card--compact .operator-card__header {
+    @apply pb-0 border-b-0;
+  }
+
+  .operator-card--compact .operator-card__description,
+  .operator-card--compact .operator-card__services,
+  .operator-card--compact .operator-card__contact {
+    display: none;
+  }
+
+  .operator-card--compact .operator-card__stats {
+    @apply p-4;
+  }
+
+  .operator-card--compact .operator-card__stats-grid {
+    @apply gap-3;
+  }
+}

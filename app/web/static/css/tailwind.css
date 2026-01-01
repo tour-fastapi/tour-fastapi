@@ -9,6 +9,7 @@
 @import "./partials/listing.css";
 @import "./partials/group-header.css";
 @import "./partials/packages-card.css";
+@import "./partials/operators-card.css";
 
 @tailwind base;
 
