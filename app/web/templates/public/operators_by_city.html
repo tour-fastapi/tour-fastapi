@@ -26,8 +26,22 @@
       </span>
     </div>
   </header>
+
   <!-- Operators List -->
+   <div class="listing-results">
   {% if agencies and agencies|length > 0 %}
+  <!-- Results Header - Count & Sort -->
+    <div class="listing-results__header">
+      <p class="listing-results__count">Showing {{ count }} package{{ 's' if count != 1 else '' }}</p>
+      <select class="listing-results__sort is-hidden">
+        <option>Sort by: Recommended</option>
+        <option>Price: Low to High</option>
+        <option>Price: High to Low</option>
+        <option>Duration: Shortest</option>
+        <option>Duration: Longest</option>
+      </select>
+    </div>
+    
     <section class="operator-list">
       {% for a in agencies %}
         <a
@@ -100,6 +114,7 @@
       No operators found in {{ city }}.
     </div>
   {% endif %}
+  </div>
   
 </main>
 {% endblock %}
