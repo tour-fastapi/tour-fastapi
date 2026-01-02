@@ -9,6 +9,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from sqlalchemy.dialects.mysql import INTEGER as MYSQL_INTEGER
+from sqlalchemy.dialects.mysql import TINYINT
 
 # ---- Base import ----
 from app.db.base import Base
@@ -48,6 +49,12 @@ class PackageInclusion(Base):
 
     insurance_enabled = Column(Boolean, nullable=False, default=False)
     insurance_desc = Column(Text)
+
+    visa_enabled = Column(TINYINT(1), nullable=False, server_default="0")
+    visa_desc = Column(Text, nullable=True)
+
+    ziyarat_enabled = Column(TINYINT(1), nullable=False, server_default="0")
+    ziyarat_desc = Column(Text, nullable=True)
 
     other_notes = Column(Text)
 

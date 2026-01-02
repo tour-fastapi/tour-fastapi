@@ -157,7 +157,12 @@
            width="60" height="60"
            class="img-brd"
            onerror="this.style.display='none'"/>
-
+      {% set banner = pkg.banner_image or "dynamic-tawaf-at-night.jpg" %}
+      <img
+        src="/media/packages-banners/{{ banner }}"
+        alt="{{ pkg.package_name }}"
+        style="width:100%; max-height:340px; object-fit:cover; border-radius:12px;"
+      >
       <div class="flex-grow-1">
         <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
           <h1 class="h5 m-0">{{ pkg.package_name }}</h1>

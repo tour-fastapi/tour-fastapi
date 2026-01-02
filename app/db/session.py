@@ -5,7 +5,7 @@ from typing import Generator
 from app.core.config import settings
 
 db_url = settings.DATABASE_URL.strip()
-
+db_url = db_url.replace("mysql+mysqldb://", "mysql+pymysql://")
 connect_args = {}
 if "mysql+pymysql://" in db_url:
     connect_args = {"ssl": {}}

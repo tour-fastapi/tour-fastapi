@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="container py-4" style="max-width: 820px;">
+<div class="container py-4" style="max-width: 920px;">
   <h1 class="h4 mb-3">Add Package</h1>
 
   {% if flashes %}
@@ -25,34 +25,70 @@
       .theme-card input[type="radio"]{position:absolute;inset:10px auto auto 10px}
       .theme-title{font-weight:700;font-size:.95rem;margin-left:24px}
       .theme-badge{display:inline-block;font-size:.7rem;padding:2px 6px;border-radius:999px;background:#f1f5f9;color:#0f172a;margin-left:6px}
-      .theme-thumb{height:110px;border:1px dashed #e5e7eb;border-radius:10px;background:linear-gradient(180deg,#f8fafc,#eef2f7);display:flex;align-items:center;justify-content:center;font-size:.8rem;color:#64748b;margin-top:10px}
+      .theme-thumb{height:110px;border:1px dashed #e5e7eb;border-radius:10px;background:linear-gradient(180deg,#f8fafc,#eef2f7);display:flex;align-items:center;justify-content:center;font-size:.8rem;color:#64748b;margin-top:10px;text-align:center;padding:6px}
       .is-premium .theme-badge{background:linear-gradient(135deg,#9333ea,#2563eb);color:#fff}
       .theme-card:has(input:checked){border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.15)}
       .theme-desc{font-size:.8rem;color:#64748b;margin-top:8px;line-height:1.25rem}
+      is-hidden{disable:none !important}
+
+      .banner-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+  @media (min-width: 768px) { .banner-grid { grid-template-columns: repeat(3, 1fr); } }
+
+  .banner-card {
+    position: relative;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    background: #fff;
+    cursor: pointer;
+    overflow: hidden;
+    transition: box-shadow .15s, border-color .15s, transform .15s;
+  }
+  .banner-card:hover { box-shadow: 0 10px 28px rgba(2,6,23,.10); transform: translateY(-1px); }
+  .banner-card input[type="radio"] { position: absolute; top: 10px; left: 10px; z-index: 2; }
+  .banner-thumb {
+    height: 120px;
+    background: #f8fafc;
+    border-bottom: 1px solid #eef2f7;
+  }
+  .banner-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .banner-meta { padding: 10px 12px; }
+  .banner-title { font-weight: 700; font-size: .9rem; margin: 0; }
+  .banner-hint { font-size: .8rem; color: #64748b; margin-top: 4px; }
+
+  .banner-card:has(input:checked) {
+    border-color: #0d6efd; /* bootstrap primary */
+    box-shadow: 0 0 0 3px rgba(13,110,253,.20);
+  }
+
     </style>
 
-    <div class="mb-3">
+    <div class="mb-3 is-hidden">
       <label class="form-label d-block">Package Detail Theme *</label>
       <div class="theme-grid">
         <label class="theme-card">
           <input type="radio" name="detail_theme" value="basic" required checked>
           <span class="theme-title">Basic <span class="theme-badge">Default</span></span>
-          <div class="theme-thumb">Clean 2-column, above-the-fold facts</div>
-          <div class="theme-desc">Simple header, key price & dates on the left, quick highlights on the right.</div>
+          <div class="theme-thumb">Clean, professional layout</div>
+          <div class="theme-desc">Simple header, key facts first, quick reading.</div>
         </label>
 
         <label class="theme-card is-premium">
           <input type="radio" name="detail_theme" value="premium-aurora" required>
           <span class="theme-title">Aurora <span class="theme-badge">Premium</span></span>
-          <div class="theme-thumb">Hero banner + stat chips + sticky CTA</div>
-          <div class="theme-desc">Large hero with gradient overlay, stat chips, sticky inquiry button.</div>
+          <div class="theme-thumb">Hero banner + stat chips</div>
+          <div class="theme-desc">Modern premium look with strong CTA.</div>
         </label>
 
         <label class="theme-card is-premium">
           <input type="radio" name="detail_theme" value="premium-classic" required>
           <span class="theme-title">Classic <span class="theme-badge">Premium</span></span>
           <div class="theme-thumb">Tabbed sections + price cards</div>
-          <div class="theme-desc">Tabs for Overview/Itinerary/Inclusions/FAQ + elegant price cards.</div>
+          <div class="theme-desc">Elegant sections for Overview/Itinerary/Inclusions.</div>
         </label>
       </div>
       <div class="form-text mt-1">You can change this later while editing the package.</div>
@@ -63,14 +99,91 @@
     <div class="mb-3">
       <label class="form-label d-block">Package Type *</label>
       <div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio" name="package_type" id="type_umrah" value="umrah" required checked>
+        <label class="form-check-label" for="type_umrah">Umrah</label>
+      </div>
+      <div class="form-check form-check-inline">
         <input class="form-check-input" type="radio" name="package_type" id="type_haj" value="haj" required>
         <label class="form-check-label" for="type_haj">Haj</label>
       </div>
-      <div class="form-check form-check-inline">
-        <input class="form-check-input" type="radio" name="package_type" id="type_umrah" value="umrah" required>
-        <label class="form-check-label" for="type_umrah">Umrah</label>
+    </div>
+    <!-- Package banner -->
+    <div class="mb-3">
+      <label class="form-label d-block">Select Banner *</label>
+
+      <div class="banner-grid">
+
+        <!-- 1 (default selected) -->
+        <label class="banner-card">
+          <input class="form-check-input" type="radio" name="banner_image" value="dynamic-tawaf-at-night.jpg" required checked>
+          <div class="banner-thumb">
+            <img src="/media/packages-banners/dynamic-tawaf-at-night.jpg" alt="Dynamic Tawaf at Night">
+          </div>
+          <div class="banner-meta">
+            <p class="banner-title">Dynamic Tawaf at Night in Haram Sharif</p>
+            
+          </div>
+        </label>
+
+        <!-- 2 -->
+        <label class="banner-card">
+          <input class="form-check-input" type="radio" name="banner_image" value="eternal-peace-at-masjid-an-nabawi.jpg" required>
+          <div class="banner-thumb">
+            <img src="/media/packages-banners/eternal-peace-at-masjid-an-nabawi.jpg" alt="Eternal Peace at Masjid an-Nabawi">
+          </div>
+          <div class="banner-meta">
+            <p class="banner-title">Eternal Peace at Masjid an-Nabawi</p>
+            
+          </div>
+        </label>
+
+        <!-- 3 -->
+        <label class="banner-card">
+          <input class="form-check-input" type="radio" name="banner_image" value="golden-hour-panorama-of-makkah.jpg" required>
+          <div class="banner-thumb">
+            <img src="/media/packages-banners/golden-hour-panorama-of-makkah.jpg" alt="Golden Hour Panorama of Makkah">
+          </div>
+          <div class="banner-meta">
+            <p class="banner-title">Golden Hour Panorama of Makkah</p>
+          </div>
+        </label>
+
+        <!-- 4 -->
+        <label class="banner-card">
+          <input class="form-check-input" type="radio" name="banner_image" value="grand-view-of-masjid-al-haram.jpg" required>
+          <div class="banner-thumb">
+            <img src="/media/packages-banners/grand-view-of-masjid-al-haram.jpg" alt="Grand View of Masjid al-Haram">
+          </div>
+          <div class="banner-meta">
+            <p class="banner-title">Grand View of Masjid al-Haram</p>
+          </div>
+        </label>
+
+        <!-- 5 -->
+        <label class="banner-card">
+          <input class="form-check-input" type="radio" name="banner_image" value="serene-dawn-at-the-prophets-mosque.jpg" required>
+          <div class="banner-thumb">
+            <img src="/media/packages-banners/serene-dawn-at-the-prophets-mosque.jpg" alt="Serene Dawn at the Prophet's Mosque">
+          </div>
+          <div class="banner-meta">
+            <p class="banner-title">Serene Dawn at the Prophet's Mosque</p>
+          </div>
+        </label>
+
+        <!-- 6 -->
+        <label class="banner-card">
+          <input class="form-check-input" type="radio" name="banner_image" value="the-umbrellas-of-the-prophets-mosque.jpg" required>
+          <div class="banner-thumb">
+            <img src="/media/packages-banners/the-umbrellas-of-the-prophets-mosque.jpg" alt="The Umbrellas of the Prophet's Mosque">
+          </div>
+          <div class="banner-meta">
+            <p class="banner-title">The Umbrellas of the Prophet's Mosque</p>
+          </div>
+        </label>
+
       </div>
-      <div class="form-text">Choose exactly one.</div>
+
+      <div class="form-text mt-1">This banner will appear on the package detail page.</div>
     </div>
 
     <!-- Basics -->
@@ -83,7 +196,7 @@
       <label class="form-label">Package Class</label>
       <select class="form-select" name="package_class">
         <option value="">-- select class (optional) --</option>
-        <option value="economy">Economy</option>
+        <option value="economy" selected>Economy</option>
         <option value="business">Business</option>
         <option value="first">First Class</option>
       </select>
@@ -155,65 +268,271 @@
 
     <hr class="my-4">
 
-    <!-- Flights -->
-    <h2 class="h6 mb-3">Flights</h2>
-    <div class="row">
-      <div class="col-md-6">
-        <div class="card mb-3">
-          <div class="card-body">
-            <h3 class="h6">Onward</h3>
-            <div class="mb-2">
-              <label class="form-label">Date</label>
-              <input class="form-control" type="date" name="onward_date">
-            </div>
-            <div class="mb-2">
-              <label class="form-label">Type</label>
-              <select class="form-select" name="onward_type">
-                <option value="">-- select --</option>
-                <option value="direct">Direct</option>
-                <option value="via">Via</option>
-              </select>
-            </div>
-            <div class="mb-2">
-              <label class="form-label">Via (if any)</label>
-              <input class="form-control" type="text" name="onward_via" placeholder="e.g., Doha">
-            </div>
-            <div class="mb-2">
-              <label class="form-label">Airline</label>
-              <input class="form-control" type="text" name="onward_airline" placeholder="e.g., Qatar Airways">
-            </div>
-          </div>
-        </div>
-      </div>
+    <!-- =================== FLIGHTS =================== -->
+    <section class="mt-3">
+      <h2 class="h6 mb-3">Flights</h2>
 
-      <div class="col-md-6">
-        <div class="card mb-3">
-          <div class="card-body">
-            <h3 class="h6">Return</h3>
-            <div class="mb-2">
+      <div class="row g-3">
+
+        <!-- Onward -->
+        <div class="col-md-6">
+          <div class="border rounded-3 p-3 h-100">
+            <h3 class="h6 mb-3">Onward</h3>
+
+            <div>
               <label class="form-label">Date</label>
-              <input class="form-control" type="date" name="return_date">
-            </div>
-            <div class="mb-2">
-              <label class="form-label">Type</label>
-              <select class="form-select" name="return_type">
-                <option value="">-- select --</option>
-                <option value="direct">Direct</option>
-                <option value="via">Via</option>
-              </select>
-            </div>
-            <div class="mb-2">
-              <label class="form-label">Via (if any)</label>
-              <input class="form-control" type="text" name="return_via" placeholder="e.g., Muscat">
-            </div>
-            <div class="mb-2">
+              <input type="date" name="onward_date" class="form-control" value="{{ onward.flight_date if onward else '' }}">
+            </div>  
+            <div class="mt-3">
               <label class="form-label">Airline</label>
-              <input class="form-control" type="text" name="return_airline" placeholder="e.g., Oman Air">
+              <input type="text" name="onward_airline" class="form-control" placeholder="e.g., Qatar Airways" value="{{ onward.airline_name if onward else '' }}">
             </div>
+            <div class="mt-3">
+              <div class="form-label mb-2">Type</div>
+
+              <div class="d-flex gap-4">
+                <label class="d-flex align-items-center gap-2">
+                  <input
+                    type="radio"
+                    name="onward_type"
+                    value="direct"
+                    class="form-check-input m-0"
+                    checked
+                    data-flight="onward"
+                    data-type="direct"
+                  >
+                  <span>Direct</span>
+                </label>
+
+                <label class="d-flex align-items-center gap-2">
+                  <input
+                    type="radio"
+                    name="onward_type"
+                    value="via"
+                    class="form-check-input m-0"
+                    data-flight="onward"
+                    data-type="via"
+                  >
+                  <span>Via</span>
+                </label>
+              </div>
+
+              <input type="hidden" name="onward_via" id="onward_via" value="">
+              <div class="mt-2 small text-muted">
+                <span id="onward_via_label" class="d-none">
+                  Via: <span class="fw-semibold" id="onward_via_text"></span>
+                  <button type="button" class="btn btn-link btn-sm p-0 ms-2 text-danger" id="onward_via_clear">remove</button>
+                </span>
+              </div>
+            </div>
+            
+
+            
           </div>
         </div>
+
+        <!-- Return -->
+        <div class="col-md-6">
+          <div class="border rounded-3 p-3 h-100">
+            <h3 class="h6 mb-3">Return</h3>
+
+            <div>
+              <label class="form-label">Date</label>
+              <input type="date" name="return_date" class="form-control" value="{{ ret.flight_date if ret else '' }}">
+            </div>
+            <div class="mt-3">
+              <label class="form-label">Airline</label>
+              <input type="text" name="return_airline" class="form-control" placeholder="e.g., Oman Air" value="{{ ret.airline_name if ret else '' }}">
+            </div>
+
+            <div class="mt-3">
+              <div class="form-label mb-2">Type</div>
+
+              <div class="d-flex gap-4">
+                <label class="d-flex align-items-center gap-2">
+                  <input
+                    type="radio"
+                    name="return_type"
+                    value="direct"
+                    class="form-check-input m-0"
+                    checked
+                    data-flight="return"
+                    data-type="direct"
+                  >
+                  <span>Direct</span>
+                </label>
+
+                <label class="d-flex align-items-center gap-2">
+                  <input
+                    type="radio"
+                    name="return_type"
+                    value="via"
+                    class="form-check-input m-0"
+                    data-flight="return"
+                    data-type="via"
+                  >
+                  <span>Via</span>
+                </label>
+              </div>
+
+              <input type="hidden" name="return_via" id="return_via" value="">
+              <div class="mt-2 small text-muted">
+                <span id="return_via_label" class="d-none">
+                  Via: <span class="fw-semibold" id="return_via_text"></span>
+                  <button type="button" class="btn btn-link btn-sm p-0 ms-2 text-danger" id="return_via_clear">remove</button>
+                </span>
+              </div>
+            </div>
+
+            
+          </div>
+        </div>
+
       </div>
-    </div>
+    </section>
+
+    <!-- Via Modal (shared) -->
+    <dialog id="viaModal" class="p-0 border-0" style="width:min(520px, 92vw); border-radius:12px;">
+      <div class="p-3">
+        <h3 class="h6 mb-2">Select Via City</h3>
+
+        <input
+          id="viaSearch"
+          type="text"
+          class="form-control"
+          placeholder="Search city (e.g., Muscat, Dubai, Doha)"
+          autocomplete="off"
+        />
+
+        <div id="viaList" class="mt-3" style="max-height: 260px; overflow:auto; border:1px solid #e5e7eb; border-radius:10px; padding:8px;">
+          <!-- results injected by JS -->
+        </div>
+
+        <div class="mt-3 d-flex justify-content-end gap-2">
+          <button type="button" class="btn btn-outline-secondary btn-sm" id="viaCancel">Cancel</button>
+        </div>
+      </div>
+    </dialog>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const VIA_CITIES = [
+          "Abu Dhabi","Amman","Bahrain","Colombo","Cairo","Doha","Dubai",
+          "Istanbul","Jeddah","Kuwait","Lahore","Muscat","Riyadh","Sharjah","Singapore"
+        ];
+
+        let currentFlight = null; // "onward" | "return"
+
+        const modal = document.getElementById("viaModal");
+        const search = document.getElementById("viaSearch");
+        const list = document.getElementById("viaList");
+        const cancelBtn = document.getElementById("viaCancel");
+
+        function showModalSafe() {
+          try { if (typeof modal.showModal === "function") modal.showModal(); else modal.setAttribute("open","open"); }
+          catch (e) { modal.setAttribute("open","open"); }
+        }
+
+        function closeModalSafe() {
+          try { if (typeof modal.close === "function") modal.close(); else modal.removeAttribute("open"); }
+          catch (e) { modal.removeAttribute("open"); }
+        }
+
+        function render(items) {
+          list.innerHTML = "";
+          if (!items.length) {
+            list.innerHTML = `<div class="small text-muted p-2">No results</div>`;
+            return;
+          }
+
+          items.forEach(city => {
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "btn btn-light btn-sm w-100 text-start mb-1";
+            btn.textContent = city;
+
+            btn.addEventListener("click", () => {
+              if (!currentFlight) return;
+              setVia(currentFlight, city);
+              closeModalSafe();
+            });
+
+            list.appendChild(btn);
+          });
+        }
+
+        function openVia(flightKey) {
+          currentFlight = flightKey;
+          search.value = "";
+          render(VIA_CITIES);
+          showModalSafe();
+          setTimeout(() => search.focus(), 50);
+        }
+
+        function setVia(flightKey, city) {
+          const hidden = document.getElementById(flightKey + "_via");
+          const labelWrap = document.getElementById(flightKey + "_via_label");
+          const labelText = document.getElementById(flightKey + "_via_text");
+
+          if (hidden) hidden.value = city;
+          if (labelText) labelText.textContent = city;
+          if (labelWrap) labelWrap.classList.remove("d-none");
+        }
+
+        function clearVia(flightKey) {
+          const hidden = document.getElementById(flightKey + "_via");
+          const labelWrap = document.getElementById(flightKey + "_via_label");
+          const labelText = document.getElementById(flightKey + "_via_text");
+
+          if (hidden) hidden.value = "";
+          if (labelText) labelText.textContent = "";
+          if (labelWrap) labelWrap.classList.add("d-none");
+
+          const direct = document.querySelector(`input[name="${flightKey}_type"][value="direct"]`);
+          if (direct) direct.checked = true;
+        }
+
+        // Bind VIA radios
+        document.querySelectorAll('input[type="radio"][data-type="via"]').forEach(r => {
+          r.addEventListener("change", (e) => {
+            const flightKey = e.target.getAttribute("data-flight");
+            openVia(flightKey);
+          });
+        });
+
+        // Bind DIRECT radios
+        document.querySelectorAll('input[type="radio"][data-type="direct"]').forEach(r => {
+          r.addEventListener("change", (e) => {
+            const flightKey = e.target.getAttribute("data-flight");
+            clearVia(flightKey);
+          });
+        });
+
+        // remove buttons
+        const onwardClear = document.getElementById("onward_via_clear");
+        const returnClear = document.getElementById("return_via_clear");
+        if (onwardClear) onwardClear.addEventListener("click", () => clearVia("onward"));
+        if (returnClear) returnClear.addEventListener("click", () => clearVia("return"));
+
+        // search filter
+        search.addEventListener("input", () => {
+          const q = (search.value || "").trim().toLowerCase();
+          render(VIA_CITIES.filter(c => c.toLowerCase().includes(q)));
+        });
+
+        // cancel modal
+        cancelBtn.addEventListener("click", () => {
+          if (currentFlight) {
+            const direct = document.querySelector(`input[name="${currentFlight}_type"][value="direct"]`);
+            if (direct) direct.checked = true;
+          }
+          closeModalSafe();
+          currentFlight = null;
+        });
+      });
+    </script>
+
+    <hr class="my-4">
 
     <!-- =================== STAYS =================== -->
     <h2 class="h6 mb-3">Stay</h2>
@@ -240,19 +559,8 @@
             <div class="mb-2">
               <label class="form-label">Hotel name</label>
               <div class="d-flex gap-2">
-                <input
-                  id="mecca_hotel"
-                  class="form-control"
-                  type="text"
-                  name="mecca_hotel"
-                  placeholder="Type new hotel OR choose below"
-                >
-                <select
-                  id="mecca_hotel_city"
-                  name="mecca_hotel_city"
-                  class="form-select"
-                  style="max-width: 140px;"
-                >
+                <input id="mecca_hotel" class="form-control" type="text" name="mecca_hotel" placeholder="Type new hotel OR choose below">
+                <select id="mecca_hotel_city" name="mecca_hotel_city" class="form-select" style="max-width: 140px;">
                   <option value="Mecca" selected>Mecca</option>
                   <option value="Medinah">Medinah</option>
                 </select>
@@ -291,15 +599,10 @@
 
             <div class="mb-2">
               <label class="form-label">Distance (km/meters) label</label>
-              <input
-                id="mecca_distance_text"
-                name="mecca_distance_text"
-                class="form-control"
-                placeholder="e.g., 0.30 km from Haram"
-              >
+              <input id="mecca_distance_text" name="mecca_distance_text" class="form-control" placeholder="e.g., 0.30 km from Haram">
             </div>
 
-            <!-- OR SIMILAR: Mecca -->
+            <!-- Similar Hotels (kept as-is; you can change to modal later) -->
             <div class="mb-3">
               <label class="form-label">Similar Hotels (Mecca)</label>
               <select id="mecca_similar" name="mecca_similar" multiple>
@@ -308,8 +611,6 @@
                 {% endfor %}
               </select>
             </div>
-
-
 
           </div>
         </div>
@@ -336,19 +637,8 @@
             <div class="mb-2">
               <label class="form-label">Hotel name</label>
               <div class="d-flex gap-2">
-                <input
-                  id="med_hotel"
-                  class="form-control"
-                  type="text"
-                  name="med_hotel"
-                  placeholder="Type new hotel OR choose below"
-                >
-                <select
-                  id="med_hotel_city"
-                  name="med_hotel_city"
-                  class="form-select"
-                  style="max-width: 140px;"
-                >
+                <input id="med_hotel" class="form-control" type="text" name="med_hotel" placeholder="Type new hotel OR choose below">
+                <select id="med_hotel_city" name="med_hotel_city" class="form-select" style="max-width: 140px;">
                   <option value="Medinah" selected>Medinah</option>
                   <option value="Mecca">Mecca</option>
                 </select>
@@ -387,15 +677,9 @@
 
             <div class="mb-2">
               <label class="form-label">Distance (km/meters) label</label>
-              <input
-                id="med_distance_text"
-                name="med_distance_text"
-                class="form-control"
-                placeholder="e.g., 0.20 km from Masjid an-Nabawi"
-              >
+              <input id="med_distance_text" name="med_distance_text" class="form-control" placeholder="e.g., 0.20 km from Masjid an-Nabawi">
             </div>
 
-            <!-- OR SIMILAR: Medinah -->
             <div class="mb-3">
               <label class="form-label">Similar Hotels (Medinah)</label>
               <select id="medinah_similar" name="medinah_similar" multiple>
@@ -405,36 +689,59 @@
               </select>
             </div>
 
-
-
           </div>
         </div>
       </div>
     </div>
 
+    <!-- Autofill hotel fields from DB selects -->
     <script>
-  new SlimSelect({
-    select: '#mecca_similar',
-    placeholder: 'Search & select similar hotels...',
-    allowDeselect: true,
-    closeOnSelect: false
-  });
+      function wireHotelSelect(selectId, nameInputId, linkId, distanceLabelId, ratingId, cityLockId) {
+        const select = document.getElementById(selectId);
+        if (!select) return;
 
-  new SlimSelect({
-    select: '#medinah_similar',
-    placeholder: 'Search & select similar hotels...',
-    allowDeselect: true,
-    closeOnSelect: false
-  });
-</script>
+        select.addEventListener("change", function () {
+          const opt = this.selectedOptions[0];
+          if (!opt || !opt.dataset) return;
 
-    <!-- ============================================ -->
+          const name = opt.dataset.name || "";
+          const link = opt.dataset.link || "";
+          const distanceKm = opt.dataset.distanceKm || "";
+          const rating = opt.dataset.rating || "";
+
+          const nameInput = document.getElementById(nameInputId);
+          const linkInput = document.getElementById(linkId);
+          const distLabelInput = document.getElementById(distanceLabelId);
+          const ratingInput = document.getElementById(ratingId);
+          const citySelect = document.getElementById(cityLockId);
+
+          if (nameInput) nameInput.value = name;
+          if (linkInput) linkInput.value = link;
+          if (ratingInput) ratingInput.value = rating;
+
+          if (distLabelInput && distanceKm) {
+            const cityLabel = (selectId === "mecca_hotel_select") ? "Haram" : "Masjid an-Nabawi";
+            distLabelInput.value = distanceKm + " km from " + cityLabel;
+          }
+
+          if (citySelect) {
+            citySelect.value = (selectId === "mecca_hotel_select") ? "Mecca" : "Medinah";
+          }
+        });
+      }
+
+      wireHotelSelect("mecca_hotel_select", "mecca_hotel", "mecca_link", "mecca_distance_text", "mecca_rating", "mecca_hotel_city");
+      wireHotelSelect("med_hotel_select", "med_hotel", "med_link", "med_distance_text", "med_rating", "med_hotel_city");
+    </script>
+
+    <hr class="my-4">
 
     <!-- Inclusions -->
     <h2 class="h6 mb-3">Inclusions</h2>
     <div class="card mb-3">
       <div class="card-body">
         <div class="row g-3">
+
           <div class="col-12">
             <div class="form-check">
               <input class="form-check-input" type="checkbox" id="incl_meals_enabled" name="incl_meals_enabled">
@@ -484,88 +791,36 @@
           </div>
 
           <div class="col-12">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="incl_visa_enabled" name="incl_visa_enabled">
+              <label class="form-check-label fw-semibold" for="incl_visa_enabled">VISA</label>
+            </div>
+            <input class="form-control mt-2" type="text" name="incl_visa_desc" placeholder="e.g., Umrah visa processing included">
+          </div>
+
+          <div class="col-12">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="incl_ziyarat_enabled" name="incl_ziyarat_enabled">
+              <label class="form-check-label fw-semibold" for="incl_ziyarat_enabled">Ziyarat</label>
+            </div>
+            <input class="form-control mt-2" type="text" name="incl_ziyarat_desc" placeholder="e.g., Makkah & Madinah ziyarat by AC bus">
+          </div>
+
+          <div class="col-12">
             <label class="form-label mt-2">Other notes (optional)</label>
             <textarea class="form-control" name="incl_other" rows="2" placeholder="(optional — add any other inclusions or notes)"></textarea>
           </div>
+
         </div>
       </div>
     </div>
 
+    <!-- Only 2 buttons -->
     <div class="d-flex gap-2">
-      <button class="btn btn-primary" type="submit">Save & Next</button>
-      <a href="/agency/{{ agency.registration_id }}/dashboard" class="btn btn-outline-secondary">Cancel</a>
+      <button class="btn btn-primary" type="submit" name="submit_action" value="next">Save & Next</button>
+      <button class="btn btn-outline-secondary" type="submit" name="submit_action" value="draft">Save as Draft</button>
     </div>
+
   </form>
 </div>
-
-<!-- ================= Similar Hotels Modal (shared) ================= -->
-<div class="modal fade" id="similarHotelsModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-scrollable">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Select Similar Hotels</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-
-      <div class="modal-body">
-        <input id="similar_search" type="text" class="form-control form-control-sm mb-2" placeholder="Search hotel...">
-        <div id="similarHotelsList"></div>
-      </div>
-
-      <div class="modal-footer">
-        <button type="button" class="btn btn-sm btn-light" data-bs-dismiss="modal">Cancel</button>
-        <button type="button" class="btn btn-sm btn-primary" id="similarHotelsApplyBtn">
-          Add selected
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ================= JS ================= -->
-<script>
-  // ----------------------------------------------------
-  // 1) Existing: Autofill hotel fields from DB selects
-  // ----------------------------------------------------
-  function wireHotelSelect(selectId, nameInputId, linkId, distanceLabelId, ratingId, cityLockId) {
-    const select = document.getElementById(selectId);
-    if (!select) return;
-
-    select.addEventListener("change", function () {
-      const opt = this.selectedOptions[0];
-      if (!opt || !opt.dataset) return;
-
-      const name = opt.dataset.name || "";
-      const link = opt.dataset.link || "";
-      const distanceKm = opt.dataset.distanceKm || "";
-      const rating = opt.dataset.rating || "";
-
-      const nameInput = document.getElementById(nameInputId);
-      const linkInput = document.getElementById(linkId);
-      const distLabelInput = document.getElementById(distanceLabelId);
-      const ratingInput = document.getElementById(ratingId);
-      const citySelect = document.getElementById(cityLockId);
-
-      if (nameInput) nameInput.value = name;
-      if (linkInput) linkInput.value = link;
-      if (ratingInput) ratingInput.value = rating;
-
-      if (distLabelInput && distanceKm) {
-        const cityLabel = selectId === "mecca_hotel_select" ? "Haram" : "Masjid an-Nabawi";
-        distLabelInput.value = distanceKm + " km from " + cityLabel;
-      }
-
-      // lock city when choosing saved hotel
-      if (citySelect) {
-        citySelect.value = (selectId === "mecca_hotel_select") ? "Mecca" : "Medinah";
-      }
-    });
-  }
-
-  wireHotelSelect("mecca_hotel_select", "mecca_hotel", "mecca_link", "mecca_distance_text", "mecca_rating", "mecca_hotel_city");
-  wireHotelSelect("med_hotel_select", "med_hotel", "med_link", "med_distance_text", "med_rating", "med_hotel_city");
-</script>
-
-
-
 {% endblock %}

@@ -46,3 +46,10 @@ __pycache__/
 .env.*
 EOF
 .env
+
+ HEAD
+__pycache__/
+*.pyc
+
+.env
+ 966ceb4 (Stop tracking .env)

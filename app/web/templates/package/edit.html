@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="container py-4" style="max-width: 860px;">
-  <h1 class="h4 mb-3">Edit Package</h1>
+<div class="container py-4" style="max-width: 820px;">
+  <h1 class="h4 mb-3">Add Package</h1>
 
   {% if flashes %}
     {% for f in flashes %}
@@ -14,83 +14,235 @@
 
   <form method="post" action="/package/{{ pkg.package_id }}/edit" class="card p-3">
     <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <input type="hidden" name="agency_id" value="{{ agency.registration_id }}">
+
+    <!-- =============== Theme Picker =============== -->
+    <style>
+      .theme-grid{display:grid;grid-template-columns:1fr;gap:12px}
+      @media (min-width:768px){.theme-grid{grid-template-columns:repeat(3,1fr)}}
+      .theme-card{position:relative;border:1px solid #e5e7eb;border-radius:12px;padding:12px;background:#fff;cursor:pointer;transition:box-shadow .15s, border-color .15s}
+      .theme-card:hover{box-shadow:0 8px 24px rgba(2,6,23,.08)}
+      .theme-card input[type="radio"]{position:absolute;inset:10px auto auto 10px}
+      .theme-title{font-weight:700;font-size:.95rem;margin-left:24px}
+      .theme-badge{display:inline-block;font-size:.7rem;padding:2px 6px;border-radius:999px;background:#f1f5f9;color:#0f172a;margin-left:6px}
+      .theme-thumb{height:110px;border:1px dashed #e5e7eb;border-radius:10px;background:linear-gradient(180deg,#f8fafc,#eef2f7);display:flex;align-items:center;justify-content:center;font-size:.8rem;color:#64748b;margin-top:10px}
+      .is-premium .theme-badge{background:linear-gradient(135deg,#9333ea,#2563eb);color:#fff}
+      .theme-card:has(input:checked){border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.15)}
+      .theme-desc{font-size:.8rem;color:#64748b;margin-top:8px;line-height:1.25rem}
+      .banner-card:has(input:checked) {
+        border: 2px solid #2563eb;
+        box-shadow: 0 0 0 3px rgba(37,99,235,.15);
+      }
+
+    </style>
+
+    <!-- <div class="mb-3">
+      <label class="form-label d-block">Package Detail Theme *</label>
+      <div class="theme-grid">
+        <label class="theme-card">
+          <input type="radio" name="detail_theme" value="basic" required checked>
+          <span class="theme-title">Basic <span class="theme-badge">Default</span></span>
+          <div class="theme-thumb">Clean 2-column, above-the-fold facts</div>
+          <div class="theme-desc">Simple header, key price & dates on the left, quick highlights on the right.</div>
+        </label>
+
+        <label class="theme-card is-premium">
+          <input type="radio" name="detail_theme" value="premium-aurora" required>
+          <span class="theme-title">Aurora <span class="theme-badge">Premium</span></span>
+          <div class="theme-thumb">Hero banner + stat chips + sticky CTA</div>
+          <div class="theme-desc">Large hero with gradient overlay, stat chips, sticky inquiry button.</div>
+        </label>
+
+        <label class="theme-card is-premium">
+          <input type="radio" name="detail_theme" value="premium-classic" required>
+          <span class="theme-title">Classic <span class="theme-badge">Premium</span></span>
+          <div class="theme-thumb">Tabbed sections + price cards</div>
+          <div class="theme-desc">Tabs for Overview/Itinerary/Inclusions/FAQ + elegant price cards.</div>
+        </label>
+      </div>
+      <div class="form-text mt-1">You can change this later while editing the package.</div>
+    </div> -->
+    <!-- ============================================ -->
+    <!-- Package banner -->
+    <div class="mb-3">
+      <label class="form-label d-block">Select Banner *</label>
+{% set current_banner = pkg.banner_image or "dynamic-tawaf-at-night.jpg" %}
+
+<div class="banner-grid">
+
+  <!-- 1 -->
+  <label class="banner-card">
+    <input class="form-check-input"
+           type="radio"
+           name="banner_image"
+           value="dynamic-tawaf-at-night.jpg"
+           required
+           {% if current_banner == "dynamic-tawaf-at-night.jpg" %}checked{% endif %}>
+    <div class="banner-thumb">
+      <img src="/media/packages-banners/dynamic-tawaf-at-night.jpg" alt="Dynamic Tawaf at Night">
+    </div>
+    <div class="banner-meta">
+      <p class="banner-title">Dynamic Tawaf at Night in Haram Sharif</p>
+    </div>
+  </label>
+
+  <!-- 2 -->
+  <label class="banner-card">
+    <input class="form-check-input"
+           type="radio"
+           name="banner_image"
+           value="eternal-peace-at-masjid-an-nabawi.jpg"
+           required
+           {% if current_banner == "eternal-peace-at-masjid-an-nabawi.jpg" %}checked{% endif %}>
+    <div class="banner-thumb">
+      <img src="/media/packages-banners/eternal-peace-at-masjid-an-nabawi.jpg" alt="Eternal Peace at Masjid an-Nabawi">
+    </div>
+    <div class="banner-meta">
+      <p class="banner-title">Eternal Peace at Masjid an-Nabawi</p>
+    </div>
+  </label>
+
+  <!-- 3 -->
+  <label class="banner-card">
+    <input class="form-check-input"
+           type="radio"
+           name="banner_image"
+           value="golden-hour-panorama-of-makkah.jpg"
+           required
+           {% if current_banner == "golden-hour-panorama-of-makkah.jpg" %}checked{% endif %}>
+    <div class="banner-thumb">
+      <img src="/media/packages-banners/golden-hour-panorama-of-makkah.jpg" alt="Golden Hour Panorama of Makkah">
+    </div>
+    <div class="banner-meta">
+      <p class="banner-title">Golden Hour Panorama of Makkah</p>
+    </div>
+  </label>
+
+  <!-- 4 -->
+  <label class="banner-card">
+    <input class="form-check-input"
+           type="radio"
+           name="banner_image"
+           value="grand-view-of-masjid-al-haram.jpg"
+           required
+           {% if current_banner == "grand-view-of-masjid-al-haram.jpg" %}checked{% endif %}>
+    <div class="banner-thumb">
+      <img src="/media/packages-banners/grand-view-of-masjid-al-haram.jpg" alt="Grand View of Masjid al-Haram">
+    </div>
+    <div class="banner-meta">
+      <p class="banner-title">Grand View of Masjid al-Haram</p>
+    </div>
+  </label>
+
+  <!-- 5 -->
+  <label class="banner-card">
+    <input class="form-check-input"
+           type="radio"
+           name="banner_image"
+           value="serene-dawn-at-the-prophets-mosque.jpg"
+           required
+           {% if current_banner == "serene-dawn-at-the-prophets-mosque.jpg" %}checked{% endif %}>
+    <div class="banner-thumb">
+      <img src="/media/packages-banners/serene-dawn-at-the-prophets-mosque.jpg" alt="Serene Dawn at the Prophet's Mosque">
+    </div>
+    <div class="banner-meta">
+      <p class="banner-title">Serene Dawn at the Prophet's Mosque</p>
+    </div>
+  </label>
+
+  <!-- 6 -->
+  <label class="banner-card">
+    <input class="form-check-input"
+           type="radio"
+           name="banner_image"
+           value="the-umbrellas-of-the-prophets-mosque.jpg"
+           required
+           {% if current_banner == "the-umbrellas-of-the-prophets-mosque.jpg" %}checked{% endif %}>
+    <div class="banner-thumb">
+      <img src="/media/packages-banners/the-umbrellas-of-the-prophets-mosque.jpg" alt="The Umbrellas of the Prophet's Mosque">
+    </div>
+    <div class="banner-meta">
+      <p class="banner-title">The Umbrellas of the Prophet's Mosque</p>
+    </div>
+  </label>
+
+</div>
+
+<div class="form-text mt-1">
+  This banner will appear on the package detail page.
+</div>
+
+    <!-- Package Type -->
+    <div class="mb-3">
+      <label class="form-label d-block">Package Type *</label>
+      <div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio" name="package_type" id="type_haj" value="haj" required
+              {% if (pkg.package_type or '') == 'haj' %}checked{% endif %}>
+        <label class="form-check-label" for="type_haj">Haj</label>
+      </div>
+
+      <div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio" name="package_type" id="type_umrah" value="umrah" required
+              {% if (pkg.package_type or '') == 'umrah' %}checked{% endif %}>
+        <label class="form-check-label" for="type_umrah">Umrah</label>
+      </div>
+
+      <div class="form-text">Choose exactly one.</div>
+    </div>
 
     <!-- Basics -->
     <div class="mb-3">
       <label class="form-label">Package name *</label>
-      <input class="form-control" type="text" name="package_name" required value="{{ pkg.package_name }}">
-    </div>
+      <input class="form-control" type="text" name="package_name" required value="{{ pkg.package_name or '' }}">
 
-    <div class="mb-3">
-      <label class="form-label d-block">Package Type *</label>
-      <div class="form-check form-check-inline">
-        <input
-          class="form-check-input"
-          type="radio"
-          name="package_type"
-          id="type_haj"
-          value="haj"
-          required
-          {{ 'checked' if pkg.package_type == 'haj' else '' }}
-        >
-        <label class="form-check-label" for="type_haj">Haj</label>
-      </div>
-      <div class="form-check form-check-inline">
-        <input
-          class="form-check-input"
-          type="radio"
-          name="package_type"
-          id="type_umrah"
-          value="umrah"
-          required
-          {{ 'checked' if pkg.package_type == 'umrah' else '' }}
-        >
-        <label class="form-check-label" for="type_umrah">Umrah</label>
-      </div>
-      <div class="form-text">Choose exactly one.</div>
+
+
+
     </div>
 
     <div class="mb-3">
       <label class="form-label">Package Class</label>
       <select class="form-select" name="package_class">
         <option value="">-- select class (optional) --</option>
-        <option value="economy" {{ 'selected' if pkg.package_class == 'economy' else '' }}>Economy</option>
-        <option value="business" {{ 'selected' if pkg.package_class == 'business' else '' }}>Business</option>
-        <option value="first" {{ 'selected' if pkg.package_class == 'first' else '' }}>First Class</option>
+        <option value="economy" {% if (pkg.package_class or '') == 'economy' %}selected{% endif %}>Economy</option>
+        <option value="business" {% if (pkg.package_class or '') == 'business' %}selected{% endif %}>Business</option>
+        <option value="first" {% if (pkg.package_class or '') == 'first' %}selected{% endif %}>First Class</option>
       </select>
-      <div class="form-text">Choose the cabin/service class for this package.</div>
+
     </div>
 
     <div class="row g-3">
       <div class="col-md-4">
         <label class="form-label">Number of Days *</label>
-        <input class="form-control" type="number" name="days" min="1" required value="{{ pkg.days }}">
+        <input class="form-control" type="number" name="days" min="1" required value="{{ pkg.days or 1 }}">
       </div>
       <div class="col-md-4">
-        <label class="form-label">Price (₹) *</label>
-        <input class="form-control" type="number" step="0.01" name="price" min="0" required value="{{ pkg.price }}">
+        <label class="form-label">Base Price (₹) *</label>
+        <input class="form-control" type="number" step="0.01" name="price" min="0" required value="{{ pkg.price or '' }}">
       </div>
       <div class="col-md-12">
         <label class="form-label">Variant prices</label>
         <div class="row g-2">
-          <div class="col-md-4">
-            <input class="form-control" type="number" step="0.01" name="price_double" placeholder="Double / Couple price" value="{{ (price_row.price_double if price_row else '') }}">
-          </div>
-          <div class="col-md-4">
-            <input class="form-control" type="number" step="0.01" name="price_triple" placeholder="Triple price" value="{{ (price_row.price_triple if price_row else '') }}">
-          </div>
-          <div class="col-md-4">
-            <input class="form-control" type="number" step="0.01" name="price_quad" placeholder="Quad/Quint price" value="{{ (price_row.price_quad if price_row else '') }}">
-          </div>
+          <input class="form-control" type="number" step="0.01" name="price_double"
+                placeholder="Double / Couple price" value="{{ pkg.price_double or '' }}">
+
+          <input class="form-control" type="number" step="0.01" name="price_triple"
+                placeholder="Triple price" value="{{ pkg.price_triple or '' }}">
+
+          <input class="form-control" type="number" step="0.01" name="price_quad"
+                placeholder="Quad/Quint price" value="{{ pkg.price_quad or '' }}">
+
+          <input class="form-control mt-2" type="text" name="price_note"
+                placeholder="Note / label (optional)" value="{{ pkg.price_note or '' }}">
+
         </div>
-        <input class="form-control mt-2" type="text" name="price_note" placeholder="Note / label (optional)" value="{{ (price_row.note if price_row and price_row.note else '') }}">
+        <input class="form-control mt-2" type="text" name="price_note" placeholder="Note / label (optional)">
       </div>
     </div>
 
-    <!-- Description -->
     <div class="mb-3 mt-3">
       <label class="form-label">Description</label>
-      <textarea class="form-control" name="description" rows="3" placeholder="Add additional notes or conditions">{{ pkg.description or '' }}</textarea>
+      <textarea class="form-control" name="description" rows="3">{{ pkg.description or '' }}</textarea>
     </div>
 
     <!-- Travel Month & Year -->
@@ -101,99 +253,151 @@
           <option value="">-- select month --</option>
           {% set month_names = ['January','February','March','April','May','June','July','August','September','October','November','December'] %}
           {% for i in range(1, 13) %}
-            <option value="{{ i }}" {{ 'selected' if pkg.travel_month == i else '' }}>{{ month_names[i-1] }}</option>
+            <option value="{{ i }}" {% if pkg.travel_month == i %}selected{% endif %}>{{ month_names[i-1] }}</option>
+
           {% endfor %}
         </select>
-        <div class="form-text">Pick the month pilgrims will travel.</div>
       </div>
       <div class="col-md-6">
         <label class="form-label">Travel Year</label>
         <select class="form-select" name="travel_year">
           <option value="">-- select year --</option>
           {% for y in years %}
-            <option value="{{ y }}" {{ 'selected' if pkg.travel_year == y else '' }}>{{ y }}</option>
+           <option value="{{ y }}" {% if pkg.travel_year == y %}selected{% endif %}>{{ y }}</option>
           {% endfor %}
         </select>
-        <div class="form-text">Only years ≥ 2026 are listed.</div>
       </div>
     </div>
 
+    <!-- Airlines -->
     <div class="mb-3">
       <label class="form-label">Airlines (you can select multiple)</label>
-      <select class="form-select" name="airline_ids" multiple size="6">
-        {% for a in airlines %}
-          <option value="{{ a.airline_id }}" {{ 'selected' if a.airline_id in selected_airline_ids else '' }}>
-            {{ a.name }}
-          </option>
-        {% endfor %}
-      </select>
-      <div class="form-text">Hold Ctrl/Cmd to multi-select (desktop).</div>
+     {% set selected_airline_ids = selected_airline_ids or [] %}
+
+    <select class="form-select" name="airline_ids" multiple size="6">
+      {% for a in airlines %}
+        <option value="{{ a.airline_id }}"
+          {% if a.airline_id in selected_airline_ids %}selected{% endif %}>
+          {{ a.name }}
+        </option>
+      {% endfor %}
+    </select>
     </div>
 
     <hr class="my-4">
 
-    <!-- Flights -->
-    <h2 class="h6 mb-3">Flights</h2>
-    <div class="row">
+    <!-- ================= FLIGHTS ================= -->
+    <h5 class="mt-4">Flights</h5>
+
+    <div class="row g-3">
+      <!-- Onward -->
       <div class="col-md-6">
-        <div class="card mb-3">
-          <div class="card-body">
-            <h3 class="h6">Onward</h3>
-            <div class="mb-2">
-              <label class="form-label">Date</label>
-              <input class="form-control" type="date" name="onward_date" value="{{ onward.flight_date if onward and onward.flight_date }}">
-            </div>
-            <div class="mb-2">
-              <label class="form-label">Type</label>
-              <select class="form-select" name="onward_type">
-                <option value="">-- select --</option>
-                <option value="direct" {{ 'selected' if onward and onward.flight_type == 'direct' else '' }}>Direct</option>
-                <option value="via" {{ 'selected' if onward and onward.flight_type == 'via' else '' }}>Via</option>
-              </select>
-            </div>
-            <div class="mb-2">
-              <label class="form-label">Via (if any)</label>
-              <input class="form-control" type="text" name="onward_via" placeholder="e.g., Doha" value="{{ onward.via_city if onward and onward.via_city }}">
-            </div>
-            <div class="mb-2">
-              <label class="form-label">Airline</label>
-              <input class="form-control" type="text" name="onward_airline" placeholder="e.g., Qatar Airways" value="{{ onward.airline_name if onward and onward.airline_name }}">
-            </div>
+        <div class="border rounded p-3">
+          <h6>Onward</h6>
+
+          <label class="form-label">Date</label>
+          <input type="date" class="form-control mb-2" name="onward_date"
+                 value="{{ onward.flight_date if onward else '' }}">
+
+          <label class="form-label d-block">Type</label>
+
+          <div class="form-check form-check-inline">
+            <input class="form-check-input" type="radio" name="onward_type" id="onward_direct"
+                   value="direct" {% if not onward or onward.flight_type != 'via' %}checked{% endif %}>
+            <label class="form-check-label" for="onward_direct">Direct</label>
           </div>
+
+          <div class="form-check form-check-inline">
+            <input class="form-check-input" type="radio" name="onward_type" id="onward_via_radio"
+                   value="via" {% if onward and onward.flight_type == 'via' %}checked{% endif %}>
+            <label class="form-check-label" for="onward_via_radio">Via</label>
+          </div>
+
+          <div class="mt-2" id="onward_via_wrap" style="display:none;">
+            <label class="form-label">Via (city)</label>
+            <input class="form-control mb-2" name="onward_via" id="onward_via_input"
+                   value="{{ onward.via_city if onward else '' }}"
+                   placeholder="e.g., Muscat">
+          </div>
+
+          <label class="form-label">Airline</label>
+          <input class="form-control" name="onward_airline"
+                 value="{{ onward.airline_name if onward else '' }}">
         </div>
       </div>
 
+      <!-- Return -->
       <div class="col-md-6">
-        <div class="card mb-3">
-          <div class="card-body">
-            <h3 class="h6">Return</h3>
-            <div class="mb-2">
-              <label class="form-label">Date</label>
-              <input class="form-control" type="date" name="return_date" value="{{ ret.flight_date if ret and ret.flight_date }}">
-            </div>
-            <div class="mb-2">
-              <label class="form-label">Type</label>
-              <select class="form-select" name="return_type">
-                <option value="">-- select --</option>
-                <option value="direct" {{ 'selected' if ret and ret.flight_type == 'direct' else '' }}>Direct</option>
-                <option value="via" {{ 'selected' if ret and ret.flight_type == 'via' else '' }}>Via</option>
-              </select>
-            </div>
-            <div class="mb-2">
-              <label class="form-label">Via (if any)</label>
-              <input class="form-control" type="text" name="return_via" placeholder="e.g., Muscat" value="{{ ret.via_city if ret and ret.via_city }}">
-            </div>
-            <div class="mb-2">
-              <label class="form-label">Airline</label>
-              <input class="form-control" type="text" name="return_airline" placeholder="e.g., Oman Air" value="{{ ret.airline_name if ret and ret.airline_name }}">
-            </div>
+        <div class="border rounded p-3">
+          <h6>Return</h6>
+
+          <label class="form-label">Date</label>
+          <input type="date" class="form-control mb-2" name="return_date"
+                 value="{{ ret.flight_date if ret else '' }}">
+
+          <label class="form-label d-block">Type</label>
+
+          <div class="form-check form-check-inline">
+            <input class="form-check-input" type="radio" name="return_type" id="return_direct"
+                   value="direct" {% if not ret or ret.flight_type != 'via' %}checked{% endif %}>
+            <label class="form-check-label" for="return_direct">Direct</label>
           </div>
+
+          <div class="form-check form-check-inline">
+            <input class="form-check-input" type="radio" name="return_type" id="return_via_radio"
+                   value="via" {% if ret and ret.flight_type == 'via' %}checked{% endif %}>
+            <label class="form-check-label" for="return_via_radio">Via</label>
+          </div>
+
+          <div class="mt-2" id="return_via_wrap" style="display:none;">
+            <label class="form-label">Via (city)</label>
+            <input class="form-control mb-2" name="return_via" id="return_via_input"
+                   value="{{ ret.via_city if ret else '' }}"
+                   placeholder="e.g., Doha">
+          </div>
+
+          <label class="form-label">Airline</label>
+          <input class="form-control" name="return_airline"
+                 value="{{ ret.airline_name if ret else '' }}">
         </div>
       </div>
     </div>
 
-    <!-- Stay -->
-    <h2 class="h6 mb-3">Stay</h2>
+    <!-- ✅ WORKING Via toggle (no modal) -->
+    <script>
+      function toggleVia(flightKey) {
+        const viaRadio = document.querySelector(`input[name="${flightKey}_type"][value="via"]`);
+        const wrap = document.getElementById(`${flightKey}_via_wrap`);
+        const input = document.getElementById(`${flightKey}_via_input`);
+        if (!viaRadio || !wrap || !input) return;
+
+        if (viaRadio.checked) {
+          wrap.style.display = "block";
+          // keep existing value if editing
+          setTimeout(() => input.focus(), 50);
+        } else {
+          wrap.style.display = "none";
+          input.value = ""; // important: clear if direct
+        }
+      }
+
+      // On page load
+      document.addEventListener("DOMContentLoaded", () => {
+        toggleVia("onward");
+        toggleVia("return");
+
+        document.querySelectorAll('input[name="onward_type"]').forEach(el => {
+          el.addEventListener("change", () => toggleVia("onward"));
+        });
+
+        document.querySelectorAll('input[name="return_type"]').forEach(el => {
+          el.addEventListener("change", () => toggleVia("return"));
+        });
+      });
+    </script>
+
+    <!-- =================== STAYS =================== -->
+    <h2 class="h6 mb-3 mt-4">Stay</h2>
     <div class="row">
 
       <!-- Mecca -->
@@ -205,57 +409,30 @@
             <div class="row">
               <div class="col-md-6 mb-2">
                 <label class="form-label">Check-in</label>
-                <input
-                  class="form-control"
-                  type="date"
-                  name="mecca_check_in"
-                  value="{{ mecca.check_in if mecca and mecca.check_in }}"
-                >
+                <input class="form-control" type="date" name="mecca_check_in">
               </div>
               <div class="col-md-6 mb-2">
                 <label class="form-label">Check-out</label>
-                <input
-                  class="form-control"
-                  type="date"
-                  name="mecca_check_out"
-                  value="{{ mecca.check_out if mecca and mecca.check_out }}"
-                >
+                <input class="form-control" type="date" name="mecca_check_out">
               </div>
             </div>
 
-            <!-- FREE TEXT (operators can type new hotel) -->
+            <!-- manual hotel -->
             <div class="mb-2">
               <label class="form-label">Hotel name</label>
               <div class="d-flex gap-2">
-                <input
-                  id="mecca_hotel"
-                  class="form-control"
-                  type="text"
-                  name="mecca_hotel"
-                  placeholder="Type new hotel OR choose below"
-                  value="{{ mecca.hotel_name if mecca and mecca.hotel_name }}"
-                >
-
-                <!-- ✅ City select for manual hotel -->
-                <select
-                  id="mecca_hotel_city"
-                  name="mecca_hotel_city"
-                  class="form-select"
-                  style="max-width: 140px;"
-                >
+                <input id="mecca_hotel" class="form-control" type="text" name="mecca_hotel" placeholder="Type new hotel OR choose below">
+                <select id="mecca_hotel_city" name="mecca_hotel_city" class="form-select" style="max-width: 140px;">
                   <option value="Mecca" selected>Mecca</option>
                   <option value="Medinah">Medinah</option>
                 </select>
               </div>
-              <div class="form-text">
-                Choose city only if you're adding a NEW hotel manually.
-              </div>
+              <div class="form-text">Choose city only if you're adding a NEW hotel manually.</div>
             </div>
 
-
-            <!-- EXISTING HOTEL SELECT -->
+            <!-- saved hotels -->
             <div class="mb-2">
-              <label class="form-label small text-muted">Choose from saved Mecca hotels</label>
+              <label class="form-label small text-muted">Or choose from saved Mecca hotels</label>
               <select id="mecca_hotel_select" class="form-select form-select-sm">
                 <option value="">— Choose existing hotel —</option>
                 {% for h in mecca_hotels %}
@@ -265,7 +442,6 @@
                     data-link="{{ h.link or '' }}"
                     data-distance-km="{{ h.distance_km or '' }}"
                     data-rating="{{ h.rating or '' }}"
-                    {{ 'selected' if mecca and mecca.hotel_id == h.id else '' }}
                   >
                     {{ h.name }}
                   </option>
@@ -273,70 +449,29 @@
               </select>
             </div>
 
-
-            <!-- Or similar (Mecca) -->
-            <div class="mt-2">
-              <button
-                type="button"
-                class="btn btn-sm btn-outline-secondary"
-                data-bs-toggle="modal"
-                data-bs-target="#similarHotelsModal"
-                data-city="Mecca"
-              >
-                Or similar
-              </button>
-
-              <!-- selected similar hotels display -->
-              <div id="mecca_similar_preview" class="small text-muted mt-1"></div>
-
-              <!-- hidden field to submit -->
-              <input type="hidden" name="mecca_similar_hotels" id="mecca_similar_hotels">
-            </div>
-  
-            
-
-
             <div class="mb-2">
               <label class="form-label">Hotel link (optional)</label>
-              <input
-                id="mecca_link"
-                class="form-control"
-                type="url"
-                name="mecca_link"
-                placeholder="https://"
-                value="{{ mecca.hotel_link if mecca and mecca.hotel_link }}"
-              >
+              <input id="mecca_link" name="mecca_link" class="form-control" placeholder="https://">
             </div>
 
-            <div class="row">
-              <!-- <div class="col-md-6 mb-2">
-                <label class="form-label">Distance (meters)</label>
-                <input
-                  id="mecca_distance_m"
-                  class="form-control"
-                  type="number"
-                  name="mecca_distance_m"
-                  min="0"
-                  placeholder="e.g., 300"
-                  value="{{ mecca.distance_m if mecca and mecca.distance_m }}"
-                >
-              </div> -->
-              <div class="col-md-6 mb-2">
-                <label class="form-label">Distance(meters) and label</label>
-                <input
-                  id="mecca_distance_text"
-                  class="form-control"
-                  type="text"
-                  name="mecca_distance_text"
-                  placeholder="e.g., 300 m from Haram"
-                  value="{{ mecca.distance_text if mecca and mecca.distance_text }}"
-                >
-              </div>
+            <div class="mb-2">
+              <label class="form-label">Hotel rating (stars)</label>
+              <input id="mecca_rating" name="mecca_rating" class="form-control" placeholder="e.g., 5">
             </div>
 
-            <!-- rating info (display only, no name so it won't break submit) -->
-            <div class="mt-1 small text-muted">
-              Rating: <span id="mecca_rating_view">{{ mecca.hotel.rating if mecca and mecca.hotel and mecca.hotel.rating else "—" }}</span>
+            <div class="mb-2">
+              <label class="form-label">Distance (km/meters) label</label>
+              <input id="mecca_distance_text" name="mecca_distance_text" class="form-control" placeholder="e.g., 0.30 km from Haram">
+            </div>
+
+            <!-- OR SIMILAR: Mecca -->
+            <div class="mb-3">
+              <label class="form-label">Similar Hotels (Mecca)</label>
+              <select id="mecca_similar" name="mecca_similar" multiple>
+                {% for h in mecca_hotels %}
+                  <option value="{{ h.id }}">{{ h.name }}</option>
+                {% endfor %}
+              </select>
             </div>
 
           </div>
@@ -352,58 +487,30 @@
             <div class="row">
               <div class="col-md-6 mb-2">
                 <label class="form-label">Check-in</label>
-                <input
-                  class="form-control"
-                  type="date"
-                  name="med_check_in"
-                  value="{{ med.check_in if med and med.check_in }}"
-                >
+                <input class="form-control" type="date" name="med_check_in">
               </div>
               <div class="col-md-6 mb-2">
                 <label class="form-label">Check-out</label>
-                <input
-                  class="form-control"
-                  type="date"
-                  name="med_check_out"
-                  value="{{ med.check_out if med and med.check_out }}"
-                >
+                <input class="form-control" type="date" name="med_check_out">
               </div>
             </div>
 
-            <!-- FREE TEXT -->
+            <!-- manual hotel -->
             <div class="mb-2">
               <label class="form-label">Hotel name</label>
               <div class="d-flex gap-2">
-                <input
-                  id="med_hotel"
-                  class="form-control"
-                  type="text"
-                  name="med_hotel"
-                  placeholder="Type new hotel OR choose below"
-                  value="{{ med.hotel_name if med and med.hotel_name }}"
-                >
-
-                <!-- ✅ City select for manual hotel -->
-                <select
-                  id="med_hotel_city"
-                  name="med_hotel_city"
-                  class="form-select"
-                  style="max-width: 140px;"
-                >
+                <input id="med_hotel" class="form-control" type="text" name="med_hotel" placeholder="Type new hotel OR choose below">
+                <select id="med_hotel_city" name="med_hotel_city" class="form-select" style="max-width: 140px;">
                   <option value="Medinah" selected>Medinah</option>
                   <option value="Mecca">Mecca</option>
                 </select>
               </div>
-              <div class="form-text">
-                Choose city only if you're adding a NEW hotel manually.
-              </div>
+              <div class="form-text">Choose city only if you're adding a NEW hotel manually.</div>
             </div>
 
-
-
-            <!-- EXISTING HOTEL SELECT -->
+            <!-- saved hotels -->
             <div class="mb-2">
-              <label class="form-label small text-muted">Choose from saved Medinah hotels</label>
+              <label class="form-label small text-muted">Or choose from saved Medinah hotels</label>
               <select id="med_hotel_select" class="form-select form-select-sm">
                 <option value="">— Choose existing hotel —</option>
                 {% for h in medinah_hotels %}
@@ -413,7 +520,6 @@
                     data-link="{{ h.link or '' }}"
                     data-distance-km="{{ h.distance_km or '' }}"
                     data-rating="{{ h.rating or '' }}"
-                    {{ 'selected' if med and med.hotel_id == h.id else '' }}
                   >
                     {{ h.name }}
                   </option>
@@ -421,84 +527,206 @@
               </select>
             </div>
 
-
-            <!-- Or similar (Medinah) -->
-            <div class="mt-2">
-              <button
-                type="button"
-                class="btn btn-sm btn-outline-secondary"
-                data-bs-toggle="modal"
-                data-bs-target="#similarHotelsModal"
-                data-city="Medinah"
-              >
-                Or similar
-              </button>
-
-              <div id="med_similar_preview" class="small text-muted mt-1"></div>
-
-              <input type="hidden" name="med_similar_hotels" id="med_similar_hotels">
-            </div>
-
-
-
-
             <div class="mb-2">
               <label class="form-label">Hotel link (optional)</label>
-              <input
-                id="med_link"
-                class="form-control"
-                type="url"
-                name="med_link"
-                placeholder="https://"
-                value="{{ med.hotel_link if med and med.hotel_link }}"
-              >
+              <input id="med_link" name="med_link" class="form-control" placeholder="https://">
             </div>
 
-            <div class="row">
-              <!-- <div class="col-md-6 mb-2">
-                <label class="form-label">Distance (meters)</label>
-                <input
-                  id="med_distance_m"
-                  class="form-control"
-                  type="number"
-                  name="med_distance_m"
-                  min="0"
-                  placeholder="e.g., 500"
-                  value="{{ med.distance_m if med and med.distance_m }}"
-                > -->
-              </div>
-              <div class="col-md-6 mb-2">
-                <label class="form-label">Distance(meters) and label</label>
-                <input
-                  id="med_distance_text"
-                  class="form-control"
-                  type="text"
-                  name="med_distance_text"
-                  placeholder="e.g., 500 m from Masjid an-Nabawi"
-                  value="{{ med.distance_text if med and med.distance_text }}"
-                >
-              </div>
+            <div class="mb-2">
+              <label class="form-label">Hotel rating (stars)</label>
+              <input id="med_rating" name="med_rating" class="form-control" placeholder="e.g., 4">
             </div>
 
-            <div class="mt-1 small text-muted">
-              Rating: <span id="med_rating_view">{{ med.hotel.rating if med and med.hotel and med.hotel.rating else "—" }}</span>
+            <div class="mb-2">
+              <label class="form-label">Distance (km/meters) label</label>
+              <input id="med_distance_text" name="med_distance_text" class="form-control" placeholder="e.g., 0.20 km from Masjid an-Nabawi">
+            </div>
+
+            <!-- OR SIMILAR: Medinah -->
+            <div class="mb-3">
+              <label class="form-label">Similar Hotels (Medinah)</label>
+              <select id="medinah_similar" name="medinah_similar" multiple>
+                {% for h in medinah_hotels %}
+                  <option value="{{ h.id }}">{{ h.name }}</option>
+                {% endfor %}
+              </select>
             </div>
 
           </div>
         </div>
       </div>
-
     </div>
 
-<!-- JS: autofill link + distance (+ rating view) -->
+    <script>
+      new SlimSelect({
+        select: '#mecca_similar',
+        placeholder: 'Search & select similar hotels...',
+        allowDeselect: true,
+        closeOnSelect: false
+      });
+
+      new SlimSelect({
+        select: '#medinah_similar',
+        placeholder: 'Search & select similar hotels...',
+        allowDeselect: true,
+        closeOnSelect: false
+      });
+    </script>
+
+    <!-- Inclusions -->
+<h2 class="h6 mb-3">Inclusions</h2>
+
+<div class="card mb-3">
+  <div class="card-body">
+    <div class="row g-3">
+
+      <!-- Meals -->
+      <div class="col-12">
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox"
+                 id="incl_meals_enabled" name="incl_meals_enabled"
+                 {% if incl and incl.meals_enabled %}checked{% endif %}>
+          <label class="form-check-label fw-semibold" for="incl_meals_enabled">Meals</label>
+        </div>
+        <input class="form-control mt-2" type="text" name="incl_meals_desc"
+               placeholder="e.g., Breakfast & Dinner"
+               value="{{ (incl.meals_desc or '') if incl else '' }}">
+      </div>
+
+      <!-- Laundry -->
+      <div class="col-12">
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox"
+                 id="incl_laundry_enabled" name="incl_laundry_enabled"
+                 {% if incl and incl.laundry_enabled %}checked{% endif %}>
+          <label class="form-check-label fw-semibold" for="incl_laundry_enabled">Laundry</label>
+        </div>
+        <input class="form-control mt-2" type="text" name="incl_laundry_desc"
+               placeholder="e.g., Alternate days"
+               value="{{ (incl.laundry_desc or '') if incl else '' }}">
+      </div>
+
+      <!-- Transport -->
+      <div class="col-12">
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox"
+                 id="incl_transport_enabled" name="incl_transport_enabled"
+                 {% if incl and incl.transport_enabled %}checked{% endif %}>
+          <label class="form-check-label fw-semibold" for="incl_transport_enabled">Transport</label>
+        </div>
+        <input class="form-control mt-2" type="text" name="incl_transport_desc"
+               placeholder="e.g., Airport transfers + Ziyarat"
+               value="{{ (incl.transport_desc or '') if incl else '' }}">
+      </div>
+
+      <!-- Zam Zam -->
+      <div class="col-12">
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox"
+                 id="incl_zamzam_enabled" name="incl_zamzam_enabled"
+                 {% if incl and incl.zamzam_enabled %}checked{% endif %}>
+          <label class="form-check-label fw-semibold" for="incl_zamzam_enabled">Zam Zam</label>
+        </div>
+        <input class="form-control mt-2" type="text" name="incl_zamzam_desc"
+               placeholder="e.g., 5 liters per pilgrim"
+               value="{{ (incl.zamzam_desc or '') if incl else '' }}">
+      </div>
+
+      <!-- Welcome Kit -->
+      <div class="col-12">
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox"
+                 id="incl_welcome_kit_enabled" name="incl_welcome_kit_enabled"
+                 {% if incl and incl.welcome_kit_enabled %}checked{% endif %}>
+          <label class="form-check-label fw-semibold" for="incl_welcome_kit_enabled">Welcome Kit</label>
+        </div>
+        <input class="form-control mt-2" type="text" name="incl_welcome_kit_desc"
+               placeholder="e.g., Backpack, ID card, prayer mat"
+               value="{{ (incl.welcome_kit_desc or '') if incl else '' }}">
+      </div>
+
+      <!-- Insurance -->
+      <div class="col-12">
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox"
+                 id="incl_insurance_enabled" name="incl_insurance_enabled"
+                 {% if incl and incl.insurance_enabled %}checked{% endif %}>
+          <label class="form-check-label fw-semibold" for="incl_insurance_enabled">Insurance</label>
+        </div>
+        <input class="form-control mt-2" type="text" name="incl_insurance_desc"
+               placeholder="e.g., Travel medical insurance included"
+               value="{{ (incl.insurance_desc or '') if incl else '' }}">
+      </div>
+
+      <!-- VISA -->
+      <div class="col-12">
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox"
+                 id="incl_visa_enabled" name="incl_visa_enabled"
+                 {% if incl and incl.visa_enabled %}checked{% endif %}>
+          <label class="form-check-label fw-semibold" for="incl_visa_enabled">VISA</label>
+        </div>
+        <input class="form-control mt-2" type="text" name="incl_visa_desc"
+               placeholder="e.g., Umrah visa processing included"
+               value="{{ (incl.visa_desc or '') if incl else '' }}">
+      </div>
+
+      <!-- ZIYARAT -->
+      <div class="col-12">
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox"
+                 id="incl_ziyarat_enabled" name="incl_ziyarat_enabled"
+                 {% if incl and incl.ziyarat_enabled %}checked{% endif %}>
+          <label class="form-check-label fw-semibold" for="incl_ziyarat_enabled">Ziyarat</label>
+        </div>
+        <input class="form-control mt-2" type="text" name="incl_ziyarat_desc"
+               placeholder="e.g., Makkah & Madinah ziyarat by AC bus"
+               value="{{ (incl.ziyarat_desc or '') if incl else '' }}">
+      </div>
+
+      <!-- Other -->
+      <div class="col-12">
+        <label class="form-label mt-2">Other notes (optional)</label>
+        <textarea class="form-control" name="incl_other" rows="2"
+                  placeholder="(optional — add any other inclusions or notes)">{{ (incl.other or '') if incl else '' }}</textarea>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+    <div class="d-flex gap-2">
+  <button class="btn btn-primary" type="submit" name="submit_action" value="save">
+    Save
+  </button>
+
+  <button class="btn btn-outline-secondary" type="submit" name="submit_action" value="draft">
+    Save as Draft
+  </button>
+
+  <button class="btn btn-success" type="submit" name="submit_action" value="finish">
+    Save & Finish (Make Active)
+  </button>
+
+  <a href="/agency/{{ agency.registration_id }}/dashboard" class="btn btn-outline-secondary">
+    Cancel
+  </a>
+</div>
+
+  </form>
+</div>
+
+<!-- ================= JS ================= -->
 <script>
-  function wireHotelSelect(selectId, nameInputId, linkId, distanceId, distanceLabelId, ratingViewId, cityLabel) {
+  // Autofill hotel fields from DB selects
+  function wireHotelSelect(selectId, nameInputId, linkId, distanceLabelId, ratingId, cityLockId) {
     const select = document.getElementById(selectId);
     if (!select) return;
 
     select.addEventListener("change", function () {
       const opt = this.selectedOptions[0];
-      if (!opt) return;
+      if (!opt || !opt.dataset) return;
 
       const name = opt.dataset.name || "";
       const link = opt.dataset.link || "";
@@ -507,280 +735,28 @@
 
       const nameInput = document.getElementById(nameInputId);
       const linkInput = document.getElementById(linkId);
-      const distInput = document.getElementById(distanceId);
       const distLabelInput = document.getElementById(distanceLabelId);
-      const ratingView = document.getElementById(ratingViewId);
+      const ratingInput = document.getElementById(ratingId);
+      const citySelect = document.getElementById(cityLockId);
 
       if (nameInput) nameInput.value = name;
       if (linkInput) linkInput.value = link;
-
-      if (distInput && distanceKm) {
-        const meters = Math.round(parseFloat(distanceKm) * 1000);
-        if (!Number.isNaN(meters)) distInput.value = meters.toString();
-      }
+      if (ratingInput) ratingInput.value = rating;
 
       if (distLabelInput && distanceKm) {
+        const cityLabel = selectId === "mecca_hotel_select" ? "Haram" : "Masjid an-Nabawi";
         distLabelInput.value = distanceKm + " km from " + cityLabel;
       }
 
-      if (ratingView) ratingView.textContent = rating || "—";
-    });
-  }
-
-  wireHotelSelect("mecca_hotel_select", "mecca_hotel", "mecca_link", "mecca_distance_m", "mecca_distance_text", "mecca_rating_view", "Haram");
-  wireHotelSelect("med_hotel_select", "med_hotel", "med_link", "med_distance_m", "med_distance_text", "med_rating_view", "Masjid an-Nabawi");
-</script>
-
-    <!-- Inclusions -->
-    <h2 class="h6 mb-3">Inclusions</h2>
-    <div class="card mb-3">
-      <div class="card-body">
-        <div class="row g-3">
-          <div class="col-12">
-            <div class="form-check">
-              <input class="form-check-input" type="checkbox" id="incl_meals_enabled" name="incl_meals_enabled" {{ 'checked' if incl and incl.meals_enabled else '' }}>
-              <label class="form-check-label fw-semibold" for="incl_meals_enabled">Meals</label>
-            </div>
-            <input class="form-control mt-2" type="text" name="incl_meals_desc" placeholder="e.g., Breakfast & Dinner" value="{{ incl.meals_desc if incl and incl.meals_desc }}">
-          </div>
-
-          <div class="col-12">
-            <div class="form-check">
-              <input class="form-check-input" type="checkbox" id="incl_laundry_enabled" name="incl_laundry_enabled" {{ 'checked' if incl and incl.laundry_enabled else '' }}>
-              <label class="form-check-label fw-semibold" for="incl_laundry_enabled">Laundry</label>
-            </div>
-            <input class="form-control mt-2" type="text" name="incl_laundry_desc" placeholder="e.g., Alternate days" value="{{ incl.laundry_desc if incl and incl.laundry_desc }}">
-          </div>
-
-          <div class="col-12">
-            <div class="form-check">
-              <input class="form-check-input" type="checkbox" id="incl_transport_enabled" name="incl_transport_enabled" {{ 'checked' if incl and incl.transport_enabled else '' }}>
-              <label class="form-check-label fw-semibold" for="incl_transport_enabled">Transport</label>
-            </div>
-            <input class="form-control mt-2" type="text" name="incl_transport_desc" placeholder="e.g., Airport transfers + Ziyarat" value="{{ incl.transport_desc if incl and incl.transport_desc }}">
-          </div>
-
-          <div class="col-12">
-            <div class="form-check">
-              <input class="form-check-input" type="checkbox" id="incl_zamzam_enabled" name="incl_zamzam_enabled" {{ 'checked' if incl and incl.zamzam_enabled else '' }}>
-              <label class="form-check-label fw-semibold" for="incl_zamzam_enabled">Zam Zam</label>
-            </div>
-            <input class="form-control mt-2" type="text" name="incl_zamzam_desc" placeholder="e.g., 5 liters per pilgrim" value="{{ incl.zamzam_desc if incl and incl.zamzam_desc }}">
-          </div>
-
-          <div class="col-12">
-            <div class="form-check">
-              <input class="form-check-input" type="checkbox" id="incl_welcome_kit_enabled" name="incl_welcome_kit_enabled" {{ 'checked' if incl and incl.welcome_kit_enabled else '' }}>
-              <label class="form-check-label fw-semibold" for="incl_welcome_kit_enabled">Welcome Kit</label>
-            </div>
-            <input class="form-control mt-2" type="text" name="incl_welcome_kit_desc" placeholder="e.g., Backpack, ID card, prayer mat" value="{{ incl.welcome_kit_desc if incl and incl.welcome_kit_desc }}">
-          </div>
-
-          <div class="col-12">
-            <div class="form-check">
-              <input class="form-check-input" type="checkbox" id="incl_insurance_enabled" name="incl_insurance_enabled" {{ 'checked' if incl and incl.insurance_enabled else '' }}>
-              <label class="form-check-label fw-semibold" for="incl_insurance_enabled">Insurance</label>
-            </div>
-            <input class="form-control mt-2" type="text" name="incl_insurance_desc" placeholder="e.g., Travel medical insurance included" value="{{ incl.insurance_desc if incl and incl.insurance_desc }}">
-          </div>
-
-          <div class="col-12">
-            <label class="form-label mt-2">Other notes (optional)</label>
-            <textarea class="form-control" name="incl_other" rows="2" placeholder="(optional — add any other inclusions or notes)">{{ incl.other_notes if incl and incl.other_notes }}</textarea>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="d-flex gap-2">
-      <button class="btn btn-primary" type="submit">Save Changes</button>
-      <a href="/agency/{{ agency.registration_id }}/dashboard" class="btn btn-outline-secondary">Cancel</a>
-    </div>
-  </form>
-</div>
-
-<!-- JS: auto-fill hotel fields when selecting saved hotels -->
-<script>
-  function wireHotelSelect(selectId, nameInputId, linkId, distanceId, distanceLabelId) {
-    const select = document.getElementById(selectId);
-    if (!select) return;
-
-    select.addEventListener("change", function () {
-      const opt = this.selectedOptions[0];
-      if (!opt) return;
-
-      const name = opt.dataset.name || "";
-      const link = opt.dataset.link || "";
-      const distanceKm = opt.dataset.distanceKm || "";
-      const citySelect =
-        selectId === "mecca_hotel_select"
-          ? document.getElementById("mecca_hotel_city")
-          : document.getElementById("med_hotel_city");
-
+      // lock city when choosing saved hotel
       if (citySelect) {
-        // lock to that city's dropdown
         citySelect.value = (selectId === "mecca_hotel_select") ? "Mecca" : "Medinah";
       }
-
-
-      const nameInput = document.getElementById(nameInputId);
-      const linkInput = document.getElementById(linkId);
-      const distInput = document.getElementById(distanceId);
-      const distLabelInput = document.getElementById(distanceLabelId);
-
-      if (nameInput) nameInput.value = name;
-      if (linkInput) linkInput.value = link;
-
-      if (distInput && distanceKm) {
-        const meters = Math.round(parseFloat(distanceKm) * 1000);
-        if (!Number.isNaN(meters)) {
-          distInput.value = meters.toString();
-        }
-      }
-
-      if (distLabelInput && distanceKm) {
-        const cityLabel = selectId === "mecca_hotel_select" ? "Haram" : "Masjid";
-        const metersText = distanceKm + " km from " + cityLabel;
-        distLabelInput.value = metersText;
-      }
     });
   }
 
-  wireHotelSelect("mecca_hotel_select", "mecca_hotel", "mecca_link", "mecca_distance_m", "mecca_distance_text");
-  wireHotelSelect("med_hotel_select", "med_hotel", "med_link", "med_distance_m", "med_distance_text");
-</script>
-
-
-<!-- Similar Hotels Modal (shared for Mecca + Medinah) -->
-<div class="modal fade" id="similarHotelsModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-scrollable">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Select Similar Hotels</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-
-      <div class="modal-body">
-
-        <!-- Search -->
-        <input id="similar_search" type="text" class="form-control form-control-sm mb-2" placeholder="Search hotel...">
-
-        <!-- List -->
-        <div id="similarHotelsList">
-          <!-- JS will fill checkboxes here -->
-        </div>
-
-      </div>
-
-      <div class="modal-footer">
-        <button type="button" class="btn btn-sm btn-light" data-bs-dismiss="modal">Cancel</button>
-        <button type="button" class="btn btn-sm btn-primary" id="similarHotelsApplyBtn">
-          Add selected
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
-<script>
-  // ----------------------------------------------------
-  // 1) Build hotel arrays safely using Jinja loop + tojson
-  //    (NO list comprehension)
-  // ----------------------------------------------------
-  const MECCA_HOTELS = [
-    {% for h in mecca_hotels %}
-      {{ {"id": h.id, "name": h.name} | tojson }}{% if not loop.last %},{% endif %}
-    {% endfor %}
-  ];
-
-  const MEDINAH_HOTELS = [
-    {% for h in medinah_hotels %}
-      {{ {"id": h.id, "name": h.name} | tojson }}{% if not loop.last %},{% endif %}
-    {% endfor %}
-  ];
-
-  // ----------------------------------------------------
-  // 2) Variables
-  // ----------------------------------------------------
-  let currentCity = "Mecca";
-  let currentSelection = new Set();
-
-  const modalEl  = document.getElementById("similarHotelsModal");
-  const listEl   = document.getElementById("similarHotelsList");
-  const searchEl = document.getElementById("similar_search");
-
-  // ----------------------------------------------------
-  // 3) Render list
-  // ----------------------------------------------------
-  function renderSimilarList() {
-    const data = currentCity === "Mecca" ? MECCA_HOTELS : MEDINAH_HOTELS;
-    const q = (searchEl.value || "").toLowerCase();
-
-    listEl.innerHTML = data
-      .filter(h => (h.name || "").toLowerCase().includes(q))
-      .map(h => `
-        <div class="form-check">
-          <input class="form-check-input similar-checkbox"
-                 type="checkbox"
-                 value="${h.name}"
-                 id="sim_${currentCity}_${h.id}"
-                 ${currentSelection.has(h.name) ? "checked" : ""}>
-          <label class="form-check-label"
-                 for="sim_${currentCity}_${h.id}">
-            ${h.name}
-          </label>
-        </div>
-      `).join("");
-  }
-
-  // ----------------------------------------------------
-  // 4) On modal open → detect city + load old selections
-  // ----------------------------------------------------
-  modalEl.addEventListener("show.bs.modal", function (event) {
-    const btn = event.relatedTarget;
-    currentCity = btn?.dataset?.city || "Mecca";
-
-    const hiddenId =
-      currentCity === "Mecca"
-        ? "mecca_similar_hotels"
-        : "med_similar_hotels";
-
-    const raw = document.getElementById(hiddenId)?.value || "";
-    currentSelection = new Set(
-      raw.split(",").map(s => s.trim()).filter(Boolean)
-    );
-
-    searchEl.value = "";
-    renderSimilarList();
-  });
-
-  // ----------------------------------------------------
-  // 5) Search filter
-  // ----------------------------------------------------
-  searchEl.addEventListener("input", renderSimilarList);
-
-  // ----------------------------------------------------
-  // 6) Apply selections
-  // ----------------------------------------------------
-  document.getElementById("similarHotelsApplyBtn")
-    .addEventListener("click", function () {
-
-      const checked = [...document.querySelectorAll(".similar-checkbox:checked")]
-        .map(c => c.value.trim());
-
-      const joined = checked.join(", ");
-
-      if (currentCity === "Mecca") {
-        document.getElementById("mecca_similar_hotels").value = joined;
-        document.getElementById("mecca_similar_preview").innerText =
-          joined ? ("Similar: " + joined) : "";
-      } else {
-        document.getElementById("med_similar_hotels").value = joined;
-        document.getElementById("med_similar_preview").innerText =
-          joined ? ("Similar: " + joined) : "";
-      }
-
-      bootstrap.Modal.getInstance(modalEl).hide();
-    });
+  wireHotelSelect("mecca_hotel_select", "mecca_hotel", "mecca_link", "mecca_distance_text", "mecca_rating", "mecca_hotel_city");
+  wireHotelSelect("med_hotel_select", "med_hotel", "med_link", "med_distance_text", "med_rating", "med_hotel_city");
 </script>
 
 {% endblock %}

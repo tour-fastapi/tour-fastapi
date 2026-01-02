@@ -22,7 +22,9 @@ from app.web.routes import router as ui_router
 from app.web.routes_media import router as media_router
 from app.web.routes_admin import router as admin_router
 
+import pymysql
 app = FastAPI(title=settings.APP_NAME)
+pymysql.install_as_MySQLdb()
 
 @app.on_event("startup")
 def on_startup():
