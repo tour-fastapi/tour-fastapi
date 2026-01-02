@@ -108,6 +108,7 @@
               <i data-lucide="globe" class="icon icon--sm icon--primary"></i>
               <span>{{ agency.website_url }}</span>
             </a>
+             {% endif %}
              {% if agency.instagram_url %}
               
               <a href="{{ agency.instagram_url }}" target="_blank" rel="noopener" class="link-primary">
@@ -123,7 +124,7 @@
               </a>
             {% endif %}
 
-            {% endif %}
+           
           {% endif %}
         </div>
       {% endif %}  
