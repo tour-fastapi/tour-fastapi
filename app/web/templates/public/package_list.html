@@ -115,12 +115,14 @@
                         <div class="flight-detail__info">
                           <div class="flight-detail__airline">{{ f.airline_name }}</div>
                           <div class="flight-detail__type">
-                            {% if f.is_direct %}
+                            {% if f.via_city %}
+                              Via from {{ f.via_city }}
+                            {% else %}
                               Direct
-                            {% elif f.via_city %}
-                              Via {{ f.via_city }}
                             {% endif %}
                           </div>
+
+
 
                         </div>
                       </div>
@@ -142,18 +144,22 @@
                       <div class="accommodation-detail__content">
                         <div class="accommodation-detail__info">
                           <div class="accommodation-detail__name">{{ s.hotel_name }}</div>
-                          {% if s.distance_meters %}
-                            <div class="accommodation-detail__distance">
-                              {{ s.distance_meters }}m from
-                              {% if s.city|lower == "makkah" %}
-                                Haram
-                              {% elif s.city|lower == "madinah" %}
-                                Masjid Nabawi
-                              {% else %}
-                                City Center
-                              {% endif %}
-                            </div>
-                          {% endif %}
+                          
+                            {% if s.distance_m %}
+                              <div class="accommodation-detail__distance">
+                                {{ s.distance_m }}m from
+                                {% if s.city and s.city|lower == "makkah" %}
+                                  Haram
+                                {% elif s.city and s.city|lower == "madinah" %}
+                                  Masjid Nabawi
+                                {% else %}
+                                  City Center
+                                {% endif %}
+                              </div>
+                            {% endif %}
+
+
+                         
 
                         </div>
                       </div>
