@@ -7,7 +7,7 @@
 <main class="page">
   <!-- Header -->
   <header class="page-header is-hidden">
-    <a href="/umrah_operators" class="page-back">
+    <a href="/operators" class="page-back">
       ← Back to operators
     </a>
 
@@ -91,22 +91,56 @@
           </div>
 
           <!-- Stats -->
-          <div class="operator-card__stats">
-            <div class="operator-card__stats-grid">
-              <div class="operator-stat">
-                <div class="operator-stat__value">250+</div>
-                <div class="operator-stat__label">Packages</div>
-              </div>
-              <div class="operator-stat">
-                <div class="operator-stat__value">12K+</div>
-                <div class="operator-stat__label">Pilgrims</div>
-              </div>
-              <div class="operator-stat">
-                <div class="operator-stat__value">15</div>
-                <div class="operator-stat__label">Years</div>
-              </div>
-            </div>
-          </div>
+          {# =========================
+   OPERATOR STATS (dynamic)
+   ========================= #}
+
+{% set umrah_tours = a.num_umrah_tours if a.num_umrah_tours is defined and a.num_umrah_tours else 0 %}
+{% set hajj_tours  = a.num_hajj_tours  if a.num_hajj_tours  is defined and a.num_hajj_tours  else 0 %}
+{% set total_tours = umrah_tours + hajj_tours %}
+
+{% set pilgrims = a.num_pilgrims_sent if a.num_pilgrims_sent is defined and a.num_pilgrims_sent else None %}
+{% set since_year = a.operating_since if a.operating_since is defined and a.operating_since else None %}
+
+{# calculate years dynamically #}
+{% if since_year and current_year %}
+  {% set years = current_year - since_year %}
+  {% if years < 1 %}
+    {% set years = 1 %}
+  {% endif %}
+{% else %}
+  {% set years = None %}
+{% endif %}
+
+{% if total_tours or pilgrims or years %}
+  <div class="operator-card__stats">
+    <div class="operator-card__stats-grid">
+
+      {% if total_tours %}
+        <div class="operator-stat">
+          <div class="operator-stat__value">{{ total_tours }}</div>
+          <div class="operator-stat__label">Tours</div>
+        </div>
+      {% endif %}
+
+      {% if pilgrims %}
+        <div class="operator-stat">
+          <div class="operator-stat__value">{{ pilgrims }}</div>
+          <div class="operator-stat__label">Pilgrims</div>
+        </div>
+      {% endif %}
+
+      {% if years %}
+        <div class="operator-stat">
+          <div class="operator-stat__value">{{ years }}</div>
+          <div class="operator-stat__label">Years</div>
+        </div>
+      {% endif %}
+
+    </div>
+  </div>
+{% endif %}
+
 
           <!-- Services -->
           <div class="operator-card__services is-hidden">
@@ -182,7 +216,7 @@
                 </div>
                 {% endif %}
               <div class="operator-card__action-secondary">
-                <a class="btn btn-outline" href="/umrah_operators/{{ a.registration_id }}">View Details</a>
+                <a class="btn btn-outline" href="/operators/{{ a.registration_id }}">View Details</a>
               </div>
             </div>
           </div>

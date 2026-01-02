@@ -3,343 +3,208 @@
 {% block content %}
 {% import "shared/_macros.html" as ui %}
 
-
 <main class="page">
 
-  <!-- ============================================================================
-     PACKAGES LISTING PAGE
-     Browse all Umrah packages with filters
-     ============================================================================ -->
-
-<!-- Page Header - Title & Subtitle -->
+<!-- ============================================================
+  PAGE HEADER
+============================================================ -->
 <div class="listing-header">
   <div class="listing-header__container">
     <h1 class="listing-header__title">Find Your Perfect Umrah Package</h1>
-    <p class="listing-header__subtitle">Discover Umrah packages by Cities</p>
-    <p class="listing-header__subtitle is-hidden">Browse verified packages from trusted operators worldwide</p>
+    <p class="listing-header__subtitle">
+      {% if packages_by_city %}
+        Discover Umrah packages by city
+      {% else %}
+        No packages available yet
+      {% endif %}
+    </p>
   </div>
 </div>
-<!-- City Group Header -->
 
-<div class="group-header group-header--with-icon is-hidden">
-  <div class="group-header__left">
-    <div class="group-header__icon">
-      <svg><!-- icon --></svg>
-    </div>
-    <h3 class="group-header__title">Mumbai</h3>
-  </div>
-  <span class="group-header__count">3 packages</span>
-</div>
+{% if packages_by_city and packages_by_city|length > 0 %}
 
-<div class="group-header group-header--sticky is-hidden">
-  <h3 class="group-header__title">Mumbai</h3>
-  <span class="group-header__count">3 packages</span>
-</div>
-  <!-- Hero -->
-  <header class="page-header is-hidden">
-    <div class="page-title-wrap">
-      <div class="page-title-group">
-        <h1 class="page-title">
-          Umrah Packages by City
-        </h1>
+  {# packages_by_city = [(city_name, [Package, Package...]), ...] #}
+  {% for city, packages in packages_by_city %}
 
-        <p class="page-subtitle">
-          Discover Umrah packages offered by verified tour operators
-        </p>
-      </div>
+    {% if packages and packages|length > 0 %}
+      <div class="listing-results">
 
-      <span class="page-count">
-        {{ packages_by_city|length }}
-        cit{{ 'ies' if packages_by_city|length != 1 else 'y' }}
-      </span>
-    </div>
-  </header>
-
-  {% if packages_by_city and packages_by_city|length > 0 %}
-  <!-- City Group Header -->
-  {% for city, items in packages_by_city %}
-  <div class="listing-results">
-    <div class="group-header">
-      <h3 class="group-header__title">{{ packages_by_city|length }} packa{{ 'ges' if packages_by_city|length != 1 else 'ge' }} in {{city}}</h3>
-      <span class="group-header__count is-hidden">{{ packages_by_city|length }}
-          cit{{ 'ies' if packages_by_city|length != 1 else 'y' }}</span>
-    </div>
-    
-      <div class="package-card">
-      
-      <!-- Banner Section -->
-      <div class="package-card__banner">
-        <img 
-          src="/media/packages-banners/{{ banner }}"
-          onerror="this.onerror=null;this.src='/media/packages-banners/larger-ones/dynamic-tawaf-at-night.jpg';"
-          alt="Ramadan Umrah Package" 
-          class="package-card__banner-image"
-        />
-        
-        <!-- Gradient Overlay -->
-        <div class="package-card__banner-gradient"></div>
-        
-        <!-- Banner Content -->
-        <div class="package-card__banner-content">
-          
-          <!-- Nudges (Top) -->
-          <div class="package-card__nudges is-hidden">
-            <span class="package-nudge package-nudge--discount">15% Early Bird</span>
-            <span class="package-nudge package-nudge--deal">Limited Seats</span>
-          </div>
-          
-          <!-- Package Info (Bottom) -->
-          <div class="package-card__info">
-            
-            <!-- Name & Price -->
-            <div class="package-card__header">
-              <h3 class="package-card__name">{{ items.package_name }}</h3>
-              <div class="package-card__price-box">
-                <div class="package-card__price">₹ 45,000</div>
-              </div>
-            </div>
-            
-            <!-- Meta Line -->
-            <p class="package-card__meta">
-              <span class="package-card__category">Premium</span>
-              <span class="package-card__meta-separator">•</span>
-              <span class="package-card__meta-item">
-                <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                  <line x1="16" y1="2" x2="16" y2="6"/>
-                  <line x1="8" y1="2" x2="8" y2="6"/>
-                  <line x1="3" y1="10" x2="21" y2="10"/>
-                </svg>
-                15 Days
-              </span>
-              <span class="package-card__meta-separator">•</span>
-              <span>Direct</span>
-              <span class="package-card__meta-separator">•</span>
-              <span>Saudi Airlines</span>
-            </p>
-            
-            <!-- Departure Date -->
-            <div class="package-card__departure">
-              <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/>
-              </svg>
-              <span>Departure: Mon, 24th December</span>
-            </div>
-            
-            <!-- Inclusions Icons -->
-            <div class="package-card__inclusions">
-              
-              <!-- Flights -->
-              <div class="package-inclusion" title="Flights">
-                <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                  <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/>
-                </svg>
-                <div class="package-inclusion__tooltip">
-                  <div class="package-inclusion__tooltip-content">
-                    <div class="package-inclusion__tooltip-title">Flights</div>
-                    <div class="package-inclusion__tooltip-detail">Round-trip flights</div>
-                    <div class="package-inclusion__tooltip-arrow"></div>
-                  </div>
-                </div>
-              </div>
-              
-              <!-- Hotels -->
-              <div class="package-inclusion" title="Hotels">
-                <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                  <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
-                  <polyline points="9 22 9 12 15 12 15 22"/>
-                </svg>
-                <div class="package-inclusion__tooltip">
-                  <div class="package-inclusion__tooltip-content">
-                    <div class="package-inclusion__tooltip-title">Hotels</div>
-                    <div class="package-inclusion__tooltip-detail">4-star accommodations</div>
-                    <div class="package-inclusion__tooltip-arrow"></div>
-                  </div>
-                </div>
-              </div>
-              
-              <!-- Meals -->
-              <div class="package-inclusion" title="Meals">
-                <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                  <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 002-2V2M7 2v20M21 15V2v0a5 5 0 00-5 5v6c0 1.1.9 2 2 2h3zM21 15v7"/>
-                </svg>
-                <div class="package-inclusion__tooltip">
-                  <div class="package-inclusion__tooltip-content">
-                    <div class="package-inclusion__tooltip-title">Meals</div>
-                    <div class="package-inclusion__tooltip-detail">Breakfast & Dinner</div>
-                    <div class="package-inclusion__tooltip-arrow"></div>
-                  </div>
-                </div>
-              </div>
-              
-              <!-- Transport -->
-              <div class="package-inclusion" title="Transport">
-                <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                  <rect x="1" y="3" width="15" height="13"/>
-                  <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/>
-                  <circle cx="5.5" cy="18.5" r="2.5"/>
-                  <circle cx="18.5" cy="18.5" r="2.5"/>
-                </svg>
-                <div class="package-inclusion__tooltip">
-                  <div class="package-inclusion__tooltip-content">
-                    <div class="package-inclusion__tooltip-title">Transport</div>
-                    <div class="package-inclusion__tooltip-detail">Private AC buses</div>
-                    <div class="package-inclusion__tooltip-arrow"></div>
-                  </div>
-                </div>
-              </div>
-              
-              <!-- Ziyarat -->
-              <div class="package-inclusion" title="Ziyarat">
-                <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                  <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
-                  <circle cx="9" cy="7" r="4"/>
-                  <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
-                </svg>
-                <div class="package-inclusion__tooltip">
-                  <div class="package-inclusion__tooltip-content">
-                    <div class="package-inclusion__tooltip-title">Ziyarat</div>
-                    <div class="package-inclusion__tooltip-detail">Guided tours</div>
-                    <div class="package-inclusion__tooltip-arrow"></div>
-                  </div>
-                </div>
-              </div>
-              
-              <!-- Insurance -->
-              <div class="package-inclusion" title="Insurance">
-                <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-                </svg>
-                <div class="package-inclusion__tooltip">
-                  <div class="package-inclusion__tooltip-content">
-                    <div class="package-inclusion__tooltip-title">Insurance</div>
-                    <div class="package-inclusion__tooltip-detail">Travel insurance</div>
-                    <div class="package-inclusion__tooltip-arrow"></div>
-                  </div>
-                </div>
-              </div>
-              
-            </div>
-            
-          </div>
+        <!-- City Header -->
+        <div class="group-header">
+          <h3 class="group-header__title">
+            {{ packages|length }} package{{ 's' if packages|length != 1 else '' }} in {{ city }}
+          </h3>
         </div>
-      </div>
-      
-      <!-- Flight Details Section -->
-      <div class="package-card__flights">
-        <div class="package-card__flights-grid">
-          
-          <!-- Onward Flight -->
-          <div class="flight-detail">
-            <div class="flight-detail__label">ONWARD</div>
-            <div class="flight-detail__content">
-              <div class="flight-detail__icon flight-detail__icon--onward">
-                <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                  <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/>
-                </svg>
-              </div>
-              <div class="flight-detail__info">
-                <div class="flight-detail__airline">Saudia SV 752</div>
-                <div class="flight-detail__type">Direct</div>
-              </div>
-            </div>
-          </div>
-          
-          <!-- Return Flight -->
-          <div class="flight-detail">
-            <div class="flight-detail__label">RETURN</div>
-            <div class="flight-detail__content">
-              <div class="flight-detail__icon flight-detail__icon--return">
-                <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                  <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/>
-                </svg>
-              </div>
-              <div class="flight-detail__info">
-                <div class="flight-detail__airline">Air India AI 966</div>
-                <div class="flight-detail__type">via Doha</div>
-              </div>
-            </div>
-          </div>
-          
-        </div>
-      </div>
-      
-      <!-- Accommodation Section -->
-      <div class="package-card__accommodation">
-        <div class="package-card__accommodation-grid">
-          
-          <!-- Makkah Hotel -->
-          <div class="accommodation-detail">
-            <div class="accommodation-detail__label">MAKKAH</div>
-            <div class="accommodation-detail__content">
-              <div class="accommodation-detail__icon">
-                <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                  <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
-                  <polyline points="9 22 9 12 15 12 15 22"/>
-                </svg>
-              </div>
-              <div class="accommodation-detail__info">
-                <div class="accommodation-detail__name">Fairmont Makkah Clock Royal Tower</div>
-                <div class="accommodation-detail__distance">50m from Haram</div>
-              </div>
-            </div>
-          </div>
-          
-          <!-- Madinah Hotel -->
-          <div class="accommodation-detail">
-            <div class="accommodation-detail__label">MADINAH</div>
-            <div class="accommodation-detail__content">
-              <div class="accommodation-detail__icon">
-                <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                  <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
-                  <polyline points="9 22 9 12 15 12 15 22"/>
-                </svg>
-              </div>
-              <div class="accommodation-detail__info">
-                <div class="accommodation-detail__name">Pullman Zamzam Madinah</div>
-                <div class="accommodation-detail__distance">200m from Masjid Nabawi</div>
-              </div>
-            </div>
-          </div>
-          
-        </div>
-      </div>
-      
-      <!-- Operator Section -->
-      <div class="package-card__operator">
-        <div class="package-card__operator-content">
-          <div class="package-card__operator-info">
-            <!-- Operator Avatar -->
-            <div class="operator-avatar">A</div>
-            <!-- Operator Details -->
-            <div class="operator-details">
-              <div class="operator-details__name">Al Warsi Tours & Travels</div>
-              <div class="operator-details__location">
-                <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/>
-                  <circle cx="12" cy="10" r="3"/>
-                </svg>
-                Mumbai, India
-              </div>
-            </div>
-          </div>
-          <!-- Rating -->
-          <div class="operator-rating">
-            <div class="operator-rating__value">⭐ 4.8</div>
-            <div class="operator-rating__count">250 reviews</div>
-          </div>
-        </div>
-      </div>
-      
-    </div>
-    {% endfor %}
-    
-  {% else %}
-    <div class="card empty">No packages available yet.</div>
-  {% endif %}
 
-  </div>
-    
-    </main>
+        {% for p in packages %}
+          <div class="package-card">
 
+            <!-- ============================================================
+              BANNER
+            ============================================================ -->
+            {% set banner = p.banner_image if p.banner_image else "dynamic-tawaf-at-night.jpg" %}
+            <div class="package-card__banner">
+              <img
+                src="/media/packages-banners/{{ banner }}"
+                onerror="this.onerror=null;this.src='/media/packages-banners/dynamic-tawaf-at-night.jpg';"
+                alt="{{ p.package_name }}"
+                class="package-card__banner-image"
+              />
+              <div class="package-card__banner-gradient"></div>
+
+              <div class="package-card__banner-content">
+
+                <!-- Package Info -->
+                <div class="package-card__info">
+
+                  <div class="package-card__header">
+                    <h3 class="package-card__name">{{ p.package_name }}</h3>
+
+                    {% if p.price %}
+                      <div class="package-card__price-box">
+                        <div class="package-card__price">₹ {{ p.price }}</div>
+                      </div>
+                    {% endif %}
+                  </div>
+
+                  <!-- Meta -->
+                  <p class="package-card__meta">
+                    {% if p.package_class %}
+                      <span class="package-card__category">{{ p.package_class|title }}</span>
+                      <span class="package-card__meta-separator">•</span>
+                    {% endif %}
+
+                    {% if p.days %}
+                      <span class="package-card__meta-item">
+                        {{ p.days }} Days
+                      </span>
+                    {% endif %}
+                  </p>
+
+                  <!-- Travel Month / Year -->
+                  {% if p.travel_month or p.travel_year %}
+                    <div class="package-card__departure">
+                      <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                        <rect x="3" y="4" width="18" height="18" rx="2"/>
+                        <line x1="16" y1="2" x2="16" y2="6"/>
+                        <line x1="8" y1="2" x2="8" y2="6"/>
+                        <line x1="3" y1="10" x2="21" y2="10"/>
+                      </svg>
+                      <span>
+                        Travel:
+                        {% if p.travel_month %}{{ p.travel_month }}{% endif %}
+                        {% if p.travel_year %}/{{ p.travel_year }}{% endif %}
+                      </span>
+                    </div>
+                  {% endif %}
+
+                </div>
+              </div>
+            </div>
+
+            <!-- ============================================================
+              FLIGHTS (only if exist)
+            ============================================================ -->
+            {% if p.flights and p.flights|length > 0 %}
+              <div class="package-card__flights">
+                <div class="package-card__flights-grid">
+                  {% for f in p.flights %}
+                    <div class="flight-detail">
+                      <div class="flight-detail__label">{{ f.direction|upper }}</div>
+                      <div class="flight-detail__content">
+                        <div class="flight-detail__info">
+                          <div class="flight-detail__airline">{{ f.airline_name }}</div>
+                          <div class="flight-detail__type">
+                            {% if f.is_direct %}
+                              Direct
+                            {% elif f.via_city %}
+                              Via {{ f.via_city }}
+                            {% endif %}
+                          </div>
+
+                        </div>
+                      </div>
+                    </div>
+                  {% endfor %}
+                </div>
+              </div>
+            {% endif %}
+
+            <!-- ============================================================
+              HOTELS (only if exist)
+            ============================================================ -->
+            {% if p.stays and p.stays|length > 0 %}
+              <div class="package-card__accommodation">
+                <div class="package-card__accommodation-grid">
+                  {% for s in p.stays %}
+                    <div class="accommodation-detail">
+                      <div class="accommodation-detail__label">{{ s.city|upper }}</div>
+                      <div class="accommodation-detail__content">
+                        <div class="accommodation-detail__info">
+                          <div class="accommodation-detail__name">{{ s.hotel_name }}</div>
+                          {% if s.distance_meters %}
+                            <div class="accommodation-detail__distance">
+                              {{ s.distance_meters }}m from
+                              {% if s.city|lower == "makkah" %}
+                                Haram
+                              {% elif s.city|lower == "madinah" %}
+                                Masjid Nabawi
+                              {% else %}
+                                City Center
+                              {% endif %}
+                            </div>
+                          {% endif %}
+
+                        </div>
+                      </div>
+                    </div>
+                  {% endfor %}
+                </div>
+              </div>
+            {% endif %}
+
+            <!-- ============================================================
+              OPERATOR
+            ============================================================ -->
+            <div class="package-card__operator">
+              <div class="package-card__operator-content">
+                <div class="package-card__operator-info">
+                  <div class="operator-avatar">
+                    {{ ui.agency_badge(p.agency, 40, True) }}
+                  </div>
+                  <div class="operator-details">
+                    <div class="operator-details__name">
+                      {{ p.agency.agencies_name }}
+                    </div>
+                    {% if p.agency.city or p.agency.country %}
+                      <div class="operator-details__location">
+                        {{ p.agency.city }}{% if p.agency.country %}, {{ p.agency.country }}{% endif %}
+                      </div>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ============================================================
+              CTA
+            ============================================================ -->
+            <div class="package-card__footer">
+              <a href="/packages/{{ p.package_id }}" class="btn btn-primary">
+                View Package
+              </a>
+            </div>
+
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+  {% endfor %}
+
+{% else %}
+  <div class="card empty">No packages available yet.</div>
+{% endif %}
+
+</main>
 {% endblock %}

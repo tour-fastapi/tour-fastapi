@@ -230,8 +230,8 @@ def home(request: Request, db: Session = Depends(get_db)):
         {
             "name": r[0],
             "count": r[1],
-            "operators_href": f"/city/{urllib.parse.quote(r[0])}/umrah_operators",
-            "packages_href": f"/city/{urllib.parse.quote(r[0])}/umrah_packages",
+            "operators_href": f"/city/{urllib.parse.quote(r[0])}/operators",
+            "packages_href": f"/city/{urllib.parse.quote(r[0])}/packages",
             "hub_href": f"/city/{urllib.parse.quote(r[0])}",
         }
         for r in rows
@@ -283,8 +283,8 @@ def _get_footer_cities(db: Session, limit: int = 16):
         out.append(
             {
                 "name": city,
-                "operators_href": f"/city/{q}/umrah_operators",
-                "packages_href": f"/city/{q}/umrah_packages",
+                "operators_href": f"/city/{q}/operators",
+                "packages_href": f"/city/{q}/packages",
             }
         )
     return out
@@ -1278,7 +1278,7 @@ def agency_delete_submit(
 
 # ----------------- Packages (public + owner CRUD) -----------------
 
-@router.get("/umrah_packages", response_class=HTMLResponse)
+@router.get("/packages", response_class=HTMLResponse)
 def packages_list(request: Request, db: Session = Depends(get_db)):
     from collections import defaultdict
     from sqlalchemy.orm import selectinload
@@ -1348,7 +1348,7 @@ from app.db.models.hotel import Hotel
 from app.db.models.package_theme import PackageTheme
 
 
-@router.get("/umrah_packages/{package_id}", response_class=HTMLResponse)
+@router.get("/packages/{package_id}", response_class=HTMLResponse)
 def package_detail(package_id: int, request: Request, db: Session = Depends(get_db)):
     pkg = (
         db.query(Package)
@@ -1561,7 +1561,7 @@ def package_detail(package_id: int, request: Request, db: Session = Depends(get_
         is_public=True,
     )
 
-@router.post("/umrah_packages/{package_id}/inquire")
+@router.post("/ packages/{package_id}/inquire")
 def package_inquire_submit(
     request: Request,
     package_id: int,
@@ -1578,12 +1578,12 @@ def package_inquire_submit(
 
     if website.strip():  # honeypot
         flash(request, "Thanks! Your inquiry was sent.", "success")
-        return RedirectResponse(url=f"/umrah_packages/{package_id}", status_code=303)
+        return RedirectResponse(url=f"/packages/{package_id}", status_code=303)
 
     pkg = db.query(Package).filter(Package.package_id == package_id).first()
     if not pkg:
         flash(request, "Package not found", "error")
-        return RedirectResponse(url="/umrah_packages", status_code=303)
+        return RedirectResponse(url="/packages", status_code=303)
 
     name = (name or "").strip()
     msg = (inquiry or "").strip()
@@ -1593,7 +1593,7 @@ def package_inquire_submit(
 
     if not name or not msg:
         flash(request, "Please fill all required fields.", "error")
-        return RedirectResponse(url=f"/umrah_packages/{package_id}", status_code=303)
+        return RedirectResponse(url=f"/packages/{package_id}", status_code=303)
 
     if not is_valid_phone(phone):
         flash(
@@ -1601,13 +1601,13 @@ def package_inquire_submit(
             "Enter a valid phone number (e.g., +9198xxxxxxxx or a 10-digit Indian mobile starting 6–9).",
             "error",
         )
-        return RedirectResponse(url=f"/umrah_packages/{package_id}", status_code=303)
+        return RedirectResponse(url=f"/packages/{package_id}", status_code=303)
 
     # unified tag with detail page
     if not check_captcha(request, tag=f"pkg-inq:{package_id}", user_answer=captcha_answer):
         flash(request, "CAPTCHA was incorrect. Please try again.", "error")
         new_captcha(request, tag=f"pkg-inq:{package_id}")
-        return RedirectResponse(url=f"/umrah_packages/{package_id}", status_code=303)
+        return RedirectResponse(url=f"/packages/{package_id}", status_code=303)
 
     try:
         db.add(
@@ -1623,10 +1623,10 @@ def package_inquire_submit(
     except Exception:
         db.rollback()
         flash(request, "Could not save inquiry. Please try again.", "error")
-        return RedirectResponse(url=f"/umrah_packages/{package_id}", status_code=303)
+        return RedirectResponse(url=f"/packages/{package_id}", status_code=303)
 
     flash(request, "Thanks! Your inquiry was sent.", "success")
-    return RedirectResponse(url=f"/umrah_packages/{package_id}", status_code=303)
+    return RedirectResponse(url=f"/packages/{package_id}", status_code=303)
 
 
 # ---- Owner: Package create/edit/delete (protected) ----
@@ -2812,7 +2812,7 @@ def package_delete(
 
 # ----------------- Operators (public) -----------------
 from sqlalchemy.orm import selectinload
-@router.get("/umrah_operators", response_class=HTMLResponse)
+@router.get("/operators", response_class=HTMLResponse)
 def operators_list(request: Request, db: Session = Depends(get_db)):
     agencies = (
         db.query(Agency)
@@ -2847,13 +2847,14 @@ def operators_list(request: Request, db: Session = Depends(get_db)):
             "cities": cities,
             "total": len(agencies),
             "version": "operators_list v5",
+            "current_year": datetime.now().year, 
         },
         is_public=True,
     )
 
 from app.db.models.agency_branch import AgencyBranch
 
-@router.get("/umrah_operators/{registration_id}", response_class=HTMLResponse)
+@router.get("/operators/{registration_id}", response_class=HTMLResponse)
 def operator_detail(
     registration_id: int,
     request: Request,
@@ -2900,9 +2901,9 @@ def operator_detail(
     # Build UI helpers
     display_city = _display_city(agency)
     back_href = (
-        f"/city/{urllib.parse.quote(display_city)}/umrah_operators"
+        f"/city/{urllib.parse.quote(display_city)}/operators"
         if display_city != "Unknown"
-        else "/umrah_operators"
+        else "/operators"
     )
 
     # Render strictly with this operator's data
@@ -2925,7 +2926,7 @@ def operator_detail(
 
 
 
-@router.get("/city/{city_name}/umrah_operators", response_class=HTMLResponse, name="city_operators")
+@router.get("/city/{city_name}/operators", response_class=HTMLResponse, name="city_operators")
 def city_operators(city_name: str, request: Request, db: Session = Depends(get_db)):
     city = _decode_city(city_name)
     if not city:
@@ -2952,12 +2953,13 @@ def city_operators(city_name: str, request: Request, db: Session = Depends(get_d
         "public/operators_by_city.html",
         request,
         db,
-        {"title": f"Operators in {city}", "city": city, "agencies": agencies, "count": len(agencies)},
+        {"title": f"Operators in {city}", "city": city, "agencies": agencies, "count": len(agencies),"current_year": datetime.now().year},
         is_public=True,
+        
     )
 
 
-@router.get("/city/{city_name}/umrah_packages", response_class=HTMLResponse, name="city_packages")
+@router.get("/city/{city_name}/packages", response_class=HTMLResponse, name="city_packages")
 def city_packages(city_name: str, request: Request, db: Session = Depends(get_db)):
     city = _decode_city(city_name)
     agencies = (
@@ -3087,22 +3089,22 @@ def legacy_dashboard_agency(registration_id: int):
 
 @router.get("/city/{city_name}/package")
 def legacy_city_package(city_name: str):
-    return RedirectResponse(url=f"/city/{urllib.parse.quote(city_name)}/umrah_packages", status_code=308)
+    return RedirectResponse(url=f"/city/{urllib.parse.quote(city_name)}/packages", status_code=308)
 
 
-@router.get("/umrah_packages/{city}/{package_id}")
+@router.get("/packages/{city}/{package_id}")
 def legacy_package_detail(city: str, package_id: int):
-    return RedirectResponse(url=f"/umrah_packages/{package_id}", status_code=308)
+    return RedirectResponse(url=f"/packages/{package_id}", status_code=308)
 
 
-@router.get("/umrah_operators/city/{city_name}")
+@router.get("operators/city/{city_name}")
 def legacy_operators_city(city_name: str):
-    return RedirectResponse(url=f"/city/{urllib.parse.quote(city_name)}/umrah_operators", status_code=308)
+    return RedirectResponse(url=f"/city/{urllib.parse.quote(city_name)}/operators", status_code=308)
 
 
-@router.get("/umrah_packages/city/{city_name}")
+@router.get("/packages/city/{city_name}")
 def legacy_packages_city(city_name: str):
-    return RedirectResponse(url=f"/city/{urllib.parse.quote(city_name)}/umrah_packages", status_code=308)
+    return RedirectResponse(url=f"/city/{urllib.parse.quote(city_name)}/packages", status_code=308)
 
 
 # ----------------- Phone + CAPTCHA helpers -----------------
@@ -3471,5 +3473,21 @@ def _is_admin_email(email: str | None) -> bool:
 def _is_admin_user(user: User | None) -> bool:
     return bool(user) and (getattr(user, "is_admin", False) or _is_admin_email(user.email))
 
+from fastapi.responses import RedirectResponse
+
+@router.get("/city/{city}/umrah_packages")
+def redirect_umrah_packages(city: str):
+    return RedirectResponse(
+        url=f"/city/{city}/packages",
+        status_code=301  # permanent redirect
+    )
+
+
+@router.get("/city/{city}/umrah_operators")
+def redirect_umrah_operators(city: str):
+    return RedirectResponse(
+        url=f"/city/{city}/operators",
+        status_code=301
+    )
 
 
