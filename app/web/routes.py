@@ -2918,6 +2918,7 @@ def operator_detail(
             "display_city": display_city,
             "back_href": back_href,
             "branch": branch,  # your template can show it if present
+            "current_year": datetime.now().year,
         },
         is_public=True,
     )
