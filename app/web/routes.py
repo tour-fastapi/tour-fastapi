@@ -52,6 +52,49 @@ from PIL import Image, UnidentifiedImageError
 router = APIRouter()
 templates = Jinja2Templates(directory="app/web/templates")
 
+def format_money(amount, currency_symbol=None, currency_position=None, currency_code=None):
+    """
+    amount: number
+    currency_symbol: e.g. "₹", "SR"
+    currency_position: "left" or "right"
+    currency_code: e.g. "INR", "SAR" (fallback if symbol missing)
+    """
+
+    if amount is None:
+        return ""
+
+    # ✅ Fallback symbols if DB has NULL symbol
+    FALLBACK_SYMBOLS = {
+        "INR": "₹",
+        "SAR": "SR",
+        "AED": "AED",
+        "USD": "$",
+        "EUR": "€",
+        "GBP": "£",
+    }
+
+    sym = (currency_symbol or "").strip()
+    if not sym:
+        code = (currency_code or "").strip().upper()
+        sym = FALLBACK_SYMBOLS.get(code, "₹")  # last fallback
+
+    pos = (currency_position or "left").strip().lower()
+
+    try:
+        value = float(amount)
+        formatted = f"{value:,.0f}"  # you can change to :,.2f if needed
+    except Exception:
+        formatted = str(amount)
+
+    if pos == "right":
+        return f"{formatted} {sym}"
+    return f"{sym}{formatted}"
+
+
+templates.env.globals["format_money"] = format_money
+
+
+
 # canonical mapping: DB/user input -> file key (without .html)
 THEME_ALIAS_MAP = {
     "premium-aurora": "premium_aurora",
@@ -72,6 +115,58 @@ def normalize_theme_key(raw: str) -> str:
     k = THEME_ALIAS_MAP.get(k, "basic")
     return k  # returns one of: premium_aurora | premium | basic
 
+CURRENCY_SYMBOLS = {
+    "INR": "₹",
+    "SAR": "SR",      # use SR (safe font support)
+    "USD": "$",
+    "EUR": "€",
+    "GBP": "£",
+    "AED": "AED",     # or "د.إ" if your font supports it
+}
+
+
+def get_currency_ctx_for_agency(agency: Agency | None) -> dict:
+    """
+    Returns a dict:
+      {
+        "currency_code": "USD",
+        "currency_symbol": "$",
+        "currency_position": "prefix"   # prefix|suffix
+      }
+    """
+
+    FALLBACK_SYMBOLS = {
+        "INR": "₹",
+        "SAR": "SR",
+        "AED": "AED",
+        "USD": "$",
+        "EUR": "€",
+        "GBP": "£",
+    }
+
+    code = (getattr(agency, "currency_code", None) or "INR").strip().upper()
+
+    # prefer DB symbol, else fallback by code
+    sym = (getattr(agency, "currency_symbol", None) or "").strip()
+    if not sym:
+        sym = FALLBACK_SYMBOLS.get(code, code)
+
+    # prefer DB position, else default prefix
+    pos = (getattr(agency, "currency_position", None) or "prefix").strip().lower()
+    if pos not in {"prefix", "suffix", "left", "right"}:
+        pos = "prefix"
+
+    # normalize left/right to prefix/suffix
+    if pos == "left":
+        pos = "prefix"
+    if pos == "right":
+        pos = "suffix"
+
+    return {
+        "currency_code": code,
+        "currency_symbol": sym,
+        "currency_position": pos,
+    }
 
 # ----------------- Small helpers -----------------
 
@@ -945,6 +1040,7 @@ def agency_new_submit(
     branch_contact_person: str = Form(""),
     branch_contact_number: str = Form(""),
     branch_is_main: Optional[str] = Form(None),
+    currency_code: str = Form(...),
     # ✅ accept optional file as UploadFile via File()
     logo_file: Optional[UploadFile] = File(None),
     csrf_token: str = Form(...),
@@ -1034,6 +1130,7 @@ def agency_new_submit(
         num_pilgrims_sent=_to_int_or_none(num_pilgrims_sent),
         city_id=city_row.id,
         user_id=user.id,
+        currency_code=(currency_code or "").strip().upper(),
     )
     db.add(agency)
     db.commit()
@@ -1101,6 +1198,7 @@ def agency_new_submit(
         url=f"/agency/{agency.registration_id}/dashboard",
         status_code=303,
     )
+
 
 
 
@@ -1330,6 +1428,9 @@ def packages_list(request: Request, db: Session = Depends(get_db)):
         return (name == "Unknown", name.casefold())
 
     packages_by_city = sorted(by_city.items(), key=lambda t: city_sort_key(t[0]))
+    currency_by_agency_id = {a.registration_id: get_currency_ctx_for_agency(a) for a in agencies}
+
+
 
     return render(
         "public/package_list.html",
@@ -1339,9 +1440,20 @@ def packages_list(request: Request, db: Session = Depends(get_db)):
             "title": "Discover Packages",
             "packages_by_city": packages_by_city,
             "agency_by_id": agency_by_id,  # keeps agency info for cards
+            "currency_by_agency_id": currency_by_agency_id,
         },
         is_public=True,
     )
+
+def currency_ctx_for_agency(agency):
+    # sensible defaults
+    code = getattr(agency, "currency_code", None) or "INR"
+    symbol = getattr(agency, "currency_symbol", None) or "₹"
+    pos = getattr(agency, "currency_position", None) or "prefix"  # prefix|suffix
+    return {"currency_code": code, "currency_symbol": symbol, "currency_position": pos}
+
+
+
 
 from sqlalchemy import func
 from app.db.models.hotel import Hotel
@@ -1518,6 +1630,9 @@ def package_detail(package_id: int, request: Request, db: Session = Depends(get_
     mecca_similar_hotels = _get_similar_hotels(mecca)
     med_similar_hotels   = _get_similar_hotels(med)
     # --------------------------------------------------------------
+    currency_ctx = get_currency_ctx_for_agency(agency)
+
+
 
     csrf_token = get_csrf_token(request)
     captcha_tag = f"pkg-inq:{pkg.package_id}"
@@ -1554,6 +1669,9 @@ def package_detail(package_id: int, request: Request, db: Session = Depends(get_
             # ✅ NEW: lists used by basic / premium / premium_aurora templates
             "mecca_similar_hotels": mecca_similar_hotels,
             "med_similar_hotels":   med_similar_hotels,
+            **currency_ctx,
+            
+
 
             "csrf_token": csrf_token,
             "captcha_q": new_captcha(request, captcha_tag),
@@ -1561,7 +1679,7 @@ def package_detail(package_id: int, request: Request, db: Session = Depends(get_
         is_public=True,
     )
 
-@router.post("/ packages/{package_id}/inquire")
+@router.post("/packages/{package_id}/inquire")
 def package_inquire_submit(
     request: Request,
     package_id: int,
@@ -2165,6 +2283,8 @@ def package_new_submit(
 
     flash(request, "Package added! Let’s add the day-by-day itinerary (you can skip it).", "info")
     return RedirectResponse(url=f"/package/{pkg.package_id}/itinerary/wizard?day=1", status_code=303)
+
+
 
 @router.post("/package/{package_id}/status")
 def package_set_status(
@@ -2812,6 +2932,9 @@ def package_delete(
 
 # ----------------- Operators (public) -----------------
 from sqlalchemy.orm import selectinload
+from datetime import datetime
+from collections import defaultdict
+
 @router.get("/operators", response_class=HTMLResponse)
 def operators_list(request: Request, db: Session = Depends(get_db)):
     agencies = (
@@ -2821,6 +2944,17 @@ def operators_list(request: Request, db: Session = Depends(get_db)):
         .filter(Agency.is_blocked == False)
         .all()
     )
+
+    # ✅ currency map per agency
+    currency_by_agency_id = {}
+    for a in agencies:
+        ctx = get_currency_ctx_for_agency(a) or {}
+        currency_by_agency_id[a.registration_id] = {
+            "currency_code": ctx.get("currency_code"),
+            "currency_symbol": ctx.get("currency_symbol"),
+            "currency_position": ctx.get("currency_position"),
+        }
+
     grouped: dict[str, list[Agency]] = {}
     for a in agencies:
         grouped.setdefault(_display_city(a), []).append(a)
@@ -2832,12 +2966,6 @@ def operators_list(request: Request, db: Session = Depends(get_db)):
 
     cities = [{"city": name, "agencies": grouped[name]} for name in sorted(grouped, key=city_sort_key)]
 
-    by_city = defaultdict(list)
-    for a in agencies:
-        city = _display_city(a)
-        by_city[city].append(a)
-    cards = [(city, len(items)) for city, items in by_city.items() if len(items) > 0]
-    cards.sort(key=lambda t: (t[0] == "Unknown", t[0].casefold()))
     return render(
         "public/operators_list.html",
         request,
@@ -2847,7 +2975,11 @@ def operators_list(request: Request, db: Session = Depends(get_db)):
             "cities": cities,
             "total": len(agencies),
             "version": "operators_list v5",
-            "current_year": datetime.now().year, 
+            "current_year": datetime.now().year,
+
+            # ✅ REQUIRED
+            "format_money": format_money,
+            "currency_by_agency_id": currency_by_agency_id,
         },
         is_public=True,
     )
@@ -2868,7 +3000,11 @@ def operator_detail(
     )
     if not agency:
         raise HTTPException(status_code=404, detail="Operator not found")
-    
+
+    # Currency context for THIS operator (used in both blocked + normal pages)
+    currency_ctx = get_currency_ctx_for_agency(agency)
+
+    # Blocked agency → show void page
     if getattr(agency, "is_blocked", False):
         flashes = pop_flashes(request)
         return templates.TemplateResponse(
@@ -2878,18 +3014,17 @@ def operator_detail(
                 "title": "Agency Blocked",
                 "flashes": flashes,
                 "csrf_token": get_csrf_token(request),
+                **currency_ctx,
             },
         )
 
-    # Packages belonging to this operator
+    # Packages belonging to this operator (only active)
     packages = (
         db.query(Package)
-        .filter(Package.registration_id == registration_id)
-        .filter(Package.status == "active")
+        .filter(Package.registration_id == registration_id, Package.status == "active")
         .order_by(Package.package_id.desc())
         .all()
     )
-
 
     # Optional: fetch the operator’s main branch (if exists) for address/contact details
     branch = (
@@ -2917,8 +3052,9 @@ def operator_detail(
             "packages": packages,
             "display_city": display_city,
             "back_href": back_href,
-            "branch": branch,  # your template can show it if present
+            "branch": branch,  # template can show it if present
             "current_year": datetime.now().year,
+            **currency_ctx,
         },
         is_public=True,
     )
@@ -2960,18 +3096,34 @@ def city_operators(city_name: str, request: Request, db: Session = Depends(get_d
     )
 
 
+from fastapi import Depends, HTTPException, Request
+from fastapi.responses import HTMLResponse
+from sqlalchemy.orm import Session, selectinload
+from sqlalchemy import func
+
 @router.get("/city/{city_name}/packages", response_class=HTMLResponse, name="city_packages")
 def city_packages(city_name: str, request: Request, db: Session = Depends(get_db)):
     city = _decode_city(city_name)
-    agencies = (
+
+    if not city or not city.strip():
+        raise HTTPException(status_code=404, detail="City not found")
+
+    city_norm = city.lower().strip()
+
+    # (Optional) agencies list if your template uses it anywhere.
+    # If not used, you can delete this whole block safely.
+    agencies_list = (
         db.query(Agency)
         .join(Package, Package.registration_id == Agency.registration_id)
         .outerjoin(City, City.id == Agency.city_id)
         .options(selectinload(Agency.city_rel))
         .filter(
             func.lower(
-                func.coalesce(func.nullif(func.trim(Agency.city), ""), func.trim(City.name))
-            ) == city.lower().strip()
+                func.coalesce(
+                    func.nullif(func.trim(Agency.city), ""),
+                    func.trim(City.name),
+                )
+            ) == city_norm
         )
         .filter(Agency.is_blocked == False)
         .filter(Package.status == "active")
@@ -2980,8 +3132,6 @@ def city_packages(city_name: str, request: Request, db: Session = Depends(get_db
         .all()
     )
 
-    if not city:
-        raise HTTPException(status_code=404, detail="City not found")
     rows = (
         db.query(Package, Agency)
         .join(Agency, Agency.registration_id == Package.registration_id)
@@ -2993,17 +3143,28 @@ def city_packages(city_name: str, request: Request, db: Session = Depends(get_db
                     func.nullif(func.trim(Agency.city), ""),
                     func.trim(City.name),
                 )
-            )
-            == city.lower().strip()
+            ) == city_norm
         )
-        .order_by(Package.package_id.desc())
         .filter(Agency.is_blocked == False)
-        .filter(Package.status == "active") 
+        .filter(Package.status == "active")
+        .order_by(Package.package_id.desc())
         .all()
     )
+
     packages = [r[0] for r in rows]
     agencies = [r[1] for r in rows]
+
     agency_by_id = {a.registration_id: a for a in agencies}
+
+    # One clean mapping: {registration_id: {currency_code, currency_symbol, currency_position}}
+    currency_by_agency_id = {}
+    for ag_id, ag in agency_by_id.items():
+        ctx = get_currency_ctx_for_agency(ag) or {}
+        currency_by_agency_id[ag_id] = {
+            "currency_code": ctx.get("currency_code"),
+            "currency_symbol": ctx.get("currency_symbol"),
+            "currency_position": ctx.get("currency_position"),
+        }
 
     return render(
         "public/packages_city.html",
@@ -3015,6 +3176,10 @@ def city_packages(city_name: str, request: Request, db: Session = Depends(get_db
             "packages": packages,
             "agency_by_id": agency_by_id,
             "count": len(packages),
+            "format_money": format_money,
+            "currency_by_agency_id": currency_by_agency_id,
+            # only keep this if your template needs it:
+            "agencies": agencies_list,
         },
         is_public=True,
     )
@@ -3065,6 +3230,20 @@ def city_hub(city_name: str, request: Request, db: Session = Depends(get_db)):
     packages = [r[0] for r in pkg_rows]
     pkg_agencies = [r[1] for r in pkg_rows]
     agency_by_id = {a.registration_id: a for a in pkg_agencies}
+    all_agencies = {a.registration_id: a for a in (agencies + pkg_agencies)}
+    currency_by_agency_id = {rid: get_currency_ctx_for_agency(a) for rid, a in all_agencies.items()}
+    for _, packages in city_packages:
+        for p in packages:
+            ag = getattr(p, "agency", None)
+            if ag and ag.registration_id not in currency_by_agency_id:
+                ctx = get_currency_ctx_for_agency(ag) or {}
+                currency_by_agency_id[ag.registration_id] = {
+                    "currency_code": ctx.get("currency_code"),
+                    "currency_symbol": ctx.get("currency_symbol"),
+                    "currency_position": ctx.get("currency_position"),
+                }
+
+
 
     return render(
         "public/city_hub.html",
@@ -3076,6 +3255,12 @@ def city_hub(city_name: str, request: Request, db: Session = Depends(get_db)):
             "agencies": agencies,
             "packages": packages,
             "agency_by_id": agency_by_id,
+            "format_money": format_money,
+            "currency_by_agency_id": currency_by_agency_id,
+            "count_agencies": len(agencies),
+            "count_packages": len(packages),
+            "current_year": datetime.now().year, 
+
         },
         is_public=True,
     )
@@ -3490,5 +3675,6 @@ def redirect_umrah_operators(city: str):
         url=f"/city/{city}/operators",
         status_code=301
     )
+
 
 
