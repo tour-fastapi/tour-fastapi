@@ -12,6 +12,8 @@
 
   .listing-page__container {
     @apply max-w-7xl mx-auto px-4 py-8;
+    max-width: 768px;
+    margin:auto;
   }
 
   @media (min-width: 768px) {
