@@ -2213,21 +2213,22 @@ def package_new_submit(
         # ----------------------------------------------------------------------
         # 7.5) Auto-compute "or similar" hotels ONLY if user didn't select any
         # ----------------------------------------------------------------------
-        if mecca_stay and mecca_stay.hotel_id and not mecca_stay.similar_hotel_ids:
-            mecca_stay.similar_hotel_ids = find_similar_hotel_ids(
-                db=db,
-                base_hotel_id=mecca_stay.hotel_id,
-                city="Mecca",
-                limit=4,
-            ) or None
+        
+        # if mecca_stay and mecca_stay.hotel_id and not mecca_stay.similar_hotel_ids:
+        #     mecca_stay.similar_hotel_ids = find_similar_hotel_ids(
+        #         db=db,
+        #         base_hotel_id=mecca_stay.hotel_id,
+        #         city="Mecca",
+        #         limit=4,
+        #     ) or None
 
-        if med_stay and med_stay.hotel_id and not med_stay.similar_hotel_ids:
-            med_stay.similar_hotel_ids = find_similar_hotel_ids(
-                db=db,
-                base_hotel_id=med_stay.hotel_id,
-                city="Medinah",
-                limit=4,
-            ) or None
+        # if med_stay and med_stay.hotel_id and not med_stay.similar_hotel_ids:
+        #     med_stay.similar_hotel_ids = find_similar_hotel_ids(
+        #         db=db,
+        #         base_hotel_id=med_stay.hotel_id,
+        #         city="Medinah",
+        #         limit=4,
+        #     ) or None
 
 
 
