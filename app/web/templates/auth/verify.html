@@ -1,43 +1,422 @@
 {% extends "base.html" %}
-
 {% block content %}
-<div class="container py-4" style="max-width: 480px;">
-  <h1 class="h4 mb-3">Verify your email address</h1>
 
-  <p class="mb-4">
-    We've sent you a 6 digit verification code on your email address
-    <strong>{{ otp_email or "your email address" }}</strong>.
-    Please enter the verification code to complete your registration.
-  </p>
-
-  <form action="/verify" method="post" novalidate>
-    <!-- CSRF -->
-    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-
-    <div class="mb-3">
-      <label for="code" class="form-label">Enter verification code</label>
-      <input
-        id="code"
-        name="code"
-        type="text"
-        inputmode="numeric"
-        autocomplete="one-time-code"
-        class="form-control"
-        minlength="6"
-        maxlength="6"
-        required
-        placeholder="______"
+<!-- Main Content -->
+<main class="flex-1 flex items-center justify-center px-4 py-8 md:py-12" style="min-height: calc(100vh - 400px);">
+  <div class="w-full max-w-md">
+    
+    <!-- Header Section -->
+    <div class="text-center mb-6 md:mb-8">
+      <div 
+        class="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
+        style="background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(145, 62%, 24%) 100%); color: white;">
+        <i data-lucide="mail-check" class="w-8 h-8"></i>
+      </div>
+      <h1 class="mb-3" style="font-size: clamp(1.5rem, 4vw, 2rem); font-weight: 700;">
+        Verify your email
+      </h1>
+      <p class="text-sm md:text-base mb-3" style="color: hsl(var(--muted));">
+        We've sent a 6-digit verification code to
+      </p>
+      <div 
+        class="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg mb-2"
+        style="background: hsl(var(--primary) / 0.1); border: 1px solid hsl(var(--primary) / 0.2);">
+        <i data-lucide="mail" class="w-4 h-4" style="color: hsl(var(--primary));"></i>
+        <span style="font-weight: 600; color: hsl(var(--fg)); font-size: 0.9375rem;">
+          {{ otp_email or "your@email.com" }}
+        </span>
+      </div>
+      <button 
+        type="button" 
+        onclick="window.location.href='/register'"
+        class="text-sm flex items-center justify-center gap-1.5 mx-auto mt-2"
+        style="color: hsl(var(--primary)); font-weight: 500; cursor: pointer; background: none; border: none; padding: 0.25rem 0.5rem; border-radius: 0.375rem; transition: all 0.2s;"
+        onmouseover="this.style.background='hsl(var(--primary) / 0.1)'"
+        onmouseout="this.style.background='none'"
       >
-      <div class="form-text">The code expires in {{ otp_exp_minutes }} minutes.</div>
+        <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
+        Edit email address
+      </button>
     </div>
 
-    <button class="btn btn-primary w-100" type="submit">Verify</button>
-  </form>
+    <!-- Info Alert -->
+    <div class="alert alert--info mb-5">
+      <i data-lucide="info" class="alert__icon"></i>
+      <div class="alert__content">
+        <div class="alert__message" style="font-size: 0.8125rem;">
+          Check your spam folder if you don't see the email. The code expires in {{ otp_exp_minutes or 15 }} minutes.
+        </div>
+      </div>
+    </div>
 
-  <form action="/verify/resend" method="post" class="mt-3">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-    <span class="text-muted">Didn't receive verification code?</span>
-    <button class="btn btn-link p-0 align-baseline" type="submit">Request another code</button>
-  </form>
-</div>
+    <!-- Flash Messages (Backend Alerts) -->
+    {% if flashes %}
+      <div id="flashMessages" class="mb-5">
+        {% for f in flashes %}
+          <div class="alert alert--{{ 'error' if f.type == 'error' else 'success' if f.type == 'success' else 'warning' if f.type == 'warning' else 'info' }}">
+            <i data-lucide="{{ 'alert-circle' if f.type == 'error' else 'check-circle' if f.type == 'success' else 'alert-triangle' if f.type == 'warning' else 'info' }}" class="alert__icon"></i>
+            <div class="alert__content">
+              <div class="alert__title">{{ f.type|capitalize }}</div>
+              <div class="alert__message">{{ f.text }}</div>
+            </div>
+            <button type="button" class="alert__close" onclick="closeFlashAlert(this)">
+              <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <!-- Verification Form Card -->
+    <div class="form-card">
+      <form method="post" action="/verify" id="verifyForm" novalidate autocomplete="off">
+        
+        <!-- CSRF Token -->
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}"/>
+        
+        <!-- OTP Code Field -->
+        <div class="form-group">
+          <label class="form-label form-label--required text-center mb-4" style="display: block;">
+            Enter verification code
+          </label>
+          
+          <!-- Hidden input for form submission -->
+          <input type="hidden" id="code" name="code" value="" />
+          
+          <!-- 6-Digit OTP Boxes -->
+          <div class="otp-input-container">
+            <input type="text" class="otp-input" id="otp1" maxlength="1" inputmode="numeric" autocomplete="off" />
+            <input type="text" class="otp-input" id="otp2" maxlength="1" inputmode="numeric" autocomplete="off" />
+            <input type="text" class="otp-input" id="otp3" maxlength="1" inputmode="numeric" autocomplete="off" />
+            <input type="text" class="otp-input" id="otp4" maxlength="1" inputmode="numeric" autocomplete="off" />
+            <input type="text" class="otp-input" id="otp5" maxlength="1" inputmode="numeric" autocomplete="off" />
+            <input type="text" class="otp-input" id="otp6" maxlength="1" inputmode="numeric" autocomplete="off" />
+          </div>
+          
+          <div class="invalid-feedback text-center" id="otpError" style="display: none; margin-top: 0.75rem;">
+            Please enter a valid 6-digit code.
+          </div>
+        </div>
+
+        <!-- Verify Button -->
+        <button
+          type="submit"
+          class="form-submit-btn"
+          id="verifyBtn"
+        >
+          <span id="verifyBtnText">Verify email</span>
+          <span id="verifyBtnLoader" style="display: none;">
+            <i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i>
+            Verifying...
+          </span>
+        </button>
+
+        <!-- Resend Section (Inside Card) -->
+        <div class="form-secondary-action">
+          <!-- "Didn't receive" text - hidden when timer ends -->
+          <p class="text-sm text-center mb-2" id="didntReceiveText" style="color: hsl(var(--muted));">
+            Didn't receive the code?
+          </p>
+          
+          <!-- Timer Display - hidden when timer ends -->
+          <div id="resendTimer" class="text-center mb-3" style="display: block;">
+            <p class="text-sm" style="color: hsl(var(--muted)); font-weight: 500;">
+              Send again in <span id="timerCount" style="color: hsl(var(--primary)); font-weight: 600;">60</span>s
+            </p>
+          </div>
+          
+          <!-- Resend Button - shown only when timer ends -->
+          <button
+            type="button"
+            class="btn-secondary-action"
+            id="resendBtn"
+            onclick="handleResendCode(event)"
+            style="display: none;"
+          >
+            <span id="resendBtnText">
+              <i data-lucide="send" class="w-4 h-4"></i>
+              Send again
+            </span>
+            <span id="resendBtnLoader" style="display: none;">
+              <i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i>
+              Sending...
+            </span>
+          </button>
+        </div>
+      </form>
+    </div>
+
+  </div>
+</main>
+
+<!-- Form Validation & Interaction Script -->
+<script>
+  // ========================================================================
+  // OTP INPUT HANDLING - 6 Separate Boxes
+  // ========================================================================
+  const otpInputs = document.querySelectorAll('.otp-input');
+  const hiddenCodeInput = document.getElementById('code');
+  const verifyBtn = document.getElementById('verifyBtn');
+  
+  // Update hidden input and check if form is complete
+  function updateOTPValue() {
+    const code = Array.from(otpInputs).map(input => input.value).join('');
+    hiddenCodeInput.value = code;
+    
+    // Enable/disable verify button based on completion
+    if (code.length === 6) {
+      verifyBtn.disabled = false;
+      verifyBtn.style.opacity = '1';
+    } else {
+      verifyBtn.disabled = true;
+      verifyBtn.style.opacity = '0.5';
+    }
+  }
+  
+  // Initialize - disable button on load
+  verifyBtn.disabled = true;
+  verifyBtn.style.opacity = '0.5';
+  
+  // Handle input in OTP boxes
+  otpInputs.forEach((input, index) => {
+    // Input event - numbers only + auto-advance
+    input.addEventListener('input', function(e) {
+      // Only allow numbers
+      this.value = this.value.replace(/[^0-9]/g, '');
+      
+      // Update hidden input
+      updateOTPValue();
+      
+      // Auto-advance to next input
+      if (this.value.length === 1 && index < otpInputs.length - 1) {
+        otpInputs[index + 1].focus();
+      }
+      
+      // Clear error state when typing
+      const feedback = document.getElementById('otpError');
+      if (feedback) feedback.style.display = 'none';
+      otpInputs.forEach(inp => inp.classList.remove('is-invalid'));
+    });
+    
+    // Backspace handling - move to previous input
+    input.addEventListener('keydown', function(e) {
+      if (e.key === 'Backspace' && !this.value && index > 0) {
+        otpInputs[index - 1].focus();
+      }
+    });
+    
+    // Paste handling - distribute across all boxes
+    input.addEventListener('paste', function(e) {
+      e.preventDefault();
+      const pastedText = (e.clipboardData || window.clipboardData).getData('text');
+      const numbers = pastedText.replace(/[^0-9]/g, '').slice(0, 6);
+      
+      // Fill boxes with pasted numbers
+      numbers.split('').forEach((num, i) => {
+        if (otpInputs[i]) {
+          otpInputs[i].value = num;
+        }
+      });
+      
+      // Focus last filled box or next empty
+      const lastIndex = Math.min(numbers.length, otpInputs.length - 1);
+      otpInputs[lastIndex].focus();
+      
+      // Update hidden input
+      updateOTPValue();
+    });
+  });
+
+  // ========================================================================
+  // FORM VALIDATION
+  // ========================================================================
+  const verifyForm = document.getElementById('verifyForm');
+  
+  if (verifyForm) {
+    verifyForm.addEventListener('submit', function(event) {
+      event.preventDefault();
+      
+      // Get OTP code
+      const code = hiddenCodeInput.value;
+      const feedback = document.getElementById('otpError');
+      
+      // Reset validation states
+      otpInputs.forEach(input => input.classList.remove('is-invalid', 'is-valid'));
+      if (feedback) feedback.style.display = 'none';
+      
+      let isValid = true;
+      
+      // Validate
+      if (!code || code.length !== 6) {
+        otpInputs.forEach(input => input.classList.add('is-invalid'));
+        if (feedback) {
+          feedback.textContent = 'Please enter all 6 digits';
+          feedback.style.display = 'block';
+        }
+        otpInputs[0].focus();
+        isValid = false;
+      } else if (!/^\d{6}$/.test(code)) {
+        otpInputs.forEach(input => input.classList.add('is-invalid'));
+        if (feedback) {
+          feedback.textContent = 'Code must contain only numbers';
+          feedback.style.display = 'block';
+        }
+        otpInputs[0].focus();
+        isValid = false;
+      }
+      
+      if (isValid) {
+        // Show loading state
+        setButtonLoading('verify', true);
+        
+        // Submit form
+        this.submit();
+      }
+    });
+  }
+
+  // ========================================================================
+  // RESEND TIMER (60 seconds countdown)
+  // ========================================================================
+  let resendCountdown = 60;
+  let timerInterval = null;
+  const resendBtn = document.getElementById('resendBtn');
+  const resendTimer = document.getElementById('resendTimer');
+  const timerCount = document.getElementById('timerCount');
+  const didntReceiveText = document.getElementById('didntReceiveText');
+  
+  function startResendTimer() {
+    resendCountdown = 10;
+    
+    // Show timer and text, hide button
+    didntReceiveText.style.display = 'block';
+    resendTimer.style.display = 'block';
+    resendBtn.style.display = 'none';
+    resendBtn.disabled = true;
+    
+    timerInterval = setInterval(() => {
+      resendCountdown--;
+      timerCount.textContent = resendCountdown;
+      
+      if (resendCountdown <= 0) {
+        clearInterval(timerInterval);
+        
+        // Hide timer and text, show button
+        didntReceiveText.style.display = 'none';
+        resendTimer.style.display = 'none';
+        resendBtn.style.display = 'block';
+        resendBtn.disabled = false;
+        resendBtn.style.opacity = '1';
+        resendBtn.style.cursor = 'pointer';
+      }
+    }, 1000);
+  }
+  
+  // Handle resend button click
+  function handleResendCode(event) {
+    event.preventDefault();
+    
+    // Show loading state
+    setButtonLoading('resend', true);
+    
+    // Create form data
+    const formData = new FormData();
+    formData.append('csrf_token', document.querySelector('input[name=\"csrf_token\"]').value);
+    
+    // Show toast notification
+    showToast('Sending verification code...');
+    
+    // Submit resend request
+    fetch('/verify/resend', {
+      method: 'POST',
+      body: formData
+    })
+    .then(response => {
+      if (response.ok) {
+        return response.text();
+      }
+      throw new Error('Resend failed');
+    })
+    .then(() => {
+      // Reset loading state
+      setButtonLoading('resend', false);
+      
+      // Show success toast
+      hideToast(); // Hide the "Sending..." toast first
+      setTimeout(() => {
+        showToast('New verification code sent!', 4);
+      }, 100);
+      
+      // Restart timer
+      startResendTimer();
+    })
+    .catch(error => {
+      console.error('Resend error:', error);
+      setButtonLoading('resend', false);
+      
+      // Show error toast
+      hideToast();
+      setTimeout(() => {
+        showToast('Failed to send code. Please try again.', 4);
+      }, 100);
+    });
+  }
+  
+  // Start timer on page load
+  document.addEventListener('DOMContentLoaded', function() {
+    startResendTimer();
+    
+    // Re-enable lucide icons
+    if (typeof lucide !== 'undefined') {
+      lucide.createIcons();
+    }
+    
+    // Focus first OTP input
+    if (otpInputs[0]) {
+      otpInputs[0].focus();
+    }
+  });
+
+  // ========================================================================
+  // BUTTON LOADING STATES
+  // ========================================================================
+  function setButtonLoading(buttonType, isLoading) {
+    const btn = document.getElementById(buttonType === 'verify' ? 'verifyBtn' : 'resendBtn');
+    const btnText = document.getElementById(buttonType === 'verify' ? 'verifyBtnText' : 'resendBtnText');
+    const btnLoader = document.getElementById(buttonType === 'verify' ? 'verifyBtnLoader' : 'resendBtnLoader');
+    
+    if (isLoading) {
+      btn.disabled = true;
+      btn.style.opacity = '0.7';
+      btn.style.cursor = 'not-allowed';
+      btnText.style.display = 'none';
+      btnLoader.style.display = 'flex';
+      btnLoader.style.alignItems = 'center';
+      btnLoader.style.justifyContent = 'center';
+      btnLoader.style.gap = '0.5rem';
+      
+      if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+      }
+    } else {
+      btn.disabled = false;
+      btn.style.opacity = '1';
+      btn.style.cursor = 'pointer';
+      btnText.style.display = 'flex';
+      btnText.style.alignItems = 'center';
+      btnText.style.justifyContent = 'center';
+      btnText.style.gap = '0.5rem';
+      btnLoader.style.display = 'none';
+    }
+  }
+
+  // ========================================================================
+  // ALERT FUNCTIONS
+  // ========================================================================
+  function closeFlashAlert(button) {
+    const alert = button.closest('.alert');
+    if (alert) alert.style.display = 'none';
+  }
+</script>
+
 {% endblock %}

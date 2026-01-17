@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-4" style="max-width: 480px;">
+  <h1 class="h4 mb-3">Verify your email address</h1>
+
+  <p class="mb-4">
+    We've sent you a 6 digit verification code on your email address
+    <strong>{{ otp_email or "your email address" }}</strong>.
+    Please enter the verification code to complete your registration.
+  </p>
+
+  <form action="/verify" method="post" novalidate>
+    <!-- CSRF -->
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+    <div class="mb-3">
+      <label for="code" class="form-label">Enter verification code</label>
+      <input
+        id="code"
+        name="code"
+        type="text"
+        inputmode="numeric"
+        autocomplete="one-time-code"
+        class="form-control"
+        minlength="6"
+        maxlength="6"
+        required
+        placeholder="______"
+      >
+      <div class="form-text">The code expires in {{ otp_exp_minutes }} minutes.</div>
+    </div>
+
+    <button class="btn btn-primary w-100" type="submit">Verify</button>
+  </form>
+
+  <form action="/verify/resend" method="post" class="mt-3">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <span class="text-muted">Didn't receive verification code?</span>
+    <button class="btn btn-link p-0 align-baseline" type="submit">Request another code</button>
+  </form>
+</div>
+{% endblock %}
