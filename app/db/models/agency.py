@@ -109,6 +109,8 @@ class Agency(Base):
     )
 
     admin_last_viewed_at = Column(DateTime, nullable=True)
+    currency_code = Column(String(10), nullable=True)
+
 
     def __repr__(self) -> str:
         return f"<Agency id={self.registration_id!r} name={self.agencies_name!r}>"

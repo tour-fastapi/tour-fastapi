@@ -42,10 +42,18 @@
             <div class="package-card__header">
               <h3 class="package-card__name">{{ p.package_name }}</h3>
 
-              {% if p.price %}
-              <div class="package-card__price-box">
-                <div class="package-card__price">₹ {{ p.price }}</div>
-              </div>
+              {% if p.price is not none %}
+                {# ✅ Currency per operator (by package.registration_id) #}
+                {% set c = currency_by_agency_id.get(p.registration_id, {}) %}
+                {% set sym = c.get("currency_symbol") %}
+                {% set pos = c.get("currency_position") %}
+                {% set code = c.get("currency_code") %}
+
+                <div class="package-card__price-box">
+                  <div class="package-card__price">
+                    {{ format_money(p.price, sym, pos, code) }}
+                  </div>
+                </div>
               {% endif %}
             </div>
 
@@ -96,7 +104,6 @@
                   {{ f.airline_name }}
                 </div>
 
-                <!-- ✅ FINAL DIRECT / VIA LOGIC -->
                 <div class="flight-detail__type">
                   {% if f.via_city %}
                     Via from {{ f.via_city }}

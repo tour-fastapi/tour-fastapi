@@ -24,7 +24,7 @@ class PackageAirline(Base):
 
     # ✅ ADD THESE (THIS IS WHAT YOUR ERROR IS ABOUT)
     package = relationship("Package", back_populates="package_airlines")
-    airline = relationship("Airline", back_populates="package_airlines")
+    airline = relationship("Airline", back_populates="package_airlines",overlaps="package_airlines,packages")
 
     __table_args__ = (
         UniqueConstraint("package_id", "airline_id", name="uq_package_airline"),

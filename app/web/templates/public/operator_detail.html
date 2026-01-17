@@ -89,7 +89,6 @@
           </div>
           {% endif %}
 
-          {# Reg no: only if present (not None/"null"/"none"/empty) #}
           {% if is_present(agency.public_registration_code) %}
           <div class="operator-banner__stat">
             Reg. <span class="operator-banner__stat-value">{{ agency.public_registration_code }}</span>
@@ -141,7 +140,6 @@
           </a>
           {% endif %}
 
-          {# Instagram/Facebook: hide if None/"null"/"none"/empty #}
           {% if is_present(agency.instagram_url) %}
           <a href="{{ agency.instagram_url }}" target="_blank" rel="noopener noreferrer" class="operator-contact__link">
             <i data-lucide="instagram" class="icon icon--sm icon--primary"></i>
@@ -193,7 +191,6 @@
         <a class="operator-package-card" href="/packages/{{ p.package_id }}">
           <div class="operator-package-card__inner">
 
-            {# Month + Year #}
             {% set month_ok = (p.travel_month is not none and p.travel_month|int >= 1 and p.travel_month|int <= 12) %}
             {% set year_ok = (p.travel_year is not none) %}
             {% if month_ok or year_ok %}
@@ -222,9 +219,9 @@
               </div>
 
               {% if p.price is not none %}
-              <div class="operator-package-card__price">
-                ₹{{ '%.2f'|format(p.price) }}
-              </div>
+                <div class="operator-package-card__price">
+                  {{ format_money(p.price, currency_symbol, currency_position, currency_code) }}
+                </div>
               {% endif %}
             </div>
 
@@ -258,4 +255,40 @@
   </div>
 
 </main>
+
+{% if google_reviews %}
+  <section class="card p-3 mt-3">
+    <h3 class="h6 mb-2">Google Reviews</h3>
+
+    <div class="d-flex align-items-center gap-2 mb-2">
+      <strong style="font-size: 20px;">{{ google_reviews.rating or "—" }}</strong>
+      <span class="text-muted">
+        ({{ google_reviews.user_rating_count or 0 }} ratings)
+      </span>
+    </div>
+
+    {% if google_reviews.reviews and google_reviews.reviews|length > 0 %}
+      <div class="mt-2">
+        {% for r in google_reviews.reviews %}
+          <div class="border-top pt-2 mt-2">
+            <div class="d-flex justify-content-between">
+              <strong>{{ r.author or "Anonymous" }}</strong>
+              <span class="text-muted">⭐ {{ r.rating or "—" }}</span>
+            </div>
+            {% if r.text %}
+              <p class="mb-1">{{ r.text }}</p>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="text-muted mb-0">No reviews available.</p>
+    {% endif %}
+
+    <p class="text-muted mt-2 mb-0" style="font-size: 12px;">
+      Updated: {{ google_reviews.fetched_at }}
+    </p>
+  </section>
+{% endif %}
+
 {% endblock %}

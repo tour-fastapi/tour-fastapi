@@ -208,9 +208,14 @@
           <div class="operator-card__footer">
             <div class="operator-card__actions">
               {% if a.min_package_price %}
-                <div class="operator-card__sub">
-                  Packages from <strong>₹ {{ a.min_package_price }}</strong>
-                </div>
+              {% set c = currency_by_agency_id.get(a.registration_id, {}) %}
+              {% set sym = c.get("currency_symbol") %}
+              {% set pos = c.get("currency_position") %}
+
+              <div class="operator-card__sub">
+                Packages from
+                <strong>{{ format_money(a.min_package_price, sym, pos) }}</strong>
+              </div>
                 <div class="operator-card__action-primary">
                   <button class="btn btn-primary">View Packages</button>
                 </div>

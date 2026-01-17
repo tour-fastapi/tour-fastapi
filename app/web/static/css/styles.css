@@ -1650,34 +1650,6 @@ body {
 
 /* Ghost Button */
 
-.btn-ghost {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  border-radius: 0.5rem;
-  padding-left: 1rem;
-  padding-right: 1rem;
-  padding-top: 0.5rem;
-  padding-bottom: 0.5rem;
-  font-size: 0.875rem;
-  line-height: 1.25rem;
-  font-weight: 600;
-  transition-property: all;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 150ms;
-  background: hsl(var(--surface-2));
-  color: hsl(var(--fg));
-  border: none;
-  cursor: pointer;
-  text-decoration: none;
-}
-
-.btn-ghost:hover:not(:disabled) {
-  background: hsl(var(--surface));
-  border: 1px solid hsl(var(--border));
-}
-
 /* Base Icon */
 
 .icon {
@@ -2766,14 +2738,6 @@ body {
 
 /* Footer Heading */
 
-.footer-heading {
-  margin-bottom: 0.75rem;
-  font-size: 0.875rem;
-  line-height: 1.25rem;
-  font-weight: 700;
-  color: hsl(var(--fg));
-}
-
 /* Footer Links */
 
 .footer-links > :not([hidden]) ~ :not([hidden]) {
@@ -2790,19 +2754,6 @@ body {
 
 .footer-links li {
   /* Each link item */
-}
-
-.footer-link {
-  font-size: 0.875rem;
-  line-height: 1.25rem;
-  color: hsl(var(--muted));
-  text-decoration: none;
-  transition: color 0.2s;
-}
-
-.footer-link:hover {
-  text-decoration: underline;
-  color: hsl(var(--primary));
 }
 
 /* SEO Section */
@@ -2885,42 +2836,6 @@ body {
 }
 
 /* Social Links */
-
-.footer-social {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  order: 1;
-}
-
-@media (min-width: 768px) {
-  .footer-social {
-    order: 2;
-  }
-}
-
-.footer-social__link {
-  display: flex;
-  height: 2.25rem;
-  width: 2.25rem;
-  align-items: center;
-  justify-content: center;
-  border-radius: 0.5rem;
-  color: hsl(var(--muted));
-  border: 1px solid hsl(var(--border));
-  text-decoration: none;
-  transition: all 0.2s;
-}
-
-.footer-social__link:hover {
-  color: hsl(var(--primary));
-  border-color: hsl(var(--primary));
-}
-
-.footer-social__icon {
-  width: 16px;
-  height: 16px;
-}
 
 /* Copyright */
 
@@ -4497,6 +4412,10 @@ body {
 
 .pt-0 {
   padding-top: 0px;
+}
+
+.pt-2 {
+  padding-top: 0.5rem;
 }
 
 .text-center {

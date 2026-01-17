@@ -3,11 +3,37 @@
 {% block content %}
 {% import "shared/_macros.html" as ui %}
 
+{# ------------------------------
+   Currency helper (per package)
+   - prefers agency.currency_symbol
+   - fallback: SAR -> SR
+   - fallback: use currency_code or ₹
+-------------------------------- #}
+{% macro money(amount, agency) -%}
+  {%- set code = (agency.currency_code if agency else None) -%}
+  {%- set sym  = (agency.currency_symbol if agency and agency.currency_symbol else None) -%}
+  {%- set pos  = (agency.currency_position if agency and agency.currency_position else None) -%}
+
+  {%- if (not sym) and code -%}
+    {%- set sym = ('SR' if code|string|upper == 'SAR' else code) -%}
+  {%- endif -%}
+
+  {%- if not sym -%}
+    {%- set sym = '₹' -%}
+  {%- endif -%}
+
+  {%- if not pos -%}
+    {%- set pos = 'prefix' -%}
+  {%- endif -%}
+
+  {{- format_money(amount or 0, sym, pos) -}}
+{%- endmacro %}
+
 <main class="page">
 
 <!-- ============================================================
   PAGE HEADER
-============================================================ -->
+============================================================= -->
 <div class="listing-header">
   <div class="listing-header__container">
     <h1 class="listing-header__title">Find Your Perfect Umrah Package</h1>
@@ -60,9 +86,13 @@
                   <div class="package-card__header">
                     <h3 class="package-card__name">{{ p.package_name }}</h3>
 
-                    {% if p.price %}
+                    {% if p.price is not none %}
                       <div class="package-card__price-box">
-                        <div class="package-card__price">₹ {{ p.price }}</div>
+                        <div class="package-card__price">
+                          {% set ag = agency_by_id.get(p.registration_id) %}
+                          {{ money(p.price, ag) }}
+
+                        </div>
                       </div>
                     {% endif %}
                   </div>
@@ -121,9 +151,6 @@
                               Direct
                             {% endif %}
                           </div>
-
-
-
                         </div>
                       </div>
                     </div>
@@ -144,23 +171,19 @@
                       <div class="accommodation-detail__content">
                         <div class="accommodation-detail__info">
                           <div class="accommodation-detail__name">{{ s.hotel_name }}</div>
-                          
-                            {% if s.distance_m %}
-                              <div class="accommodation-detail__distance">
-                                {{ s.distance_m }}m from
-                                {% if s.city and s.city|lower == "makkah" %}
-                                  Haram
-                                {% elif s.city and s.city|lower == "madinah" %}
-                                  Masjid Nabawi
-                                {% else %}
-                                  City Center
-                                {% endif %}
-                              </div>
-                            {% endif %}
 
-
-                         
-
+                          {% if s.distance_m %}
+                            <div class="accommodation-detail__distance">
+                              {{ s.distance_m }}m from
+                              {% if s.city and s.city|lower == "makkah" %}
+                                Haram
+                              {% elif s.city and s.city|lower == "madinah" %}
+                                Masjid Nabawi
+                              {% else %}
+                                City Center
+                              {% endif %}
+                            </div>
+                          {% endif %}
                         </div>
                       </div>
                     </div>
@@ -180,7 +203,11 @@
                   </div>
                   <div class="operator-details-meta">
                     <div class="operator-details__name">
-                      {{ p.agency.agencies_name }}
+                      {% set ag = agency_by_id.get(p.registration_id) %}
+                      {% if ag %}
+                        {{ ag.agencies_name }}
+                      {% endif %}
+
                     </div>
                     {% if p.agency.city or p.agency.country %}
                       <div class="operator-details__location">
