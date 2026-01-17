@@ -1,0 +1,356 @@
+
+{# app/web/templates/package/themes/basic.html #}
+
+
+
+{% set month_names = {
+  1:'January',2:'February',3:'March',4:'April',5:'May',6:'June',
+  7:'July',8:'August',9:'September',10:'October',11:'November',12:'December'
+} %}
+
+{# ---- Banner (with fallback + cache-buster to avoid "same banner" bug) ---- #}
+{% set banner_name = pkg.banner_image or 'dynamic-tawaf-at-night.jpg' %}
+{% set banner_url = '/media/packages-banners/' ~ banner_name ~ '?v=' ~ (pkg.package_id|string) ~ '-' ~ banner_name %}
+
+<!-- Package Details Banner -->
+<section class="package-banner">
+  <div class="package-banner__image-container">
+    <img 
+      src="https://images.unsplash.com/photo-1591604129939-f1efa4d9f7fa" 
+      alt="Premium Umrah Package"
+      class="package-banner__image"
+    />
+    <div class="package-banner__gradient"></div>
+  </div>
+  
+  <div class="package-banner__content">
+    <div class="package-banner__header">
+      <div class="package-banner__breadcrumb">
+        <a href="/" class="package-banner__breadcrumb-link">
+          <i data-lucide="home"></i>
+          <span>Home</span>
+        </a>
+        <i data-lucide="chevron-right" class="package-banner__breadcrumb-separator"></i>
+        <a href="/packages" class="package-banner__breadcrumb-link">
+          <span>Packages</span>
+        </a>
+        <i data-lucide="chevron-right" class="package-banner__breadcrumb-separator"></i>
+        <span class="package-banner__breadcrumb-current">Premium 14 Days</span>
+      </div>
+      
+      <button class="package-banner__share-btn">
+        <i data-lucide="share-2"></i>
+        <span>Share</span>
+      </button>
+    </div>
+
+    <div class="package-banner__main">
+      <div class="package-banner__info">
+        <h1 class="package-banner__title">Premium Umrah Package - 14 Days</h1>
+        
+        <div class="package-banner__meta">
+          <div class="package-banner__meta-item">
+            <i data-lucide="building-2"></i>
+            <span>Al Haram Travel</span>
+          </div>
+          <div class="package-banner__meta-item">
+            <i data-lucide="map-pin"></i>
+            <span>Makkah & Madinah</span>
+          </div>
+          <div class="package-banner__meta-item">
+            <i data-lucide="calendar"></i>
+            <span>14 Days / 13 Nights</span>
+          </div>
+          <div class="package-banner__meta-item package-banner__meta-item--rating">
+            <i data-lucide="star"></i>
+            <span>4.8 (127 reviews)</span>
+          </div>
+        </div>
+
+        <div class="package-banner__highlights">
+          <div class="package-banner__highlight">
+            <i data-lucide="hotel"></i>
+            <span>5-Star Hotels</span>
+          </div>
+          <div class="package-banner__highlight">
+            <i data-lucide="utensils"></i>
+            <span>All Meals Included</span>
+          </div>
+          <div class="package-banner__highlight">
+            <i data-lucide="bus"></i>
+            <span>Private Transport</span>
+          </div>
+          <div class="package-banner__highlight">
+            <i data-lucide="shield-check"></i>
+            <span>Visa Included</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="package-banner__pricing">
+        <div class="package-banner__price-card">
+          <div class="package-banner__price-label">Starting from</div>
+          <div class="package-banner__price">
+            <span class="package-banner__currency">$</span>
+            <span class="package-banner__amount">3,499</span>
+            <span class="package-banner__per-person">per person</span>
+          </div>
+          
+          <div class="package-banner__price-details">
+            <div class="package-banner__price-detail">
+              <i data-lucide="users"></i>
+              <span>Twin sharing</span>
+            </div>
+            <div class="package-banner__price-detail">
+              <i data-lucide="calendar-check"></i>
+              <span>Flexible dates</span>
+            </div>
+          </div>
+
+          <button class="package-banner__cta">
+            <i data-lucide="calendar-days"></i>
+            <span>Book Now</span>
+          </button>
+
+          <button class="package-banner__secondary-cta">
+            <i data-lucide="phone"></i>
+            <span>Contact Us</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<div class="theme-basic">
+  
+
+  <!-- Header -->
+  <div class="band mb-3">
+
+    <!-- Banner first (full width) -->
+    <img
+      src="{{ banner_url }}"
+      alt="{{ pkg.package_name }}"
+      class="hero-img"
+      loading="lazy"
+    >
+
+    <div class="mt-3 hero-top">
+      <!-- Agency logo -->
+      <img
+        src="/media/agency/{{ agency.registration_id }}/logo"
+        alt="{{ agency.agencies_name }} logo"
+        width="56" height="56"
+        class="rounded img-brd"
+        onerror="this.style.display='none'"
+      />
+
+      <div class="hero-meta">
+        <h1 class="h4 mb-1">{{ pkg.package_name }}</h1>
+
+        <div class="d-flex flex-wrap align-items-center gap-2 small muted">
+          <span>{{ pkg.days }} days</span>
+
+          {% if pkg.travel_month or pkg.travel_year %}
+            <span>
+              •
+              {{ month_names.get((pkg.travel_month or 0)|int, '') }}
+              {{ pkg.travel_year or '' }}
+            </span>
+          {% endif %}
+
+          {% if pkg.package_class %}
+            <span>• {{ pkg.package_class | title }}</span>
+          {% endif %}
+
+          {% if pkg.package_type %}
+            <span class="chip">{{ pkg.package_type | title }}</span>
+          {% endif %}
+        </div>
+
+        {% if pkg.description %}
+          <div class="small mt-2">{{ pkg.description }}</div>
+        {% endif %}
+
+        {% if agency and agency.agencies_name %}
+          <div class="small muted mt-2">
+            {{ agency.agencies_name }}{% if agency.city %}, {{ agency.city }}{% endif %}
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Price -->
+      <div class="hero-price">
+        <div class="kicker mb-1">Starting</div>
+        <div class="price-lg">₹{{ "%.2f"|format(pkg.price or 0) }}</div>
+
+        {% if price_row and (price_row.price_double or price_row.price_triple or price_row.price_quad) %}
+          <div class="small muted mt-2">
+            {% if price_row.price_double %}Double/Couple • ₹{{ "%.2f"|format(price_row.price_double) }}<br>{% endif %}
+            {% if price_row.price_triple %}Triple • ₹{{ "%.2f"|format(price_row.price_triple) }}<br>{% endif %}
+            {% if price_row.price_quad %}Quad/Quint • ₹{{ "%.2f"|format(price_row.price_quad) }}{% endif %}
+          </div>
+        {% endif %}
+
+        {% if price_row and price_row.price_note %}
+          <div class="small muted mt-1">{{ price_row.price_note }}</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Flights -->
+  <div class="card-soft p-3 p-md-4 mb-3">
+    <h2 class="h6 mb-3">Flights</h2>
+    <div class="sep"></div>
+
+    <div class="row g-3">
+      <div class="col-md-6">
+        <div class="block h-100">
+          <div class="label-m mb-1">Onward</div>
+          <div>{{ onward_text or '—' }}</div>
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <div class="block h-100">
+          <div class="label-m mb-1">Return</div>
+          <div>{{ return_text or '—' }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stays -->
+  <div class="card-soft p-3 p-md-4 mb-3">
+    <h2 class="h6 mb-3">Stays</h2>
+    <div class="sep"></div>
+
+    <div class="row g-3">
+      <!-- Mecca -->
+      <div class="col-md-6">
+        <div class="block h-100">
+          <div class="fw-semibold mb-2">Mecca</div>
+
+          <div class="label-m">Dates</div>
+          <div class="mb-2">{{ mecca_dates or '—' }}</div>
+
+          <div class="label-m">Distance</div>
+          <div class="mb-2">{{ mecca_distance_label or '—' }}</div>
+
+          <div class="label-m">Hotel</div>
+          <div>
+            {% if mecca_hotel_name %}
+              {% if mecca_hotel_link %}
+                <a href="{{ mecca_hotel_link }}" target="_blank" rel="noopener">{{ mecca_hotel_name }}</a>
+              {% else %}
+                {{ mecca_hotel_name }}
+              {% endif %}
+            {% else %}
+              —
+            {% endif %}
+          </div>
+
+          {% if mecca_similar_hotels %}
+            <div class="label-m mt-2">Or similar</div>
+            <div class="small">
+              {% for h in mecca_similar_hotels %}
+                {% if h.link %}
+                  <a href="{{ h.link }}" target="_blank" rel="noopener">{{ h.name }}</a>
+                {% else %}
+                  {{ h.name }}
+                {% endif %}
+                {% if not loop.last %}, {% endif %}
+              {% endfor %}
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Medinah -->
+      <div class="col-md-6">
+        <div class="block h-100">
+          <div class="fw-semibold mb-2">Medinah</div>
+
+          <div class="label-m">Dates</div>
+          <div class="mb-2">{{ med_dates or '—' }}</div>
+
+          <div class="label-m">Distance</div>
+          <div class="mb-2">{{ med_distance_label or '—' }}</div>
+
+          <div class="label-m">Hotel</div>
+          <div>
+            {% if med_hotel_name %}
+              {% if med_hotel_link %}
+                <a href="{{ med_hotel_link }}" target="_blank" rel="noopener">{{ med_hotel_name }}</a>
+              {% else %}
+                {{ med_hotel_name }}
+              {% endif %}
+            {% else %}
+              —
+            {% endif %}
+          </div>
+
+          {% if med_similar_hotels %}
+            <div class="label-m mt-2">Or similar</div>
+            <div class="small">
+              {% for h in med_similar_hotels %}
+                {% if h.link %}
+                  <a href="{{ h.link }}" target="_blank" rel="noopener">{{ h.name }}</a>
+                {% else %}
+                  {{ h.name }}
+                {% endif %}
+                {% if not loop.last %}, {% endif %}
+              {% endfor %}
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Inclusions -->
+  <div class="card-soft p-3 p-md-4">
+    <h2 class="h6 mb-3">Inclusions</h2>
+    <div class="sep" style="margin-top:-.25rem;"></div>
+
+    {% set incl = pkg.inclusion %}
+
+<ul class="mb-0">
+  {% if incl %}
+    {% set has_any = (
+      incl.meals_enabled or incl.meals_desc or
+      incl.laundry_enabled or incl.laundry_desc or
+      incl.transport_enabled or incl.transport_desc or
+      incl.zamzam_enabled or incl.zamzam_desc or
+      incl.welcome_kit_enabled or incl.welcome_kit_desc or
+      incl.insurance_enabled or incl.insurance_desc or
+      incl.visa_enabled or incl.visa_desc or
+      incl.ziyarat_enabled or incl.ziyarat_desc or
+      incl.other
+    ) %}
+
+    {% if incl.meals_enabled or incl.meals_desc %}<li>Meals: {{ incl.meals_desc or "Included" }}</li>{% endif %}
+    {% if incl.laundry_enabled or incl.laundry_desc %}<li>Laundry: {{ incl.laundry_desc or "Included" }}</li>{% endif %}
+    {% if incl.transport_enabled or incl.transport_desc %}<li>Transport: {{ incl.transport_desc or "Included" }}</li>{% endif %}
+    {% if incl.zamzam_enabled or incl.zamzam_desc %}<li>Zam Zam: {{ incl.zamzam_desc or "Included" }}</li>{% endif %}
+    {% if incl.welcome_kit_enabled or incl.welcome_kit_desc %}<li>Welcome Kit: {{ incl.welcome_kit_desc or "Included" }}</li>{% endif %}
+    {% if incl.insurance_enabled or incl.insurance_desc %}<li>Insurance: {{ incl.insurance_desc or "Included" }}</li>{% endif %}
+
+    {# ✅ NEW #}
+    {% if incl.visa_enabled or incl.visa_desc %}<li>VISA: {{ incl.visa_desc or "Included" }}</li>{% endif %}
+    {% if incl.ziyarat_enabled or incl.ziyarat_desc %}<li>Ziyarat: {{ incl.ziyarat_desc or "Included" }}</li>{% endif %}
+
+    {% if incl.other %}<li>{{ incl.other }}</li>{% endif %}
+
+    {% if not has_any %}
+      <li>No inclusions listed.</li>
+    {% endif %}
+  {% else %}
+    <li>No inclusions listed.</li>
+  {% endif %}
+</ul>
+
+  </div>
+
+</div>

@@ -1,10 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
 {# optional tiny badge to verify which theme is active #}
-{% if theme_debug %}<div class="text-muted small mb-2">Theme: {{ theme_debug }}</div>{% endif %}
+{% if theme_debug %}<div class="text-muted small mb-2 is-hidden">Theme: {{ theme_debug }}</div>{% endif %}
 
 {# this pulls one of: package/themes/premium_aurora.html | premium.html | basic.html #}
 {% include theme_template %}
 {# ---------------- Inquiry Modal ---------------- #}
-<div class="modal fade" id="inquiryModal" tabindex="-1" aria-hidden="true">
+<div class="modal fade is-hidden" id="inquiryModal" tabindex="-1" aria-hidden="true" >
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content rounded-4 border-0 shadow-lg">
       <div class="modal-header border-0 pb-0">
@@ -54,36 +56,6 @@
 
 
 
-<style>
-  .modal-content {
-    border-radius: 1rem;
-    border: none;
-    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.2);
-  }
-  .modal-header {
-    background: linear-gradient(135deg, #0061ff, #60efff);
-    color: white;
-    border-bottom: none;
-  }
-  .modal-title {
-    font-weight: 600;
-    letter-spacing: 0.3px;
-  }
-  .modal-body label {
-    font-weight: 500;
-    color: #333;
-  }
-  .btn-primary {
-    background: linear-gradient(135deg, #007bff, #00c6ff);
-    border: none;
-    box-shadow: 0 3px 8px rgba(0, 123, 255, 0.3);
-  }
-  .btn-primary:hover {
-    background: linear-gradient(135deg, #0069d9, #0099ff);
-  }
-  input.form-control,
-  textarea.form-control {
-    border-radius: 0.5rem;
-  }
-</style>
 
+
+{% endblock %}

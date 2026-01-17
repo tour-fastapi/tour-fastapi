@@ -1,0 +1,385 @@
+/* ===================================
+   Package Details Component
+   =================================== */
+
+/* Main container with max-width */
+.package-details {
+  background: hsl(var(--bg));
+  min-height: 100vh;
+}
+
+.package-details__container {
+  @apply  px-4 py-8;
+  max-width: 768px;
+  margin:auto;
+}
+
+/* Section spacing */
+.package-details__section {
+  @apply mb-5;
+}
+
+/* Section heading */
+.package-details__heading {
+  font-size: 16px;
+  color: hsl(var(--fg));
+  font-weight: 600;
+  @apply mb-3;
+  margin-top: 0;
+}
+
+/* Grid layouts */
+.package-details__grid {
+  display: grid;
+  gap: 10px;
+}
+
+.package-details__grid--two-col {
+  grid-template-columns: 1fr;
+}
+
+.package-details__grid--three-col {
+  grid-template-columns: 1fr;
+}
+
+/* Card styles */
+.package-details__card {
+  @apply p-4 rounded-xl;
+  background: white;
+  border: 1px solid hsl(var(--border));
+}
+
+.package-details__label {
+  font-size: 12px;
+  color: hsl(var(--muted));
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  @apply mb-2;
+}
+
+.package-details__card-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.package-details__icon-box {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  @apply rounded-lg;
+  background: hsl(var(--surface-2));
+}
+
+.package-details__icon {
+  width: 20px;
+  height: 20px;
+  color: hsl(var(--primary));
+}
+
+.package-details__icon--rotate-45 {
+  transform: rotate(45deg);
+}
+
+.package-details__icon--rotate-minus-45 {
+  transform: rotate(-45deg);
+}
+
+.package-details__card-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.package-details__card-title {
+  font-size: 14px;
+  color: hsl(var(--fg));
+  font-weight: 700;
+  @apply mb-1;
+}
+
+.package-details__card-meta {
+  font-size: 12px;
+  color: hsl(var(--muted));
+}
+
+.package-details__card-status {
+  font-size: 12px;
+  color: hsl(var(--fg));
+  font-weight: 500;
+  @apply mt-1;
+}
+
+/* Inclusion cards */
+.package-details__inclusion {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  @apply p-4 rounded-xl;
+  background: white;
+  border: 1px solid hsl(var(--border));
+}
+
+/* Pricing styles */
+.package-details__pricing-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.package-details__pricing-card {
+  @apply p-4 rounded-xl;
+  background: hsl(var(--surface));
+  border: 1px solid hsl(var(--border));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.package-details__pricing-card--complex {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.package-details__pricing-info {
+  flex: 1;
+}
+
+.package-details__pricing-type {
+  font-size: 14px;
+  color: hsl(var(--fg));
+  font-weight: 600;
+  @apply mb-1;
+}
+
+.package-details__pricing-subtitle {
+  font-size: 12px;
+  color: hsl(var(--muted));
+}
+
+.package-details__pricing-amount {
+  font-size: 18px;
+  color: hsl(var(--fg));
+  font-weight: 700;
+  text-align: right;
+}
+
+/* Complex pricing (children) */
+.package-details__pricing-group {
+  padding-bottom: 12px;
+  border-bottom: 1px solid hsl(var(--border));
+}
+
+.package-details__pricing-group--last {
+  padding-top: 4px;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.package-details__pricing-group:not(:first-child) {
+  padding-top: 12px;
+}
+
+.package-details__pricing-age {
+  font-size: 14px;
+  color: hsl(var(--fg));
+  font-weight: 600;
+  @apply mb-3;
+}
+
+.package-details__pricing-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.package-details__pricing-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.package-details__pricing-label {
+  font-size: 14px;
+  color: hsl(var(--muted));
+}
+
+.package-details__pricing-value {
+  font-size: 16px;
+  color: hsl(var(--fg));
+  font-weight: 700;
+}
+
+/* Itinerary styles */
+.package-details__itinerary {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.package-details__itinerary-item {
+  display: flex;
+  gap: 12px;
+  @apply p-4 rounded-xl;
+  background: hsl(var(--surface));
+  border: 1px solid hsl(var(--border));
+}
+
+.package-details__itinerary-day {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  @apply rounded-lg;
+  background: hsl(var(--surface-2));
+  color: hsl(var(--fg));
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.package-details__itinerary-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.package-details__itinerary-title {
+  font-size: 14px;
+  color: hsl(var(--fg));
+  font-weight: 600;
+  @apply mb-1;
+}
+
+.package-details__itinerary-desc {
+  font-size: 12px;
+  color: hsl(var(--muted));
+}
+
+/* Terms & Conditions */
+.package-details__terms {
+  @apply p-4 rounded-xl;
+  background: hsl(var(--surface));
+  border: 1px solid hsl(var(--border));
+}
+
+.package-details__terms-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.package-details__terms-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.package-details__terms-icon {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  color: hsl(var(--primary));
+  margin-top: 2px;
+}
+
+.package-details__terms-item span {
+  font-size: 14px;
+  color: hsl(var(--fg));
+  line-height: 1.5;
+}
+
+/* Tablet breakpoint - 768px */
+@media (min-width: 768px) {
+  .package-details__container {
+    @apply px-6 py-8;
+  }
+
+  .package-details__section {
+    @apply mb-8;
+  }
+
+  .package-details__heading {
+    font-size: 20px;
+    @apply mb-4;
+  }
+
+  .package-details__grid--two-col {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .package-details__grid--three-col {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+
+  .package-details__label {
+    font-size: 14px;
+  }
+
+  .package-details__card-title {
+    font-size: 16px;
+  }
+
+  .package-details__card-meta {
+    font-size: 14px;
+  }
+
+  .package-details__card-status {
+    font-size: 14px;
+  }
+
+  .package-details__pricing-type {
+    font-size: 16px;
+  }
+
+  .package-details__pricing-subtitle {
+    font-size: 14px;
+  }
+
+  .package-details__pricing-amount {
+    font-size: 20px;
+  }
+
+  .package-details__pricing-age {
+    font-size: 16px;
+  }
+
+  .package-details__pricing-label {
+    font-size: 16px;
+  }
+
+  .package-details__pricing-value {
+    font-size: 18px;
+  }
+
+  .package-details__itinerary-day {
+    font-size: 16px;
+  }
+
+  .package-details__itinerary-title {
+    font-size: 16px;
+  }
+
+  .package-details__itinerary-desc {
+    font-size: 14px;
+  }
+
+  .package-details__terms-item span {
+    font-size: 16px;
+  }
+}
+
+/* Desktop breakpoint - 1024px */
+@media (min-width: 1024px) {
+  .package-details__container {
+    @apply px-6 py-8;
+  }
+}

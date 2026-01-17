@@ -73,6 +73,7 @@ class Package(Base):
     package_airlines = relationship(
         "PackageAirline",
         back_populates="package",
+        overlaps="packages",
         cascade="all, delete-orphan"
     )
 

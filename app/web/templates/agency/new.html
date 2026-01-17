@@ -34,6 +34,19 @@
              required autocomplete="organization"
              value="{{ agency.agencies_name|default('') }}">
     </div>
+    <div class="mb-3">
+      <label for="currency_code" class="form-label">Currency *</label>
+      <select id="currency_code" name="currency_code" class="form-select" required>
+        <option value="INR">INR — Indian Rupee (₹)</option>
+        <option value="SAR">SAR — Saudi Riyal (﷼)</option>
+        <option value="AED">AED — UAE Dirham (د.إ)</option>
+        <option value="USD">USD — US Dollar ($)</option>
+        <option value="GBP">GBP — British Pound (£)</option>
+        <option value="EUR">EUR — Euro (€)</option>
+      </select>
+      <div class="form-text">This currency will be used for all your package prices.</div>
+    </div>
+
 
     <div class="row">
       <div class="col-md-6 mb-3">
@@ -71,7 +84,7 @@
              value="{{ agency.public_registration_code|default('') }}">
     </div>
     <div class="mb-3">
-      <label for="website_url" class="form-label">Website URL</label>
+      <label for="website_url" class="form-label">Google mapped URL</label>
       <input id="website_url" class="form-control" type="url" name="website_url"
              placeholder="https://example.com"
              value="{{ agency.website_url|default('') }}">

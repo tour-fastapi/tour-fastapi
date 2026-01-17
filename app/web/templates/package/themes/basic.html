@@ -1,85 +1,33 @@
+
 {# app/web/templates/package/themes/basic.html #}
 
-<style>
-  /* ========== BASIC (Light, crisp, professional) ========== */
-  .theme-basic {
-    --fg: #0f172a;
-    --muted: #64748b;
-    --card: #ffffff;
-    --bg-grad: linear-gradient(180deg, #f7fafc, #ffffff);
-    --border: #e5e7eb;
-    --hair: #eef2f6;
-    --chip: #f3f4f6;
-    --accent: #1d4ed8;
-    --radius: 14px;
-    --shadow: 0 10px 24px rgba(2,6,23,.08);
-  }
-  .theme-basic { color: var(--fg); }
-  .theme-basic .band {
-    border-radius: var(--radius);
-    padding: 18px;
-    background: var(--bg-grad);
-    border: 1px solid var(--border);
-    box-shadow: var(--shadow);
-  }
-  .theme-basic .card-soft {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    box-shadow: 0 8px 20px rgba(2,6,23,.06);
-  }
-  .theme-basic .chip {
-    padding:.24rem .6rem; border-radius:999px; background:var(--chip); border:1px solid var(--border); font-size:.75rem;
-  }
-  .theme-basic .kicker { font-size:.78rem; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); }
-  .theme-basic .label-m { font-size:.74rem; letter-spacing:.04em; text-transform:uppercase; color:var(--muted); }
-  .theme-basic .price-lg { font-size:clamp(24px,3.2vw,34px); line-height:1; font-weight:800; letter-spacing:-.01em; }
-  .theme-basic a { color: var(--accent); text-decoration: none; }
-  .theme-basic a:hover { text-decoration: underline; }
-  .theme-basic .muted { color: var(--muted); }
-  .theme-basic .sep { height:1px; background: var(--hair); margin:.5rem 0 1rem; border-radius:1px; }
-  .theme-basic .block { border:1px dashed var(--border); border-radius:12px; padding:.85rem 1rem; background:#fbfcfe; }
-  .theme-basic .img-brd { border:1px solid var(--border); border-radius: 12px; }
 
-  .theme-basic .hero-img {
-    width: 100%;
-    max-height: 340px;
-    object-fit: cover;
-    border-radius: 12px;
-    border: 1px solid var(--border);
-    display: block;
-  }
 
-  .theme-basic .hero-top {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-  }
-  .theme-basic .hero-meta {
-    flex: 1;
-    min-width: 0;
-  }
-  .theme-basic .hero-price {
-    text-align: right;
-    min-width: 180px;
-  }
+{# ------------------------------
+   Currency helper (this package's agency)
+-------------------------------- #}
+{% macro money(amount) -%}
+  {%- set code = currency_code if currency_code is defined else None -%}
+  {%- set sym  = currency_symbol if currency_symbol is defined else None -%}
+  {%- set pos  = currency_position if currency_position is defined else None -%}
 
-  @media (max-width: 768px) {
-    .theme-basic .hero-top { flex-direction: column; }
-    .theme-basic .hero-price { text-align: left; min-width: auto; }
-  }
+  {# If symbol missing, derive from code (SAR -> SR) #}
+  {%- if (not sym) and code -%}
+    {%- set sym = ('SR' if code|string|upper == 'SAR' else code) -%}
+  {%- endif -%}
 
-  .btn-primary {
-    background: linear-gradient(90deg, #2563eb, #1d4ed8);
-    color: #fff;
-    border: none;
-    transition: all .25s ease;
-  }
-  .btn-primary:hover {
-    background: linear-gradient(90deg, #1e3a8a, #1d4ed8);
-    transform: translateY(-2px);
-  }
-</style>
+  {# Absolute fallback #}
+  {%- if not sym -%}
+    {%- set sym = '₹' -%}
+  {%- endif -%}
+
+  {%- if not pos -%}
+    {%- set pos = 'prefix' -%}
+  {%- endif -%}
+
+  {{- format_money(amount or 0, sym, pos) -}}
+{%- endmacro %}
+
 
 {% set month_names = {
   1:'January',2:'February',3:'March',4:'April',5:'May',6:'June',
@@ -90,7 +38,481 @@
 {% set banner_name = pkg.banner_image or 'dynamic-tawaf-at-night.jpg' %}
 {% set banner_url = '/media/packages-banners/' ~ banner_name ~ '?v=' ~ (pkg.package_id|string) ~ '-' ~ banner_name %}
 
+<!-- Package Details Banner - Extracted from TypeScript component -->
+<section class="package-banner">
+  <!-- Hero Image -->
+  <div class="package-banner__hero">
+    <img
+      width="100%"
+       src="{{ banner_url }}"
+      alt="{{ pkg.package_name }}"
+      
+      class="package-banner__hero-image"
+    />
+    
+    <!-- Gradient Overlay -->
+    <div class="package-banner__gradient"></div>
+    
+    <!-- Hero Content Overlay -->
+    <div class="package-banner__overlay">
+      <!-- Top Meta - Nudges only -->
+      <div class="package-banner__wrapper">
+        <div class="package-banner__top">
+          <span class="package-banner__nudge package-banner__nudge--discount">15% Early Bird</span>
+          <span class="package-banner__nudge package-banner__nudge--deal">Limited Seats</span>
+        </div>
+      </div>
+
+      <!-- Bottom Content -->
+      <div class="package-banner__wrapper">
+        <div class="package-banner__bottom">
+          <!-- Package Name + Price -->
+          <div class="package-banner__title-row">
+            <h1 class="package-banner__title">{{ pkg.package_name }}</h1>
+            <div class="package-banner__price">₹{{ "%.2f"|format(pkg.price or 0) }}</div>
+          </div>
+          
+          <!-- Package Meta Line -->
+          <div class="package-banner__meta">
+            <span class="package-banner__meta-badge package-banner__meta-badge--premium">Premium</span>
+            <span class="package-banner__meta-separator">•</span>
+            <span class="package-banner__meta-badge">
+              <i data-lucide="calendar"></i>
+              15 Days
+            </span>
+            <span class="package-banner__meta-separator">•</span>
+            <span class="package-banner__meta-badge">Direct</span>
+            <span class="package-banner__meta-separator">•</span>
+            <span class="package-banner__meta-badge">Saudi Airlines</span>
+          </div>
+
+          <!-- Departure Date - Prominent -->
+          <div class="package-banner__departure">
+            <i data-lucide="plane"></i>
+            <span>Departure: Mon, 24th December</span>
+          </div>
+          
+          <!-- Inclusions Icons Strip with Tooltips -->
+          <div class="package-banner__inclusions">
+            <div class="package-banner__inclusion" title="Flights">
+              <i data-lucide="plane"></i>
+              <div class="package-banner__tooltip">
+                <div class="package-banner__tooltip-title">Flights</div>
+                <div class="package-banner__tooltip-detail">Return economy flights with 30kg baggage allowance</div>
+                <div class="package-banner__tooltip-arrow"></div>
+              </div>
+            </div>
+            <div class="package-banner__inclusion" title="Hotels">
+              <i data-lucide="home"></i>
+              <div class="package-banner__tooltip">
+                <div class="package-banner__tooltip-title">Hotels</div>
+                <div class="package-banner__tooltip-detail">5-star hotels near Haram in Makkah & Madinah</div>
+                <div class="package-banner__tooltip-arrow"></div>
+              </div>
+            </div>
+            <div class="package-banner__inclusion" title="Meals">
+              <i data-lucide="utensils-crossed"></i>
+              <div class="package-banner__tooltip">
+                <div class="package-banner__tooltip-title">Meals</div>
+                <div class="package-banner__tooltip-detail">Daily breakfast and dinner included</div>
+                <div class="package-banner__tooltip-arrow"></div>
+              </div>
+            </div>
+            <div class="package-banner__inclusion" title="Transport">
+              <i data-lucide="bus"></i>
+              <div class="package-banner__tooltip">
+                <div class="package-banner__tooltip-title">Transport</div>
+                <div class="package-banner__tooltip-detail">AC coach for Makkah-Madinah transfers</div>
+                <div class="package-banner__tooltip-arrow"></div>
+              </div>
+            </div>
+            <div class="package-banner__inclusion" title="Laundry">
+              <i data-lucide="shirt"></i>
+              <div class="package-banner__tooltip">
+                <div class="package-banner__tooltip-title">Laundry</div>
+                <div class="package-banner__tooltip-detail">15 pairs laundry service included</div>
+                <div class="package-banner__tooltip-arrow"></div>
+              </div>
+            </div>
+            <div class="package-banner__inclusion" title="Ziyarat">
+              <i data-lucide="map"></i>
+              <div class="package-banner__tooltip">
+                <div class="package-banner__tooltip-title">Ziyarat</div>
+                <div class="package-banner__tooltip-detail">Guided tours of holy sites in both cities</div>
+                <div class="package-banner__tooltip-arrow"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Operator Info Banner - Black to merge with banner -->
+   <div class="package-banner__operator ">
+    <div class="package-banner__wrapper">
+      <div class="package-banner__operator-content">
+        <!-- Left: Operator Info -->
+        <div class="package-banner__operator-info">
+          <!-- Operator Avatar -->
+          
+          
+          <!-- Operator Details -->
+          <div class="package-banner__operator-details">
+            <div class="package-banner__operator-name">Al Warsi Tours & Travels</div>
+            <div class="package-banner__operator-location">Mumbai, India</div>
+            
+            <!-- Stats Row -->
+            <div class="package-banner__operator-stats">
+              <div class="package-banner__stat">
+                <div class="package-banner__stat-value">2015</div>
+                <div class="package-banner__stat-label">In business</div>
+              </div>
+              <div class="package-banner__stat">
+                <div class="package-banner__stat-value">10+</div>
+                <div class="package-banner__stat-label">Umrah tours</div>
+              </div>
+              <div class="package-banner__stat">
+                <div class="package-banner__stat-value">5000+</div>
+                <div class="package-banner__stat-label">Pilgrims served</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Right: Contact CTA -->
+        <button class="btn-primary operator-contact__button">Contact</button>
+      </div>
+    </div>
+  </div>
+  
+</section>
+
+<!-- Package Details Content Sections -->
+
+<!-- Content wrapper with max-width -->
+<div class="package-details">
+  <div class="package-details__container">
+    
+    <!-- Flight Details Section -->
+    <section class="package-details__section">
+      <h2 class="package-details__heading">Flight Details</h2>
+      
+      <div class="package-details__grid package-details__grid--two-col">
+        <!-- Onward Flight -->
+        <div class="package-details__card">
+          <div class="package-details__label">ONWARD FLIGHT</div>
+          <div class="package-details__card-content">
+            <div class="package-details__icon-box">
+              <i data-lucide="plane" class="package-details__icon package-details__icon--rotate-45"></i>
+            </div>
+            <div class="package-details__card-info">
+              <div class="package-details__card-title">Saudia SV 752</div>
+              <div class="package-details__card-meta">Mar 15, 2024 • BOM → JED</div>
+              <div class="package-details__card-status">✓ Direct Flight</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Return Flight -->
+        <div class="package-details__card">
+          <div class="package-details__label">RETURN FLIGHT</div>
+          <div class="package-details__card-content">
+            <div class="package-details__icon-box">
+              <i data-lucide="plane" class="package-details__icon package-details__icon--rotate-minus-45"></i>
+            </div>
+            <div class="package-details__card-info">
+              <div class="package-details__card-title">Air India AI 966</div>
+              <div class="package-details__card-meta">Mar 29, 2024 • JED → BOM</div>
+              <div class="package-details__card-status">Via Doha • 3h layover</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Accommodation Section -->
+    <section class="package-details__section">
+      <h2 class="package-details__heading">Accommodation</h2>
+      
+      <div class="package-details__grid package-details__grid--two-col">
+        <!-- Makkah -->
+        <div class="package-details__card">
+          <div class="package-details__label">MAKKAH</div>
+          <div class="package-details__card-content">
+            <div class="package-details__icon-box">
+              <i data-lucide="home" class="package-details__icon"></i>
+            </div>
+            <div class="package-details__card-info">
+              <div class="package-details__card-title">Fairmont Makkah Clock Royal Tower</div>
+              <div class="package-details__card-meta">10 Nights</div>
+              <div class="package-details__card-meta">50m from Haram</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Madinah -->
+        <div class="package-details__card">
+          <div class="package-details__label">MADINAH</div>
+          <div class="package-details__card-content">
+            <div class="package-details__icon-box">
+              <i data-lucide="home" class="package-details__icon"></i>
+            </div>
+            <div class="package-details__card-info">
+              <div class="package-details__card-title">Pullman Zamzam Madinah</div>
+              <div class="package-details__card-meta">5 Nights</div>
+              <div class="package-details__card-meta">200m from Masjid Nabawi</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- What's Included Section -->
+    <section class="package-details__section">
+      <h2 class="package-details__heading">What's Included</h2>
+      
+      <div class="package-details__grid package-details__grid--three-col">
+        <div class="package-details__inclusion">
+          <div class="package-details__icon-box">
+            <i data-lucide="plane" class="package-details__icon"></i>
+          </div>
+          <div class="package-details__card-info">
+            <div class="package-details__card-title">Return Flights</div>
+            <div class="package-details__card-meta">Economy class with 30kg baggage</div>
+          </div>
+        </div>
+
+        <div class="package-details__inclusion">
+          <div class="package-details__icon-box">
+            <i data-lucide="home" class="package-details__icon"></i>
+          </div>
+          <div class="package-details__card-info">
+            <div class="package-details__card-title">Accommodation</div>
+            <div class="package-details__card-meta">5-star hotels near Haram</div>
+          </div>
+        </div>
+
+        <div class="package-details__inclusion">
+          <div class="package-details__icon-box">
+            <i data-lucide="utensils-crossed" class="package-details__icon"></i>
+          </div>
+          <div class="package-details__card-info">
+            <div class="package-details__card-title">Meals</div>
+            <div class="package-details__card-meta">Breakfast & Dinner included</div>
+          </div>
+        </div>
+
+        <div class="package-details__inclusion">
+          <div class="package-details__icon-box">
+            <i data-lucide="bus" class="package-details__icon"></i>
+          </div>
+          <div class="package-details__card-info">
+            <div class="package-details__card-title">Transportation</div>
+            <div class="package-details__card-meta">AC coach Makkah-Madinah</div>
+          </div>
+        </div>
+
+        <div class="package-details__inclusion">
+          <div class="package-details__icon-box">
+            <i data-lucide="shirt" class="package-details__icon"></i>
+          </div>
+          <div class="package-details__card-info">
+            <div class="package-details__card-title">Laundry</div>
+            <div class="package-details__card-meta">15 pairs per pilgrimage</div>
+          </div>
+        </div>
+
+        <div class="package-details__inclusion">
+          <div class="package-details__icon-box">
+            <i data-lucide="map" class="package-details__icon"></i>
+          </div>
+          <div class="package-details__card-info">
+            <div class="package-details__card-title">Ziyarat Tours</div>
+            <div class="package-details__card-meta">Makkah & Madinah holy sites</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Pricing - Adults Section -->
+    <section class="package-details__section">
+      <h2 class="package-details__heading">Pricing - Adults</h2>
+      
+      <div class="package-details__pricing-list">
+        <div class="package-details__pricing-card">
+          <div class="package-details__pricing-info">
+            <div class="package-details__pricing-type">Quad Sharing</div>
+            <div class="package-details__pricing-subtitle">Per person</div>
+          </div>
+          <div class="package-details__pricing-amount">₹1,25,000</div>
+        </div>
+
+        <div class="package-details__pricing-card">
+          <div class="package-details__pricing-info">
+            <div class="package-details__pricing-type">Triple Sharing</div>
+            <div class="package-details__pricing-subtitle">Per person</div>
+          </div>
+          <div class="package-details__pricing-amount">₹1,45,000</div>
+        </div>
+
+        <div class="package-details__pricing-card">
+          <div class="package-details__pricing-info">
+            <div class="package-details__pricing-type">Double Sharing</div>
+            <div class="package-details__pricing-subtitle">Per person</div>
+          </div>
+          <div class="package-details__pricing-amount">₹1,75,000</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Pricing - Children Section -->
+    <section class="package-details__section">
+      <h2 class="package-details__heading">Pricing - Children</h2>
+      
+      <div class="package-details__pricing-card package-details__pricing-card--complex">
+        <div class="package-details__pricing-group">
+          <div class="package-details__pricing-age">Age 2-7 years</div>
+          <div class="package-details__pricing-options">
+            <div class="package-details__pricing-row">
+              <div class="package-details__pricing-label">With Bed</div>
+              <div class="package-details__pricing-value">₹95,000</div>
+            </div>
+            <div class="package-details__pricing-row">
+              <div class="package-details__pricing-label">Without Bed</div>
+              <div class="package-details__pricing-value">₹60,000</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="package-details__pricing-group">
+          <div class="package-details__pricing-age">Age 8-12 years</div>
+          <div class="package-details__pricing-options">
+            <div class="package-details__pricing-row">
+              <div class="package-details__pricing-label">With Bed</div>
+              <div class="package-details__pricing-value">₹1,10,000</div>
+            </div>
+            <div class="package-details__pricing-row">
+              <div class="package-details__pricing-label">Without Bed</div>
+              <div class="package-details__pricing-value">₹65,000</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="package-details__pricing-group package-details__pricing-group--last">
+          <div class="package-details__pricing-row">
+            <div>
+              <div class="package-details__pricing-type">Infant (below 2 years)</div>
+            </div>
+            <div class="package-details__pricing-value">₹30,000</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Itinerary Section -->
+    <section class="package-details__section">
+      <h2 class="package-details__heading">Day-by-Day Itinerary</h2>
+      
+      <div class="package-details__itinerary">
+        <div class="package-details__itinerary-item">
+          <div class="package-details__itinerary-day">D1</div>
+          <div class="package-details__itinerary-content">
+            <div class="package-details__itinerary-title">Departure from Mumbai</div>
+            <div class="package-details__itinerary-desc">Check-in at Mumbai Airport, flight to Jeddah</div>
+          </div>
+        </div>
+
+        <div class="package-details__itinerary-item">
+          <div class="package-details__itinerary-day">D2</div>
+          <div class="package-details__itinerary-content">
+            <div class="package-details__itinerary-title">Arrival in Makkah</div>
+            <div class="package-details__itinerary-desc">Transfer to hotel, check-in, and rest</div>
+          </div>
+        </div>
+
+        <div class="package-details__itinerary-item">
+          <div class="package-details__itinerary-day">D3</div>
+          <div class="package-details__itinerary-content">
+            <div class="package-details__itinerary-title">First Umrah</div>
+            <div class="package-details__itinerary-desc">Perform your first Umrah with group</div>
+          </div>
+        </div>
+
+        <div class="package-details__itinerary-item">
+          <div class="package-details__itinerary-day">D4-10</div>
+          <div class="package-details__itinerary-content">
+            <div class="package-details__itinerary-title">Makkah Stay</div>
+            <div class="package-details__itinerary-desc">Free time for Ibadah and additional Umrahs</div>
+          </div>
+        </div>
+
+        <div class="package-details__itinerary-item">
+          <div class="package-details__itinerary-day">D11</div>
+          <div class="package-details__itinerary-content">
+            <div class="package-details__itinerary-title">Transfer to Madinah</div>
+            <div class="package-details__itinerary-desc">Travel by AC coach to Madinah</div>
+          </div>
+        </div>
+
+        <div class="package-details__itinerary-item">
+          <div class="package-details__itinerary-day">D12-15</div>
+          <div class="package-details__itinerary-content">
+            <div class="package-details__itinerary-title">Madinah Stay</div>
+            <div class="package-details__itinerary-desc">Visit Masjid Nabawi and Ziyarat tours</div>
+          </div>
+        </div>
+
+        <div class="package-details__itinerary-item">
+          <div class="package-details__itinerary-day">D16</div>
+          <div class="package-details__itinerary-content">
+            <div class="package-details__itinerary-title">Return Journey</div>
+            <div class="package-details__itinerary-desc">Transfer to Jeddah Airport, flight to Mumbai</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Terms & Conditions Section -->
+    <section class="package-details__section">
+      <h2 class="package-details__heading">Terms & Conditions</h2>
+      
+      <div class="package-details__terms">
+        <ul class="package-details__terms-list">
+          <li class="package-details__terms-item">
+            <i data-lucide="check-circle-2" class="package-details__terms-icon"></i>
+            <span>Full payment required 30 days before departure</span>
+          </li>
+          <li class="package-details__terms-item">
+            <i data-lucide="check-circle-2" class="package-details__terms-icon"></i>
+            <span>Cancellation charges apply as per airline policy</span>
+          </li>
+          <li class="package-details__terms-item">
+            <i data-lucide="check-circle-2" class="package-details__terms-icon"></i>
+            <span>Visa processing takes 7-10 working days</span>
+          </li>
+          <li class="package-details__terms-item">
+            <i data-lucide="check-circle-2" class="package-details__terms-icon"></i>
+            <span>Travel insurance is mandatory and not included</span>
+          </li>
+          <li class="package-details__terms-item">
+            <i data-lucide="check-circle-2" class="package-details__terms-icon"></i>
+            <span>Hotel check-in time is 3 PM, check-out is 12 PM</span>
+          </li>
+          <li class="package-details__terms-item">
+            <i data-lucide="check-circle-2" class="package-details__terms-icon"></i>
+            <span>Group will be accompanied by experienced tour guide</span>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+
 <div class="theme-basic">
+  
 
   <!-- Header -->
   <div class="band mb-3">
@@ -146,26 +568,32 @@
           </div>
         {% endif %}
       </div>
-
-      <!-- Price -->
-      <div class="hero-price">
-        <div class="kicker mb-1">Starting</div>
-        <div class="price-lg">₹{{ "%.2f"|format(pkg.price or 0) }}</div>
-
-        {% if price_row and (price_row.price_double or price_row.price_triple or price_row.price_quad) %}
-          <div class="small muted mt-2">
-            {% if price_row.price_double %}Double/Couple • ₹{{ "%.2f"|format(price_row.price_double) }}<br>{% endif %}
-            {% if price_row.price_triple %}Triple • ₹{{ "%.2f"|format(price_row.price_triple) }}<br>{% endif %}
-            {% if price_row.price_quad %}Quad/Quint • ₹{{ "%.2f"|format(price_row.price_quad) }}{% endif %}
-          </div>
-        {% endif %}
-
-        {% if price_row and price_row.price_note %}
-          <div class="small muted mt-1">{{ price_row.price_note }}</div>
-        {% endif %}
-      </div>
-    </div>
+<!-- Price -->
+<div class="hero-price">
+  <div class="kicker mb-1">Starting</div>
+  <div class="price-lg">
+    {{ format_money(pkg.price or 0, currency_symbol, currency_position, currency_code) }}
   </div>
+
+  {% if price_row and (price_row.price_double or price_row.price_triple or price_row.price_quad) %}
+    <div class="small muted mt-2">
+      {% if price_row.price_double %}
+        Double/Couple • {{ format_money(price_row.price_double, currency_symbol, currency_position, currency_code) }}<br>
+      {% endif %}
+      {% if price_row.price_triple %}
+        Triple • {{ format_money(price_row.price_triple, currency_symbol, currency_position, currency_code) }}<br>
+      {% endif %}
+      {% if price_row.price_quad %}
+        Quad/Quint • {{ format_money(price_row.price_quad, currency_symbol, currency_position, currency_code) }}
+      {% endif %}
+    </div>
+  {% endif %}
+
+  {% if price_row and price_row.price_note %}
+    <div class="small muted mt-1">{{ price_row.price_note }}</div>
+  {% endif %}
+</div>
+
 
   <!-- Flights -->
   <div class="card-soft p-3 p-md-4 mb-3">
@@ -284,40 +712,37 @@
 
     {% set incl = pkg.inclusion %}
 
-<ul class="mb-0">
-  {% if incl %}
-    {% set has_any = (
-      incl.meals_enabled or incl.meals_desc or
-      incl.laundry_enabled or incl.laundry_desc or
-      incl.transport_enabled or incl.transport_desc or
-      incl.zamzam_enabled or incl.zamzam_desc or
-      incl.welcome_kit_enabled or incl.welcome_kit_desc or
-      incl.insurance_enabled or incl.insurance_desc or
-      incl.visa_enabled or incl.visa_desc or
-      incl.ziyarat_enabled or incl.ziyarat_desc or
-      incl.other
-    ) %}
+    <ul class="mb-0">
+      {% if incl %}
+        {% set has_any = (
+          incl.meals_enabled or incl.meals_desc or
+          incl.laundry_enabled or incl.laundry_desc or
+          incl.transport_enabled or incl.transport_desc or
+          incl.zamzam_enabled or incl.zamzam_desc or
+          incl.welcome_kit_enabled or incl.welcome_kit_desc or
+          incl.insurance_enabled or incl.insurance_desc or
+          incl.visa_enabled or incl.visa_desc or
+          incl.ziyarat_enabled or incl.ziyarat_desc or
+          incl.other
+        ) %}
 
-    {% if incl.meals_enabled or incl.meals_desc %}<li>Meals: {{ incl.meals_desc or "Included" }}</li>{% endif %}
-    {% if incl.laundry_enabled or incl.laundry_desc %}<li>Laundry: {{ incl.laundry_desc or "Included" }}</li>{% endif %}
-    {% if incl.transport_enabled or incl.transport_desc %}<li>Transport: {{ incl.transport_desc or "Included" }}</li>{% endif %}
-    {% if incl.zamzam_enabled or incl.zamzam_desc %}<li>Zam Zam: {{ incl.zamzam_desc or "Included" }}</li>{% endif %}
-    {% if incl.welcome_kit_enabled or incl.welcome_kit_desc %}<li>Welcome Kit: {{ incl.welcome_kit_desc or "Included" }}</li>{% endif %}
-    {% if incl.insurance_enabled or incl.insurance_desc %}<li>Insurance: {{ incl.insurance_desc or "Included" }}</li>{% endif %}
+        {% if incl.meals_enabled or incl.meals_desc %}<li>Meals: {{ incl.meals_desc or "Included" }}</li>{% endif %}
+        {% if incl.laundry_enabled or incl.laundry_desc %}<li>Laundry: {{ incl.laundry_desc or "Included" }}</li>{% endif %}
+        {% if incl.transport_enabled or incl.transport_desc %}<li>Transport: {{ incl.transport_desc or "Included" }}</li>{% endif %}
+        {% if incl.zamzam_enabled or incl.zamzam_desc %}<li>Zam Zam: {{ incl.zamzam_desc or "Included" }}</li>{% endif %}
+        {% if incl.welcome_kit_enabled or incl.welcome_kit_desc %}<li>Welcome Kit: {{ incl.welcome_kit_desc or "Included" }}</li>{% endif %}
+        {% if incl.insurance_enabled or incl.insurance_desc %}<li>Insurance: {{ incl.insurance_desc or "Included" }}</li>{% endif %}
+        {% if incl.visa_enabled or incl.visa_desc %}<li>VISA: {{ incl.visa_desc or "Included" }}</li>{% endif %}
+        {% if incl.ziyarat_enabled or incl.ziyarat_desc %}<li>Ziyarat: {{ incl.ziyarat_desc or "Included" }}</li>{% endif %}
+        {% if incl.other %}<li>{{ incl.other }}</li>{% endif %}
 
-    {# ✅ NEW #}
-    {% if incl.visa_enabled or incl.visa_desc %}<li>VISA: {{ incl.visa_desc or "Included" }}</li>{% endif %}
-    {% if incl.ziyarat_enabled or incl.ziyarat_desc %}<li>Ziyarat: {{ incl.ziyarat_desc or "Included" }}</li>{% endif %}
-
-    {% if incl.other %}<li>{{ incl.other }}</li>{% endif %}
-
-    {% if not has_any %}
-      <li>No inclusions listed.</li>
-    {% endif %}
-  {% else %}
-    <li>No inclusions listed.</li>
-  {% endif %}
-</ul>
+        {% if not has_any %}
+          <li>No inclusions listed.</li>
+        {% endif %}
+      {% else %}
+        <li>No inclusions listed.</li>
+      {% endif %}
+    </ul>
 
   </div>
 

@@ -347,7 +347,8 @@
   }
 
   /* Operator Section */
-  .package-card__operator {
+  .package-card__operator,
+   .package-card__footer{
     @apply p-5;
   }
 
@@ -379,7 +380,7 @@
     }
   }
 
-  .operator-details {
+  .operator-details-meta {
     @apply flex-1 min-w-0;
   }
 
