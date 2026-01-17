@@ -52,6 +52,7 @@ from PIL import Image, UnidentifiedImageError
 router = APIRouter()
 templates = Jinja2Templates(directory="app/web/templates")
 
+
 def format_money(amount, currency_symbol=None, currency_position=None, currency_code=None):
     """
     amount: number
@@ -2978,7 +2979,6 @@ def operators_list(request: Request, db: Session = Depends(get_db)):
             "current_year": datetime.now().year,
 
             # ✅ REQUIRED
-            "format_money": format_money,
             "currency_by_agency_id": currency_by_agency_id,
         },
         is_public=True,
@@ -3176,7 +3176,6 @@ def city_packages(city_name: str, request: Request, db: Session = Depends(get_db
             "packages": packages,
             "agency_by_id": agency_by_id,
             "count": len(packages),
-            "format_money": format_money,
             "currency_by_agency_id": currency_by_agency_id,
             # only keep this if your template needs it:
             "agencies": agencies_list,
@@ -3255,7 +3254,6 @@ def city_hub(city_name: str, request: Request, db: Session = Depends(get_db)):
             "agencies": agencies,
             "packages": packages,
             "agency_by_id": agency_by_id,
-            "format_money": format_money,
             "currency_by_agency_id": currency_by_agency_id,
             "count_agencies": len(agencies),
             "count_packages": len(packages),
