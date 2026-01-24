@@ -22,11 +22,11 @@
 } %}
 
 {% set banner_name = pkg.banner_image or 'dynamic-tawaf-at-night.jpg' %}
-{% set banner_url = '/media/packages-banners/' ~ banner_name ~ '?v=' ~ pkg.package_id %}
+{% set banner_url = '/media/packages-banners/larger-ones/' ~ banner_name ~ '?v=' ~ pkg.package_id %}
 
 <!-- ===============================
      PACKAGE BANNER
-================================ -->
+================================ --> 
 <section class="package-banner">
   <div class="package-banner__hero">
     <img src="{{ banner_url }}" alt="{{ pkg.package_name }}" class="package-banner__hero-image">
@@ -188,13 +188,21 @@
       <h2 class="package-details__heading">Inclusions</h2>
 
       <ul class="package-details__terms-list">
-        {% if pkg.inclusion %}
-          {% if pkg.inclusion.meals_enabled %}<li>Meals</li>{% endif %}
-          {% if pkg.inclusion.transport_enabled %}<li>Transport</li>{% endif %}
-          {% if pkg.inclusion.visa_enabled %}<li>Visa</li>{% endif %}
-          {% if pkg.inclusion.ziyarat_enabled %}<li>Ziyarat</li>{% endif %}
-          {% if pkg.inclusion.other %}<li>{{ pkg.inclusion.other }}</li>{% endif %}
-        {% else %}
+       {% if pkg.inclusion %}
+  <ul>
+    {% if pkg.inclusion.meals_enabled %}<li>Meals{% if pkg.inclusion.meals_desc %}: {{ pkg.inclusion.meals_desc }}{% endif %}</li>{% endif %}
+    {% if pkg.inclusion.laundry_enabled %}<li>Laundry{% if pkg.inclusion.laundry_desc %}: {{ pkg.inclusion.laundry_desc }}{% endif %}</li>{% endif %}
+    {% if pkg.inclusion.transport_enabled %}<li>Transport{% if pkg.inclusion.transport_desc %}: {{ pkg.inclusion.transport_desc }}{% endif %}</li>{% endif %}
+    {% if pkg.inclusion.zamzam_enabled %}<li>Zamzam{% if pkg.inclusion.zamzam_desc %}: {{ pkg.inclusion.zamzam_desc }}{% endif %}</li>{% endif %}
+    {% if pkg.inclusion.welcome_kit_enabled %}<li>Welcome Kit{% if pkg.inclusion.welcome_kit_desc %}: {{ pkg.inclusion.welcome_kit_desc }}{% endif %}</li>{% endif %}
+    {% if pkg.inclusion.insurance_enabled %}<li>Insurance{% if pkg.inclusion.insurance_desc %}: {{ pkg.inclusion.insurance_desc }}{% endif %}</li>{% endif %}
+    {% if pkg.inclusion.visa_enabled %}<li>Visa{% if pkg.inclusion.visa_desc %}: {{ pkg.inclusion.visa_desc }}{% endif %}</li>{% endif %}
+    {% if pkg.inclusion.ziyarat_enabled %}<li>Ziyarat{% if pkg.inclusion.ziyarat_desc %}: {{ pkg.inclusion.ziyarat_desc }}{% endif %}</li>{% endif %}
+    {% if pkg.inclusion.other_notes %}<li>{{ pkg.inclusion.other_notes }}</li>{% endif %}
+  </ul>
+{% else %}
+  
+
           <li>No inclusions listed.</li>
         {% endif %}
       </ul>
