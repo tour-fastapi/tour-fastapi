@@ -1,85 +1,236 @@
 {% extends "base.html" %}
 {% block content %}
 
-
-<div class="d-flex justify-content-between align-items-center mb-3">
-  <div>
-    <h1 class="h4 mb-0">{{ agency.agencies_name }}</h1>
-    <div class="small text-muted">
-      {{ agency.city }}{% if agency.country %}, {{ agency.country }}{% endif %}
+<!-- Main Content -->
+<main class="main flex-1 px-4 py-6 md:py-8" style="">
+  
+  <!-- Flash Messages -->
+  {% if flashes %}
+    <div id="flashMessages" class="mb-6">
+      {% for f in flashes %}
+        <div class="alert alert--{{ 'error' if f.type == 'error' else 'success' if f.type == 'success' else 'warning' if f.type == 'warning' else 'info' }}">
+          <i data-lucide="{{ 'alert-circle' if f.type == 'error' else 'check-circle' if f.type == 'success' else 'alert-triangle' if f.type == 'warning' else 'info' }}" class="alert__icon"></i>
+          <div class="alert__content">
+            <div class="alert__title">{{ f.type|capitalize }}</div>
+            <div class="alert__message">{{ f.text }}</div>
+          </div>
+          <button type="button" class="alert__close" onclick="closeFlashAlert(this)">
+            <i data-lucide="x" class="w-4 h-4"></i>
+          </button>
+        </div>
+      {% endfor %}
     </div>
-  </div>
-
-<div class="d-flex gap-2">
-  {# Show “Switch agency” only if the user has more than one agency #}
-  {% if user.agencies|length > 1 %}
-    <a href="/select-agency" class="btn btn-outline-secondary btn-sm">Switch agency</a>
-  {% else %}
-    {# Otherwise show a link to create a new agency #}
-    <a href="/agency/new" class="btn btn-outline-secondary btn-sm">+ Add agency</a>
   {% endif %}
 
-  {# Existing buttons remain unchanged #}
-  <a href="/agency/{{ agency.registration_id }}/edit" class="btn btn-outline-secondary btn-sm">Edit agency</a>
-  <a href="/package/new?agency_id={{ agency.registration_id }}" class="btn btn-primary btn-sm">+ Add package</a>
-</div>
+  <!-- Agency Card -->
+  <div class="form-card mb-6">
+    <div class="agency-card">
+      <!-- Agency Avatar -->
+      <div class="agency-card__avatar">
+        {{ agency.agencies_name[:2]|upper }}
+      </div>
 
+      <!-- Agency Info -->
+      <div class="agency-card__content">
+        <h1 class="agency-card__title">
+          {{ agency.agencies_name }}
+        </h1>
+        
+        <div class="agency-card__location">
+          <i data-lucide="map-pin" class="w-4 h-4"></i>
+          <span>{{ agency.city }}{% if agency.country %}, {{ agency.country }}{% endif %}</span>
+        </div>
 
-</div>
+        {% if agency.description %}
+          <p class="agency-card__description">
+            {{ agency.description }}
+          </p>
+        {% endif %}
+      </div>
 
-{% if flashes %}
-  {% for f in flashes %}
-    <div class="alert alert-{{ 'danger' if f.type == 'error' else f.type }} alert-dismissible fade show" role="alert">
-      {{ f.text }}
-      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-  {% endfor %}
-{% endif %}
-
-{% if agency.description %}
-  <div class="card mb-3">
-    <div class="card-body">
-      <h2 class="h6 mb-2">About this agency</h2>
-      <p class="mb-0">{{ agency.description }}</p>
+      <!-- Edit Button -->
+      <div class="agency-card__actions">
+        <a href="/agency/{{ agency.registration_id }}/edit" class="btn-secondary">
+          <i data-lucide="edit-3" class="w-4 h-4"></i>
+          <span class="hidden sm:inline">Edit</span>
+        </a>
+        
+        {% if user.agencies|length > 1 %}
+          <a href="/select-agency" class="btn-secondary">
+            <i data-lucide="repeat" class="w-4 h-4"></i>
+            <span class="hidden sm:inline">Switch</span>
+          </a>
+        {% endif %}
+      </div>
     </div>
   </div>
-{% endif %}
 
-<div class="card">
-  <div class="card-header">
-    <strong>Packages</strong>
+  <!-- Packages Section Header -->
+  <div class="packages-header">
+    <div class="packages-header__title">
+      <i data-lucide="package" class="w-5 h-5"></i>
+      <h2>Your Packages</h2>
+    </div>
+    
+    <div class="packages-header__meta">
+      <span class="packages-header__count">
+        {{ packages|length }} {% if packages|length == 1 %}Package{% else %}Packages{% endif %}
+      </span>
+      <a href="/package/new?agency_id={{ agency.registration_id }}" class="btn-primary">
+        <i data-lucide="plus" class="w-4 h-4"></i>
+        Add Package
+      </a>
+    </div>
   </div>
 
+  <!-- Packages List -->
   {% if packages %}
-    <ul class="list-group list-group-flush">
+    <div class="mb-6">
       {% for p in packages %}
-        <li class="list-group-item d-flex justify-content-between align-items-center">
-          <div>
-            <div class="fw-semibold">{{ p.package_name }}</div>
-            <div class="small text-muted">{{ p.days }} days • ₹{{ '%.2f'|format(p.price) }}</div>
-            {% if p.description %}
-              <div class="small mt-1">{{ p.description }}</div>
-            {% endif %}
+        <div class="package-card">
+          <!-- Header with Status and Hover Actions -->
+          <div class="package-card__header">
+            <span class="package-card__badge package-card__badge--active">
+              Active
+            </span>
+            
+            <!-- Hover Actions (Desktop Only) -->
+            <div class="package-card__hover-actions">
+              <a 
+                href="/package/{{ p.package_id }}/edit" 
+                class="package-card__action-btn"
+                title="Edit"
+                onclick="event.stopPropagation()"
+              >
+                <i data-lucide="edit-3" class="w-4 h-4"></i>
+              </a>
+              
+              <form method="post" action="/package/{{ p.package_id }}/delete" onsubmit="event.stopPropagation(); return confirm('Are you sure you want to delete this package?')" style="margin: 0;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <button 
+                  type="submit"
+                  class="package-card__action-btn package-card__action-btn--delete"
+                  title="Delete"
+                >
+                  <i data-lucide="trash-2" class="w-4 h-4"></i>
+                </button>
+              </form>
+            </div>
           </div>
-          <div class="d-flex gap-2">
-            <a href="/package/{{ p.package_id }}/edit" class="btn btn-outline-secondary btn-sm">Edit</a>
-            <form method="post" action="/package/{{ p.package_id }}/delete" onsubmit="return confirm('Delete this package?')">
+
+          <!-- Package Name -->
+          <h3 class="package-card__title">
+            {{ p.package_name }}
+          </h3>
+          
+          <!-- Meta Information -->
+          <div class="package-card__meta">
+            <div class="package-card__meta-item package-card__meta-item--muted">
+              <i data-lucide="calendar" class="w-4 h-4"></i>
+              <span>{{ p.days }} days</span>
+            </div>
+            <div class="package-card__meta-item package-card__meta-item--price">
+              <i data-lucide="indian-rupee" class="w-4 h-4"></i>
+              <span>{{ '%.2f'|format(p.price) }}</span>
+            </div>
+          </div>
+
+          <!-- View Details Button -->
+          <a 
+            href="/packages/{{ p.package_id }}" 
+            class="package-card__view-btn"
+            onclick="event.stopPropagation()"
+          >
+            <span>View Details</span>
+            <i data-lucide="arrow-right" class="w-4 h-4"></i>
+          </a>
+
+          <!-- Mobile Action Buttons (Always Visible) -->
+          <div class="package-card__mobile-actions">
+            <a 
+              href="/package/{{ p.package_id }}/edit" 
+              class="package-card__mobile-btn package-card__mobile-btn--edit"
+              onclick="event.stopPropagation()"
+            >
+              <i data-lucide="edit-3" class="w-4 h-4"></i>
+              <span>Edit</span>
+            </a>
+            
+            <form method="post" action="/package/{{ p.package_id }}/delete" onsubmit="event.stopPropagation(); return confirm('Are you sure you want to delete this package?')" style="margin: 0; flex: 1;">
               <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-              <button class="btn btn-outline-danger btn-sm">Delete</button>
+              <button 
+                type="submit"
+                class="package-card__mobile-btn package-card__mobile-btn--delete"
+                style="width: 100%;"
+              >
+                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                <span>Delete</span>
+              </button>
             </form>
           </div>
-        </li>
+        </div>
       {% endfor %}
-    </ul>
+    </div>
   {% else %}
-    <div class="card-body text-muted small">
-      No packages yet.
+    <!-- Empty State -->
+    <div class="packages-empty mb-6">
+      <div class="packages-empty__icon">
+        <i data-lucide="package-x" class="w-8 h-8"></i>
+      </div>
+      <h3 class="packages-empty__title">
+        No packages yet
+      </h3>
+      <p class="packages-empty__text">
+        Create your first package to start attracting customers
+      </p>
+      <a href="/package/new?agency_id={{ agency.registration_id }}" class="btn-primary">
+        <i data-lucide="plus" class="w-4 h-4"></i>
+        Create Your First Package
+      </a>
     </div>
   {% endif %}
-</div>
-<!-- Inquiry button (owner-facing) -->
-<a href="/inquiries"
-   style="display:inline-block; padding:8px 12px; background:#007bff; color:#fff; text-decoration:none; border-radius:4px; margin:8px 0;">
-   View Inquiries
-</a>
+
+  <!-- Inquiries Card -->
+  <div class="form-card">
+    <div class="inquiries-card">
+      <div class="inquiries-card__content">
+        <div class="inquiries-card__icon">
+          <i data-lucide="mail" class="w-6 h-6"></i>
+        </div>
+        <div>
+          <h3 class="inquiries-card__title">
+            Customer Inquiries
+          </h3>
+          <p class="inquiries-card__subtitle">
+            View and manage customer requests
+          </p>
+        </div>
+      </div>
+      
+      <a href="/inquiries" class="btn-primary">
+        <span>View All</span>
+        <i data-lucide="arrow-right" class="w-4 h-4"></i>
+      </a>
+    </div>
+  </div>
+
+</main>
+
+<!-- Scripts -->
+<script>
+  // Close flash alert
+  function closeFlashAlert(button) {
+    const alert = button.closest('.alert');
+    if (alert) alert.style.display = 'none';
+  }
+
+  // Initialize
+  document.addEventListener('DOMContentLoaded', function() {
+    // Initialize lucide icons
+    if (typeof lucide !== 'undefined') {
+      lucide.createIcons();
+    }
+  });
+</script>
+
 {% endblock %}

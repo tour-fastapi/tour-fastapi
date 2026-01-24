@@ -18,6 +18,7 @@
 @import "./partials/package-details.css";
 @import "./partials/forms.css";
 @import "./partials/modal.css";
+@import "./partials/agency-dashboard.css";
 
 @tailwind base;
 
