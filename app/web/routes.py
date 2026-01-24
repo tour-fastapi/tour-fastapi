@@ -1704,15 +1704,18 @@ def package_detail(package_id: int, request: Request, db: Session = Depends(get_
         is_public=True,
     )
 
-@router.post("/packages/{package_id}/inquire")
+@router.post("/packages/{package_id}")
 def package_inquire_submit(
     request: Request,
     package_id: int,
     name: str = Form(...),
+    country_code: str = Form("+91"),  # ✅ Add this
     phone_number: str = Form(...),
     inquiry: str = Form(...),
     source: str = Form(""),
     website: str = Form(""),  # honeypot
+    
+    
     captcha_answer: str = Form(...),
     csrf_token: str = Form(...),
     db: Session = Depends(get_db),
@@ -1768,7 +1771,9 @@ def package_inquire_submit(
         flash(request, "Could not save inquiry. Please try again.", "error")
         return RedirectResponse(url=f"/packages/{package_id}", status_code=303)
 
-    flash(request, "Thanks! Your inquiry was sent.", "success")
+    # flash(request, "Thanks! Your inquiry was sent.", "success")
+    
+
     return RedirectResponse(url=f"/packages/{package_id}", status_code=303)
 
 

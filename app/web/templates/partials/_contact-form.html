@@ -1,0 +1,572 @@
+{# ========================================================================
+   INQUIRY MODAL - Form with Validation & Thank You Message
+   ======================================================================== #}
+
+<div class="modal-overlay" id="inquiryModal" style="display: none;">
+  <div class="modal-container">
+    <div class="modal-content">
+      
+      {# Modal Header #}
+      <div class="modal-header">
+        <h2 class="modal-title" id="inquiryModalTitle">Send Inquiry</h2>
+        <button type="button" class="modal-close" id="closeInquiryModal" aria-label="Close">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      {# Modal Body - Form View #}
+      <div class="modal-body" id="inquiryFormView">
+        <form method="post" action="/packages/{{ pkg.package_id }}" id="inquiryForm" novalidate>
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+          <input type="hidden" name="source" value="web">
+          {# Honeypot field #}
+          <input type="text" name="website" value="" style="display:none" tabindex="-1" autocomplete="off">
+
+          {# Full Name Field #}
+          <div class="form-group">
+            <label for="inq-name" class="form-label form-label--required">
+              Full Name
+            </label>
+            <div class="form-input-wrapper">
+              <i data-lucide="user" class="form-input-icon"></i>
+              <input
+                type="text"
+                id="inq-name"
+                name="name"
+                class="form-input form-input--with-icon"
+                placeholder="Your full name"
+                required
+                minlength="2"
+              />
+            </div>
+            <div class="invalid-feedback" style="display: none;">
+              Please enter your full name (at least 2 characters)
+            </div>
+          </div>
+
+          {# Phone Number Field with Country Code #}
+          <div class="form-group">
+            <label for="inq-phone" class="form-label form-label--required">
+              Phone Number
+            </label>
+            <div style="display: flex; gap: 0.75rem;">
+              {# Country Code Dropdown #}
+              <div style="flex: 0 0 auto; min-width: 120px;">
+                <select
+                  id="inq-country-code"
+                  name="country_code"
+                  class="form-input"
+                  style="height: 100%;"
+                >
+                  <option value="+91" selected>🇮🇳 +91</option>
+                  <option value="+1">🇺🇸 +1</option>
+                  <option value="+44">🇬🇧 +44</option>
+                  <option value="+971">🇦🇪 +971</option>
+                  <option value="+966">🇸🇦 +966</option>
+                  <option value="+974">🇶🇦 +974</option>
+                  <option value="+965">🇰🇼 +965</option>
+                  <option value="+968">🇴🇲 +968</option>
+                  <option value="+973">🇧🇭 +973</option>
+                  <option value="+20">🇪🇬 +20</option>
+                  <option value="+92">🇵🇰 +92</option>
+                  <option value="+880">🇧🇩 +880</option>
+                  <option value="+60">🇲🇾 +60</option>
+                  <option value="+62">🇮🇩 +62</option>
+                  <option value="+65">🇸🇬 +65</option>
+                </select>
+              </div>
+              
+              {# Phone Number Input #}
+              <div class="form-input-wrapper" style="flex: 1;">
+                <i data-lucide="phone" class="form-input-icon"></i>
+                <input
+                  type="tel"
+                  id="inq-phone"
+                  name="phone_number"
+                  class="form-input form-input--with-icon"
+                  placeholder="Enter phone number"
+                  required
+                  minlength="6"
+                  maxlength="15"
+                  pattern="[0-9]{6,15}"
+                />
+              </div>
+            </div>
+            <div class="invalid-feedback" style="display: none;">
+              Please enter a valid phone number (6-15 digits)
+            </div>
+            <p class="form-help-text">
+              Select country code and enter your phone number
+            </p>
+          </div>
+
+          {# Message Field #}
+          <div class="form-group">
+            <label for="inq-msg" class="form-label form-label--required">
+              Your Message
+            </label>
+            <div class="form-input-wrapper">
+              <textarea
+                id="inq-msg"
+                name="inquiry"
+                class="form-textarea"
+                rows="4"
+                placeholder="Write your query or request here..."
+                required
+                minlength="10"
+              ></textarea>
+            </div>
+            <div class="invalid-feedback" style="display: none;">
+              Please enter your message (at least 10 characters)
+            </div>
+          </div>
+
+          {# CAPTCHA Field #}
+          <div class="form-group">
+            <label for="inq-captcha" class="form-label form-label--required">
+              Security Check
+            </label>
+            <div class="form-captcha">
+              <div class="form-captcha__question">
+                <span class="form-captcha__label">What is</span>
+                <span class="form-captcha__math">{{ captcha_q }}</span>
+              </div>
+              <input
+                type="text"
+                id="inq-captcha"
+                name="captcha_answer"
+                class="form-input"
+                placeholder="Answer"
+                required
+                pattern="[0-9]+"
+                style="max-width: 120px;"
+              />
+            </div>
+            <div class="invalid-feedback" style="display: none;">
+              Please answer the security question
+            </div>
+          </div>
+
+          {# Submit Button #}
+          <button type="submit" class="form-submit-btn" id="inquirySubmitBtn">
+            <span id="inquiryBtnText">Send Inquiry</span>
+            <span id="inquiryBtnLoader" style="display: none;">
+              <i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i>
+              Sending...
+            </span>
+          </button>
+        </form>
+      </div>
+
+      {# Modal Body - Thank You View (Hidden by default) #}
+      <div class="modal-body" id="inquiryThankYouView" style="display: none; text-align: center; padding: 2rem 1rem;">
+        <div style="width: 64px; height: 64px; background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(145, 62%, 24%) 100%); border-radius: 50%; display: flex; align-items: center; justify-center; margin: 0 auto 1.5rem; color: white;">
+          <i data-lucide="check" class="w-8 h-8"></i>
+        </div>
+        
+        <h3 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 0.75rem; color: hsl(var(--fg));">
+          Thank You!
+        </h3>
+        
+        <p style="color: hsl(var(--muted)); margin-bottom: 1rem; line-height: 1.6;">
+          Your enquiry has been submitted to <strong id="thankYouOperatorName" style="color: hsl(var(--fg));">the operator</strong>.
+          <br>
+          Someone will reach out to you soon.
+        </p>
+        
+        <div style="background: hsl(var(--muted) / 0.1); border-radius: 0.75rem; padding: 1rem; margin-top: 1.5rem;" class="is-hidden">
+          <p style="font-size: 0.875rem; color: hsl(var(--muted)); margin-bottom: 0.5rem;">
+            Questions before you proceed?
+          </p>
+          <p style="font-size: 0.875rem; color: hsl(var(--fg)); font-weight: 500;">
+            Feel free to contact us for immediate assistance
+          </p>
+        </div>
+
+        <button 
+          type="button" 
+          class="form-submit-btn" 
+          onclick="closeInquiryModal()" 
+          style="margin-top: 1.5rem; background: hsl(var(--muted) / 0.2); color: hsl(var(--fg));"
+          onmouseover="this.style.background='hsl(var(--muted) / 0.3)'"
+          onmouseout="this.style.background='hsl(var(--muted) / 0.2)'"
+        >
+          Close
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+{# ========================================================================
+   MODAL JAVASCRIPT - Validation, Submission & Thank You
+   ======================================================================== #}
+<script>
+(function() {
+  'use strict';
+
+  const modal = document.getElementById('inquiryModal');
+  const modalTitle = document.getElementById('inquiryModalTitle');
+  const formView = document.getElementById('inquiryFormView');
+  const thankYouView = document.getElementById('inquiryThankYouView');
+  const form = document.getElementById('inquiryForm');
+  let currentOperatorName = '';
+
+  // ========================================================================
+  // OPEN MODAL
+  // ========================================================================
+  window.openInquiryModal = function(operatorName) {
+    currentOperatorName = operatorName || '';
+    
+    // Update title with operator name if provided
+    if (currentOperatorName && currentOperatorName.trim()) {
+      modalTitle.textContent = 'Send Inquiry to ' + currentOperatorName;
+    } else {
+      modalTitle.textContent = 'Send Inquiry';
+    }
+
+    // Show form view, hide thank you view
+    formView.style.display = 'block';
+    thankYouView.style.display = 'none';
+
+    modal.style.display = 'flex';
+    document.body.classList.add('modal-open');
+    
+    // Trigger animation
+    setTimeout(() => {
+      modal.classList.add('is-visible');
+    }, 10);
+    
+    // Focus first field
+    const firstInput = document.getElementById('inq-name');
+    if (firstInput) firstInput.focus();
+
+    // Re-initialize icons
+    if (typeof lucide !== 'undefined') {
+      lucide.createIcons();
+    }
+  };
+
+  // ========================================================================
+  // CLOSE MODAL
+  // ========================================================================
+  window.closeInquiryModal = function() {
+    modal.classList.remove('is-visible');
+    setTimeout(() => {
+      modal.style.display = 'none';
+      document.body.classList.remove('modal-open');
+      
+      // Reset form
+      if (form) form.reset();
+      
+      // Reset views
+      formView.style.display = 'block';
+      thankYouView.style.display = 'none';
+      
+      // Reset title
+      modalTitle.textContent = 'Send Inquiry';
+      currentOperatorName = '';
+      
+      // Clear validation states
+      clearValidation();
+      setButtonLoading(false);
+    }, 300);
+  };
+
+  // ========================================================================
+  // FORM VALIDATION
+  // ========================================================================
+  if (form) {
+    form.addEventListener('submit', function(event) {
+      event.preventDefault();
+      
+      // Reset validation states
+      clearValidation();
+      
+      let isValid = true;
+      
+      // Validate Name
+      const nameInput = document.getElementById('inq-name');
+      const nameValue = nameInput.value.trim();
+      
+      if (!nameValue) {
+        showError(nameInput, 'Full name is required');
+        isValid = false;
+      } else if (nameValue.length < 2) {
+        showError(nameInput, 'Name must be at least 2 characters');
+        isValid = false;
+      } else {
+        showValid(nameInput);
+      }
+      
+      // Validate Phone
+      const phoneInput = document.getElementById('inq-phone');
+      const phoneValue = phoneInput.value.trim();
+      const phoneRegex = /^[0-9]{6,15}$/;
+      
+      if (!phoneValue) {
+        showError(phoneInput, 'Phone number is required');
+        isValid = false;
+      } else if (!phoneRegex.test(phoneValue)) {
+        showError(phoneInput, 'Please enter a valid phone number (6-15 digits)');
+        isValid = false;
+      } else {
+        showValid(phoneInput);
+      }
+      
+      // Validate Message
+      const messageInput = document.getElementById('inq-msg');
+      const messageValue = messageInput.value.trim();
+      
+      if (!messageValue) {
+        showError(messageInput, 'Message is required');
+        isValid = false;
+      } else if (messageValue.length < 10) {
+        showError(messageInput, 'Message must be at least 10 characters');
+        isValid = false;
+      } else {
+        showValid(messageInput);
+      }
+      
+      // Validate CAPTCHA
+      const captchaInput = document.getElementById('inq-captcha');
+      const captchaValue = captchaInput.value.trim();
+      
+      if (!captchaValue) {
+        showError(captchaInput, 'Please answer the security question');
+        isValid = false;
+      } else if (!/^[0-9]+$/.test(captchaValue)) {
+        showError(captchaInput, 'Please enter a number');
+        isValid = false;
+      } else {
+        showValid(captchaInput);
+      }
+      
+      // If valid, submit form via AJAX
+      if (isValid) {
+        setButtonLoading(true);
+        
+        // Submit form via AJAX to prevent page reload
+        const formData = new FormData(this);
+        
+        fetch(this.action, {
+          method: 'POST',
+          body: formData
+        })
+        .then(response => {
+          if (response.redirected || response.ok) {
+            // Success - show thank you modal
+            showThankYou();
+          } else {
+            // Error - reload page to show error messages
+            window.location.href = response.url || this.action;
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          // On error, reload page
+          window.location.reload();
+        });
+      } else {
+        // Scroll to first error
+        const firstInvalid = form.querySelector('.is-invalid');
+        if (firstInvalid) {
+          firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          firstInvalid.focus();
+        }
+      }
+    });
+    
+    // Clear validation on input
+    ['inq-name', 'inq-phone', 'inq-msg', 'inq-captcha'].forEach(fieldId => {
+      const field = document.getElementById(fieldId);
+      if (field) {
+        field.addEventListener('input', function() {
+          this.classList.remove('is-invalid', 'is-valid');
+          const feedback = this.closest('.form-group').querySelector('.invalid-feedback');
+          if (feedback) feedback.style.display = 'none';
+        });
+      }
+    });
+  }
+
+  // ========================================================================
+  // VALIDATION HELPERS
+  // ========================================================================
+  function showError(input, message) {
+    input.classList.add('is-invalid');
+    input.classList.remove('is-valid');
+    const feedback = input.closest('.form-group').querySelector('.invalid-feedback');
+    if (feedback) {
+      feedback.textContent = message;
+      feedback.style.display = 'block';
+    }
+  }
+
+  function showValid(input) {
+    input.classList.add('is-valid');
+    input.classList.remove('is-invalid');
+    const feedback = input.closest('.form-group').querySelector('.invalid-feedback');
+    if (feedback) feedback.style.display = 'none';
+  }
+
+  function clearValidation() {
+    const inputs = form.querySelectorAll('.form-input, .form-textarea');
+    inputs.forEach(input => {
+      input.classList.remove('is-invalid', 'is-valid');
+    });
+    const feedbacks = form.querySelectorAll('.invalid-feedback');
+    feedbacks.forEach(feedback => {
+      feedback.style.display = 'none';
+    });
+  }
+
+  // ========================================================================
+  // BUTTON LOADING STATE
+  // ========================================================================
+  function setButtonLoading(isLoading) {
+    const btn = document.getElementById('inquirySubmitBtn');
+    const btnText = document.getElementById('inquiryBtnText');
+    const btnLoader = document.getElementById('inquiryBtnLoader');
+    
+    if (isLoading) {
+      btn.disabled = true;
+      btn.style.opacity = '0.7';
+      btn.style.cursor = 'not-allowed';
+      btnText.style.display = 'none';
+      btnLoader.style.display = 'flex';
+      btnLoader.style.alignItems = 'center';
+      btnLoader.style.justifyContent = 'center';
+      btnLoader.style.gap = '0.5rem';
+      
+      if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+      }
+    } else {
+      btn.disabled = false;
+      btn.style.opacity = '1';
+      btn.style.cursor = 'pointer';
+      btnText.style.display = 'block';
+      btnLoader.style.display = 'none';
+    }
+  }
+
+  // ========================================================================
+  // SHOW THANK YOU MESSAGE
+  // ========================================================================
+  function showThankYou() {
+    setButtonLoading(false);
+    
+    // Update operator name in thank you message
+    const operatorNameEl = document.getElementById('thankYouOperatorName');
+    if (operatorNameEl && currentOperatorName) {
+      operatorNameEl.textContent = currentOperatorName;
+    } else if (operatorNameEl) {
+      operatorNameEl.textContent = 'the operator';
+    }
+    
+    // Hide form, show thank you
+    formView.style.display = 'none';
+    thankYouView.style.display = 'block';
+    
+    // Re-initialize icons
+    if (typeof lucide !== 'undefined') {
+      lucide.createIcons();
+    }
+    
+    // Auto-close after 5 seconds
+    setTimeout(() => {
+      closeInquiryModal();
+    }, 5000);
+  }
+
+  // ========================================================================
+  // CLOSE HANDLERS
+  // ========================================================================
+  const closeBtn = document.getElementById('closeInquiryModal');
+  if (closeBtn) {
+    closeBtn.addEventListener('click', closeInquiryModal);
+  }
+
+  // Close on overlay click
+  if (modal) {
+    modal.addEventListener('click', function(e) {
+      if (e.target === modal) {
+        closeInquiryModal();
+      }
+    });
+  }
+
+  // Close on Escape key
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && modal && modal.classList.contains('is-visible')) {
+      closeInquiryModal();
+    }
+  });
+
+  // ========================================================================
+  // CHECK FOR SUCCESS ON PAGE LOAD
+  // ========================================================================
+  document.addEventListener('DOMContentLoaded', function() {
+    // Check URL parameter for success indicator
+    const urlParams = new URLSearchParams(window.location.search);
+    const inquirySuccess = urlParams.get('inquiry_success');
+    
+    if (inquirySuccess === 'true') {
+      // Get operator name from the page
+      const operatorNameEl = document.getElementById('pkgOperatorName');
+      const operatorName = operatorNameEl ? operatorNameEl.textContent.trim() : '';
+      
+      // Clean up URL
+      urlParams.delete('inquiry_success');
+      const newUrl = window.location.pathname + (urlParams.toString() ? '?' + urlParams.toString() : '');
+      window.history.replaceState({}, '', newUrl);
+      
+      // Show thank you modal
+      setTimeout(() => {
+        openThankYouModal(operatorName);
+      }, 300);
+    }
+  });
+
+  // ========================================================================
+  // OPEN THANK YOU MODAL DIRECTLY
+  // ========================================================================
+  window.openThankYouModal = function(operatorName) {
+    currentOperatorName = operatorName || '';
+    
+    // Update operator name in thank you message
+    const operatorNameEl = document.getElementById('thankYouOperatorName');
+    if (operatorNameEl && currentOperatorName) {
+      operatorNameEl.textContent = currentOperatorName;
+    } else if (operatorNameEl) {
+      operatorNameEl.textContent = 'the operator';
+    }
+    
+    // Show thank you view, hide form view
+    formView.style.display = 'none';
+    thankYouView.style.display = 'block';
+    modalTitle.textContent = 'Inquiry Sent';
+
+    modal.style.display = 'flex';
+    document.body.classList.add('modal-open');
+    
+    // Trigger animation
+    setTimeout(() => {
+      modal.classList.add('is-visible');
+    }, 10);
+
+    // Re-initialize icons
+    if (typeof lucide !== 'undefined') {
+      lucide.createIcons();
+    }
+    
+    // Auto-close after 5 seconds
+    setTimeout(() => {
+      closeInquiryModal();
+    }, 5000);
+  };
+
+})();
+</script>

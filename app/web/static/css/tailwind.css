@@ -17,6 +17,7 @@
 @import "./partials/package-banner.css";
 @import "./partials/package-details.css";
 @import "./partials/forms.css";
+@import "./partials/modal.css";
 
 @tailwind base;
 

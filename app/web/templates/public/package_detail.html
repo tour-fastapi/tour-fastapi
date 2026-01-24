@@ -6,56 +6,31 @@
 {# this pulls one of: package/themes/premium_aurora.html | premium.html | basic.html #}
 {% include theme_template %}
 {# ---------------- Inquiry Modal ---------------- #}
-<div class="modal fade is-hidden" id="inquiryModal" tabindex="-1" aria-hidden="true" >
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content rounded-4 border-0 shadow-lg">
-      <div class="modal-header border-0 pb-0">
-        <h5 class="modal-title">Send Inquiry</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body pt-0">
 
-        <form method="post" action="/umrah_packages/{{ pkg.package_id }}/inquire" novalidate>
-          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-          <input type="hidden" name="source" value="web">
-          <input type="text" name="website" value="" style="display:none"> {# Honeypot #}
-
-          <div class="mb-3">
-            <label for="inq-name" class="form-label fw-semibold">Full Name *</label>
-            <input type="text" class="form-control" id="inq-name" name="name" placeholder="Your full name" required>
-          </div>
-
-          <div class="mb-3">
-            <label for="inq-phone" class="form-label fw-semibold">Phone Number *</label>
-            <input type="text" class="form-control" id="inq-phone" name="phone_number" placeholder="+91XXXXXXXXXX" required>
-            <div class="form-text text-muted">Use a valid 10-digit or +91 format.</div>
-          </div>
-
-          <div class="mb-3">
-            <label for="inq-msg" class="form-label fw-semibold">Your Message *</label>
-            <textarea class="form-control" id="inq-msg" name="inquiry" rows="3" placeholder="Write your query or request here..." required></textarea>
-          </div>
-
-          <div class="mb-3">
-            <label class="form-label fw-semibold">CAPTCHA *</label>
-            <div class="d-flex align-items-center gap-2">
-              <input type="text" class="form-control" name="captcha_answer" placeholder="Answer" required style="max-width: 160px;">
-              <span class="badge bg-light text-dark border">{{ captcha_q }}</span>
-            </div>
-          </div>
-
-          <div class="text-end mt-4">
-            <button type="submit" class="btn btn-primary px-4 py-2 rounded-pill fw-semibold">Send Inquiry</button>
-          </div>
-        </form>
-
-      </div>
-    </div>
-  </div>
-</div>
+{% include './partials/_contact-form.html' %}
 
 
+<!-- Mobile Sticky CTA Script -->
+<script>
+  // Show sticky CTA on mobile when scrolling down
+  if (window.innerWidth <= 768) {
+    const stickyCta = document.querySelector('.sticky-cta');
+    let lastScroll = 0;
+    
+    window.addEventListener('scroll', () => {
+      const currentScroll = window.pageYOffset;
+      
+      if (currentScroll > 300) {
+        stickyCta.style.display = 'block';
+      } else {
+        stickyCta.style.display = 'none';
+      }
+      
+      lastScroll = currentScroll;
+    });
+  }
 
-
+  
+</script>
 
 {% endblock %}

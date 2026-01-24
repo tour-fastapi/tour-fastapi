@@ -88,7 +88,7 @@
 
         <div class="package-banner__operator-info">
           <div class="package-banner__operator-details">
-            <div class="package-banner__operator-name">
+            <div class="package-banner__operator-name" id="pkgOperatorName">
               {{ agency.agencies_name }}
             </div>
             <div class="package-banner__operator-location">
@@ -102,6 +102,7 @@
         class="btn-primary"
         data-bs-toggle="modal"
         data-bs-target="#inquiryModal"
+        onclick="openInquiryModal(document.getElementById('pkgOperatorName').textContent.trim())" 
       >
         Contact
       </button>
