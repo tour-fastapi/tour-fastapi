@@ -162,7 +162,7 @@
   </header>
 
   {% if flashes %}
-    <div class="container mt-3">
+    <div class="container mt-3 is-hidden">
       {% for f in flashes %}
         <div class="alert alert-{{ 'danger' if f.type == 'error' else f.type }} alert-dismissible fade show" role="alert">
           {{ f.text }}
@@ -238,6 +238,75 @@
     send_page_view: true
   });
 </script> 
+
+<script>
+  /**
+ * ============================================================================
+ * TOAST NOTIFICATION SYSTEM
+ * Gmail-style toast that slides from bottom center
+ * ============================================================================
+ * 
+ * Usage:
+ *   showToast('Your message here');
+ *   showToast('Longer message for user', 5);  // 5 seconds
+ * 
+ * Parameters:
+ *   @param {string} message - The message to display
+ *   @param {number} duration - Duration in seconds (default: 3)
+ * ============================================================================
+ */
+
+function showToast(message, duration = 3) {
+  // Remove any existing toast
+  const existingToast = document.getElementById('globalToast');
+  if (existingToast) {
+    existingToast.remove();
+  }
+  
+  // Create toast container
+  const toastContainer = document.createElement('div');
+  toastContainer.id = 'globalToast';
+  toastContainer.className = 'toast-container';
+  
+  // Create toast element
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.textContent = message;
+  
+  // Append to container
+  toastContainer.appendChild(toast);
+  document.body.appendChild(toastContainer);
+  
+  // Trigger slide-in animation (after a brief delay for CSS transition)
+  setTimeout(() => {
+    toastContainer.classList.add('toast--show');
+  }, 10);
+  
+  // Auto-hide after duration
+  setTimeout(() => {
+    hideToast();
+  }, duration * 1000);
+}
+
+/**
+ * Manually hide the toast
+ */
+function hideToast() {
+  const toastContainer = document.getElementById('globalToast');
+  if (!toastContainer) return;
+  
+  // Trigger slide-out animation
+  toastContainer.classList.remove('toast--show');
+  
+  // Remove from DOM after animation completes
+  setTimeout(() => {
+    if (toastContainer && toastContainer.parentNode) {
+      toastContainer.remove();
+    }
+  }, 300); // Match CSS transition duration
+}
+
+</script>
 
 </body>
 </html>
