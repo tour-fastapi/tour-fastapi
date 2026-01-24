@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container py-4" style="max-width: 520px;">
+  <h1 class="h4 mb-3">Create your account</h1>
+
+  {# Flash messages #}
+  {% if flashes %}
+    {% for f in flashes %}
+      <div class="alert alert-{{ 'danger' if f.type == 'error' else f.type }} alert-dismissible fade show" role="alert">
+        {{ f.text }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <form method="post" action="/register" novalidate>
+    <!-- CSRF token required by routes.py -->
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}"/>
+
+    <div class="row g-3">
+      <div class="col-sm-6">
+        <label class="form-label">First name</label>
+        <input type="text" name="first_name" class="form-control" placeholder="First name" />
+      </div>
+      <div class="col-sm-6">
+        <label class="form-label">Last name</label>
+        <input type="text" name="last_name" class="form-control" placeholder="Last name" />
+      </div>
+
+      <div class="col-12">
+        <label class="form-label">Account email <span class="text-danger">*</span></label>
+        <input type="email" name="email" class="form-control" placeholder="you@example.com" required />
+        <div class="form-text">We’ll use this to sign you in and send OTPs.</div>
+      </div>
+
+
+      <div class="col-12">
+        <label class="form-label">Password <span class="text-danger">*</span></label>
+        <div class="input-group">
+          <input id="pw" type="password" name="password" class="form-control" placeholder="Enter a strong password" required />
+          <button class="btn btn-outline-secondary" type="button" onclick="togglePw()">
+            Show
+          </button>
+        </div>
+        <div class="form-text">Use at least 8 characters.</div>
+      </div>
+
+      <div class="col-12">
+        <button type="submit" class="btn btn-primary w-100">Create account</button>
+      </div>
+    </div>
+  </form>
+   <div class="form-text mt-2">
+        By signing up, you agree to our <a href="/terms" target="_blank" rel="noopener">Terms of Service</a>.
+    </div>
+
+  <div class="text-muted small mt-3">
+    Already have an account? <a href="/login">Login</a>
+  </div>
+</div>
+
+<script>
+  function togglePw() {
+    const input = document.getElementById('pw');
+    input.type = input.type === 'password' ? 'text' : 'password';
+  }
+</script>
+
+{% endblock %}

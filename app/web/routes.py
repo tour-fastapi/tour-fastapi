@@ -1375,6 +1375,30 @@ def agency_delete_submit(
     return RedirectResponse(url="/select-agency", status_code=303)
 
 
+def find_similar_hotel_ids(db: Session, base_hotel_id: int, city: str, limit: int = 4) -> list[int] | None:
+    """
+    Returns a list of similar hotel IDs in the same city, excluding the base hotel.
+    Sorted by name ascending, limited to `limit`.
+    """
+    from app.db.models.hotel import Hotel
+
+    base_hotel = db.query(Hotel).filter(Hotel.id == base_hotel_id, Hotel.city == city).first()
+    if not base_hotel:
+        return None
+
+    similar_hotels = (
+        db.query(Hotel)
+        .filter(Hotel.city == city, Hotel.id != base_hotel_id)
+        .order_by(Hotel.name.asc())
+        .limit(limit)
+        .all()
+    )
+
+    if not similar_hotels:
+        return None
+
+    return [h.id for h in similar_hotels]
+
 # ----------------- Packages (public + owner CRUD) -----------------
 
 @router.get("/packages", response_class=HTMLResponse)
@@ -2213,22 +2237,21 @@ def package_new_submit(
         # ----------------------------------------------------------------------
         # 7.5) Auto-compute "or similar" hotels ONLY if user didn't select any
         # ----------------------------------------------------------------------
-        
-        # if mecca_stay and mecca_stay.hotel_id and not mecca_stay.similar_hotel_ids:
-        #     mecca_stay.similar_hotel_ids = find_similar_hotel_ids(
-        #         db=db,
-        #         base_hotel_id=mecca_stay.hotel_id,
-        #         city="Mecca",
-        #         limit=4,
-        #     ) or None
+        if mecca_stay and mecca_stay.hotel_id and not mecca_stay.similar_hotel_ids:
+            mecca_stay.similar_hotel_ids = find_similar_hotel_ids(
+                db=db,
+                base_hotel_id=mecca_stay.hotel_id,
+                city="Mecca",
+                limit=4,
+            ) or None
 
-        # if med_stay and med_stay.hotel_id and not med_stay.similar_hotel_ids:
-        #     med_stay.similar_hotel_ids = find_similar_hotel_ids(
-        #         db=db,
-        #         base_hotel_id=med_stay.hotel_id,
-        #         city="Medinah",
-        #         limit=4,
-        #     ) or None
+        if med_stay and med_stay.hotel_id and not med_stay.similar_hotel_ids:
+            med_stay.similar_hotel_ids = find_similar_hotel_ids(
+                db=db,
+                base_hotel_id=med_stay.hotel_id,
+                city="Medinah",
+                limit=4,
+            ) or None
 
 
 

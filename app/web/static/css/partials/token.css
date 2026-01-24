@@ -20,8 +20,17 @@
     --surface-2: 220 18% 96%;
     --border: 220 13% 90%;
 
+    /* State Colors */
+    --success: 145 63% 42%; /* Green for success/valid states */
+    --destructive: 0 72% 51%; /* Red for error/invalid states */
+    --destructive-fg: 0 0% 100%;
+    --warning: 45 100% 51%;
+    --info: 220 100% 50%;
+
     /* System */
     --radius: 0.75rem;
+
+
   }
 
   /* Dark Theme */

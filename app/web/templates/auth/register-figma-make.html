@@ -89,7 +89,7 @@
 
     <!-- Signup Form Card -->
     <div class="form-card">
-      <form method="post" action="/register" id="signupForm" class="space-y-5" novalidate autocomplete="off">
+      <form method="post" action="/register" id="signupForm" class="space-y-5" novalidate>
         
         <!-- CSRF Token -->
         <input type="hidden" name="csrf_token" value="{{ csrf_token }}"/>
@@ -97,7 +97,7 @@
         <!-- Name Fields - Side by Side -->
         <div class="form-group--inline">
           <div class="form-group">
-            <label for="firstName" class="form-label form-label--required">
+            <label for="firstName" class="form-label">
               First name
             </label>
             <div class="form-input-wrapper">
@@ -107,9 +107,7 @@
                 name="first_name"
                 placeholder="John"
                 class="form-input"
-                value="{{ form_data.first_name if form_data else '' }}"
-                autocomplete="off"
-                required
+                value="{{ request.form.get('first_name', '') }}"
               />
               <div class="invalid-feedback" style="display: none;">
                 First name is required.
@@ -118,7 +116,7 @@
           </div>
 
           <div class="form-group">
-            <label for="lastName" class="form-label form-label--required">
+            <label for="lastName" class="form-label">
               Last name
             </label>
             <div class="form-input-wrapper">
@@ -128,9 +126,7 @@
                 name="last_name"
                 placeholder="Doe"
                 class="form-input"
-                value="{{ form_data.last_name if form_data else '' }}"
-                autocomplete="off"
-                required
+                value="{{ request.form.get('last_name', '') }}"
               />
               <div class="invalid-feedback" style="display: none;">
                 Last name is required.
@@ -152,9 +148,8 @@
               name="email"
               placeholder="you@example.com"
               class="form-input form-input--with-icon"
-              value="{{ form_data.email if form_data else '' }}"
+              value="{{ request.form.get('email', '') }}"
               required
-              autocomplete="off"
             />
             <div class="invalid-feedback" style="display: none;">
               Please enter a valid email address.
@@ -180,7 +175,6 @@
               class="form-input form-input--with-icon form-input--with-action"
               required
               minlength="8"
-              autocomplete="off"
             />
             <button
               type="button"
@@ -216,13 +210,8 @@
         <button
           type="submit"
           class="form-submit-btn"
-          id="submitBtn"
         >
-          <span id="submitBtnText">Create account</span>
-          <span id="submitBtnLoader" style="display: none;">
-            <i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i>
-            Creating account...
-          </span>
+          Create account
         </button>
 
         <!-- Terms -->
@@ -245,6 +234,11 @@
 
 <!-- Form Validation & Interaction Script -->
 <script>
+  // Initialize Lucide icons when page loads
+  document.addEventListener('DOMContentLoaded', function() {
+    lucide.createIcons();
+  });
+
   // Password visibility toggle
   const togglePassword = document.getElementById('togglePassword');
   const passwordInput = document.getElementById('password');
@@ -318,9 +312,6 @@
   
   if (form) {
     form.addEventListener('submit', function(event) {
-      // Hide any previous error alerts when re-submitting
-      closeAlert('clientErrorAlert');
-      
       // Remove previous validation classes
       form.querySelectorAll('.form-input').forEach(input => {
         input.classList.remove('is-valid', 'is-invalid');
@@ -331,51 +322,27 @@
       let isValid = true;
       const errors = [];
 
-      // Validate first name (REQUIRED - must be filled and at least 2 chars)
+      // Validate first name (optional but if provided, must be at least 2 chars)
       const firstName = document.getElementById('firstName');
-      if (!firstName.value.trim()) {
+      if (firstName.value.trim() && firstName.value.length < 2) {
         firstName.classList.add('is-invalid');
         const feedback = firstName.parentElement.querySelector('.invalid-feedback');
-        if (feedback) {
-          feedback.textContent = 'First name is required';
-          feedback.style.display = 'block';
-        }
-        errors.push('First name is required');
-        isValid = false;
-      } else if (firstName.value.trim().length < 2) {
-        firstName.classList.add('is-invalid');
-        const feedback = firstName.parentElement.querySelector('.invalid-feedback');
-        if (feedback) {
-          feedback.textContent = 'First name must be at least 2 characters';
-          feedback.style.display = 'block';
-        }
+        if (feedback) feedback.style.display = 'block';
         errors.push('First name must be at least 2 characters');
         isValid = false;
-      } else {
+      } else if (firstName.value.trim()) {
         firstName.classList.add('is-valid');
       }
 
-      // Validate last name (REQUIRED - must be filled and at least 2 chars)
+      // Validate last name (optional but if provided, must be at least 2 chars)
       const lastName = document.getElementById('lastName');
-      if (!lastName.value.trim()) {
+      if (lastName.value.trim() && lastName.value.length < 2) {
         lastName.classList.add('is-invalid');
         const feedback = lastName.parentElement.querySelector('.invalid-feedback');
-        if (feedback) {
-          feedback.textContent = 'Last name is required';
-          feedback.style.display = 'block';
-        }
-        errors.push('Last name is required');
-        isValid = false;
-      } else if (lastName.value.trim().length < 2) {
-        lastName.classList.add('is-invalid');
-        const feedback = lastName.parentElement.querySelector('.invalid-feedback');
-        if (feedback) {
-          feedback.textContent = 'Last name must be at least 2 characters';
-          feedback.style.display = 'block';
-        }
+        if (feedback) feedback.style.display = 'block';
         errors.push('Last name must be at least 2 characters');
         isValid = false;
-      } else {
+      } else if (lastName.value.trim()) {
         lastName.classList.add('is-valid');
       }
 
@@ -450,49 +417,11 @@
           firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
           firstInvalid.focus();
         }
-      } else {
-        // ✅ Validation passed - Show loading state
-        setButtonLoading(true);
       }
       
       // If valid, form will submit naturally to backend
     });
   }
-
-  // Button loading state management
-  function setButtonLoading(isLoading) {
-    const submitBtn = document.getElementById('submitBtn');
-    const btnText = document.getElementById('submitBtnText');
-    const btnLoader = document.getElementById('submitBtnLoader');
-    
-    if (isLoading) {
-      submitBtn.disabled = true;
-      submitBtn.style.opacity = '0.7';
-      submitBtn.style.cursor = 'not-allowed';
-      btnText.style.display = 'none';
-      btnLoader.style.display = 'flex';
-      btnLoader.style.alignItems = 'center';
-      btnLoader.style.justifyContent = 'center';
-      btnLoader.style.gap = '0.5rem';
-      
-      // Re-initialize icons for spinner
-      lucide.createIcons();
-    } else {
-      submitBtn.disabled = false;
-      submitBtn.style.opacity = '1';
-      submitBtn.style.cursor = 'pointer';
-      btnText.style.display = 'inline';
-      btnLoader.style.display = 'none';
-    }
-  }
-
-  // Re-enable button if backend returns with errors (page reload scenario)
-  document.addEventListener('DOMContentLoaded', function() {
-    const hasBackendErrors = document.querySelector('#flashMessages .alert--error');
-    if (hasBackendErrors) {
-      setButtonLoading(false);
-    }
-  });
 
   // Alert functions for client-side validation
   function showAlert(alertId, message) {
@@ -508,26 +437,34 @@
     alert.style.display = 'flex';
     
     // Re-initialize icons for alert
-    if (typeof lucide !== 'undefined') {
-      lucide.createIcons();
-    }
+    lucide.createIcons();
     
-    // NO AUTO-HIDE - alert stays until user manually closes it or form passes validation
+    // Auto-hide after 5 seconds
+    setTimeout(() => {
+      closeAlert(alertId);
+    }, 5000);
   }
 
   function closeAlert(alertId) {
-    const alertContainer = document.getElementById('clientAlertContainer');
     const alert = document.getElementById(alertId);
-    
     if (alert) {
       alert.style.display = 'none';
     }
     
-    if (alertContainer) {
-      alertContainer.style.display = 'none';
+    // Hide container if no alerts are visible
+    const clientAlerts = document.querySelectorAll('#clientAlertContainer .alert');
+    let anyVisible = false;
+    clientAlerts.forEach(a => {
+      if (a.style.display !== 'none') anyVisible = true;
+    });
+    
+    if (!anyVisible) {
+      const container = document.getElementById('clientAlertContainer');
+      if (container) container.style.display = 'none';
     }
   }
 
+  // Flash message close function (for backend alerts)
   function closeFlashAlert(button) {
     const alert = button.closest('.alert');
     if (alert) {
