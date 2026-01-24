@@ -90,7 +90,8 @@
 
 .form-input-icon {
   position: absolute;
-  top: 50%;
+  /* top: 50%; */
+  top: 24px;
   left: 0.875rem;
   transform: translateY(-50%);
   width: 1rem;
@@ -103,6 +104,10 @@
   top: 50%;
   right: 0.875rem;
   transform: translateY(-50%);
+}
+.form-input-icon,
+.form-input-action{
+  top: 24px;
 }
 
 /* Textarea */
