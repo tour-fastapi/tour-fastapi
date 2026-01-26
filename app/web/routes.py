@@ -1233,7 +1233,7 @@ def agency_edit_page(
 
     flashes = pop_flashes(request)
     return templates.TemplateResponse(
-        "agency/edit.html",
+        "agency/new.html",
         {
             "request": request,
             "user": user,
@@ -1288,20 +1288,24 @@ def agency_edit_submit(
         flash(request, "Agency not found or not yours.", "error")
         return RedirectResponse(url="/select-agency", status_code=303)
 
-    if not agencies_name.strip() or not city.strip() or not country.strip() or not agency_email.strip():
-        flash(request, "Agency name, city, country, and email are required.", "error")
+    if not agencies_name.strip() or not city.strip() or not country.strip() or not agency_email.strip() or not description.strip():
+        flash(request, "Agency name, description, city, country, and email are required.", "error")
         return RedirectResponse(url=f"/agency/{registration_id}/edit", status_code=303)
     if not branch_name.strip():
         flash(request, "Branch name is required.", "error")
         return RedirectResponse(url=f"/agency/{registration_id}/edit", status_code=303)
 
+    # ⚠️ For edit, city must already exist
     city_name = city.strip()
     city_row = db.query(City).filter(City.name == city_name).first()
     if not city_row:
-        city_row = City(name=city_name)
-        db.add(city_row)
-        db.commit()
-        db.refresh(city_row)
+        flash(request, "Invalid city selected.", "error")
+        return RedirectResponse(url=f"/agency/{registration_id}/edit", status_code=303)
+
+        #city_row = City(name=city_name)
+        #db.add(city_row)
+        #db.commit()
+        #db.refresh(city_row)
 
     agency.agencies_name = agencies_name.strip()
     agency.city = city_name

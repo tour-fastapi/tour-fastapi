@@ -6,14 +6,15 @@
 
     <!-- Page Header -->
     <div class="form-header">
-      <h1 class="form-title">Add New Agency</h1>
+      <h1 class="form-title">{{ 'Edit Agency' if agency else 'Add New Agency' }}</h1>
       <p class="form-subtitle">Create your agency profile to start listing packages</p>
     </div>
 
     <form 
       id="addAgencyForm"
   method="post"
-  action="/agency/new"
+  action="{% if agency %}/agency/{{ agency.registration_id }}/edit{% else %}/agency/new{% endif %}"
+
   enctype="multipart/form-data"
   class="form-card"
   autocomplete="off"
@@ -44,6 +45,7 @@
         class="form-input"
         data-required
         autocomplete="new-password"
+        value="{{ agency.agencies_name if agency else '' }}"
       />
       <p class="form-error is-hidden" aria-live="polite">
         This field is required
@@ -64,6 +66,8 @@
     required
     placeholder="contact@youragency.com"
     class="form-input w-full"
+      value="{{ agency.agency_email if agency else '' }}"
+
   />
 
   <p class="form-help text-sm text-gray-500 mt-1">
@@ -133,10 +137,10 @@
 
       <!-- Hidden fields for submission -->
       <!-- Hidden fields for submission -->
-      <input type="hidden" name="city" data-required />
-      <input type="hidden" name="country" data-required />
+      <input type="hidden" name="city" data-required value="{{ agency.city if agency else '' }}" />
+      <input type="hidden" name="country" data-required value="{{ agency.country if agency else '' }}" />
       <!-- ✅ Renamed to match backend -->
-      <input type="hidden" name="currency_code" data-required />
+      <input type="hidden" name="currency_code" data-required value="{{ agency.currency_code if agency else '' }}" />
     </div>
   </div>
 
@@ -155,6 +159,7 @@
           class="form-input"
           placeholder="2015"
           data-required
+          value="{{ agency.operating_since if agency else '' }}"
         />
         <p class="form-error is-hidden" aria-live="polite">
           This field is required
@@ -171,6 +176,7 @@
           class="form-input"
           placeholder="5000"
           data-required
+          value="{{ agency.num_pilgrims_sent if agency else '' }}"
         />
         <p class="form-error is-hidden" aria-live="polite">
           This field is required
@@ -188,6 +194,7 @@
           name="umrah_count"
           class="form-input"
           data-required
+          value="{{ agency.num_umrah_tours if agency else '' }}"
         />
         <p class="form-error is-hidden" aria-live="polite">
           This field is required
@@ -203,6 +210,7 @@
           name="hajj_count"
           class="form-input"
           data-required
+          value="{{ agency.num_hajj_tours if agency else '' }}"
         />
         <p class="form-error is-hidden" aria-live="polite">
           This field is required
@@ -224,6 +232,7 @@
         name="branch_name"
         class="form-input"
         data-required
+        value="{{ branch.name if branch else '' }}"
       />
       <p class="form-error is-hidden" aria-live="polite">
         This field is required
@@ -241,6 +250,7 @@
           class="form-input"
           data-required
           autocomplete="new-password"
+          value="{{ branch.contact_person if branch else '' }}"
         />
         <p class="form-error is-hidden" aria-live="polite">
           This field is required
@@ -257,6 +267,7 @@
           class="form-input phone-input"
           data-required
           autocomplete="new-password"
+          value="{{ branch.contact_number if branch else '' }}"
         />
         <p class="form-error is-hidden" aria-live="polite">
           This field is required
@@ -275,6 +286,7 @@
             name="public_registration_code"
             class="form-input"
             placeholder="e.g., TAA-AB1234"
+            
           />
         </div>
 
@@ -286,6 +298,7 @@
               name="website_url"
               class="form-input"
               placeholder="https://example.com"
+              value="{{ agency.website_url if agency else '' }}"
             />
           </div>
           <div class="form-group">
@@ -295,6 +308,7 @@
               name="facebook_url"
               class="form-input"
               placeholder="https://facebook.com/yourpage"
+              value="{{ agency.facebook_url if agency else '' }}"
             />
           </div>
           <div class="form-group">
@@ -304,6 +318,7 @@
               name="instagram_url"
               class="form-input"
               placeholder="https://instagram.com/yourhandle"
+              value="{{ agency.instagram_url if agency else '' }}"
             />
           </div>
         </div>
@@ -336,7 +351,7 @@
   <!-- ================= Actions ================= -->
   <div class="form-actions">
     <button type="submit" class="btn btn-primary" data-mode="create">
-      Save
+      {{ 'Update Agency' if agency else 'Create Agency' }}
     </button>
   </div>
 
