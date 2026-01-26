@@ -1,18 +1,11 @@
 /* ========================================================================
    AGENCY DASHBOARD STYLES
    ======================================================================== */
-
-   .main{
-    margin-left: auto;
-    margin-right: auto;
-    max-width: 48rem;
-    padding-left: 1.5rem;
-    padding-right: 1.5rem;
-    padding-top: 2rem;
-    padding-bottom: 2rem;
-    min-height: calc(100vh - 200px);
-
+   .wrapper{
+    max-width: 768px;
+    margin:auto;
    }
+
 /* Agency Card */
 .agency-card {
   display: flex;
@@ -342,20 +335,29 @@
 /* Inquiries Card */
 .inquiries-card {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .inquiries-card {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
 }
 
 .inquiries-card__content {
   display: flex;
-  align-items: center;
-  gap: 0.75rem;
+  align-items: flex-start;
+  gap: 1rem;
+  flex: 1;
 }
 
 .inquiries-card__icon {
-  width: 3rem;
-  height: 3rem;
+  width: 3.5rem;
+  height: 3.5rem;
   border-radius: 0.75rem;
   display: flex;
   align-items: center;
@@ -363,6 +365,11 @@
   background: hsl(var(--primary) / 0.1);
   color: hsl(var(--primary));
   flex-shrink: 0;
+}
+
+.inquiries-card__info {
+  flex: 1;
+  min-width: 0;
 }
 
 .inquiries-card__title {
@@ -375,5 +382,44 @@
 .inquiries-card__subtitle {
   font-size: 0.875rem;
   color: hsl(var(--muted));
-  margin: 0;
+  margin: 0 0 0.75rem 0;
+}
+
+.inquiries-card__stats {
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.75rem;
+}
+
+.inquiries-card__stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.inquiries-card__stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: hsl(var(--fg));
+  line-height: 1;
+}
+
+.inquiries-card__stat-label {
+  font-size: 0.75rem;
+  color: hsl(var(--muted));
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  font-weight: 500;
+}
+
+.inquiries-card__actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+@media (min-width: 768px) {
+  .inquiries-card__actions {
+    flex-direction: column;
+  }
 }

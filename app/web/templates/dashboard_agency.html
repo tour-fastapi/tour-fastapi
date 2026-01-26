@@ -2,7 +2,7 @@
 {% block content %}
 
 <!-- Main Content -->
-<main class="main flex-1 px-4 py-6 md:py-8" style="">
+<main class="main flex-1 px-4 py-6 md:py-8 wrapper">
   
   <!-- Flash Messages -->
   {% if flashes %}
@@ -22,45 +22,41 @@
     </div>
   {% endif %}
 
-  <!-- Agency Card -->
+  <!-- Inquiries Card -->
   <div class="form-card mb-6">
-    <div class="agency-card">
-      <!-- Agency Avatar -->
-      <div class="agency-card__avatar">
-        {{ agency.agencies_name[:2]|upper }}
-      </div>
-
-      <!-- Agency Info -->
-      <div class="agency-card__content">
-        <h1 class="agency-card__title">
-          {{ agency.agencies_name }}
-        </h1>
-        
-        <div class="agency-card__location">
-          <i data-lucide="map-pin" class="w-4 h-4"></i>
-          <span>{{ agency.city }}{% if agency.country %}, {{ agency.country }}{% endif %}</span>
+    <div class="inquiries-card">
+      <div class="inquiries-card__content">
+        <div class="inquiries-card__icon">
+          <i data-lucide="mail" class="w-6 h-6"></i>
         </div>
-
-        {% if agency.description %}
-          <p class="agency-card__description">
-            {{ agency.description }}
-          </p>
-        {% endif %}
-      </div>
-
-      <!-- Edit Button -->
-      <div class="agency-card__actions">
-        <a href="/agency/{{ agency.registration_id }}/edit" class="btn-secondary">
-          <i data-lucide="edit-3" class="w-4 h-4"></i>
-          <span class="hidden sm:inline">Edit</span>
-        </a>
         
-        {% if user.agencies|length > 1 %}
-          <a href="/select-agency" class="btn-secondary">
-            <i data-lucide="repeat" class="w-4 h-4"></i>
-            <span class="hidden sm:inline">Switch</span>
-          </a>
-        {% endif %}
+        <div class="inquiries-card__info">
+          <h3 class="inquiries-card__title">
+            Customer Inquiries
+          </h3>
+          <p class="inquiries-card__subtitle">
+            View and manage customer requests
+          </p>
+          
+          <!-- Stats -->
+          <div class="inquiries-card__stats">
+            <div class="inquiries-card__stat">
+              <span class="inquiries-card__stat-value">12</span>
+              <span class="inquiries-card__stat-label">New</span>
+            </div>
+            <div class="inquiries-card__stat">
+              <span class="inquiries-card__stat-value">48</span>
+              <span class="inquiries-card__stat-label">Total</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="inquiries-card__actions">
+        <a href="/inquiries" class="btn-primary">
+          <span>View All</span>
+          <i data-lucide="arrow-right" class="w-4 h-4"></i>
+        </a>
       </div>
     </div>
   </div>
@@ -90,9 +86,12 @@
         <div class="package-card">
           <!-- Header with Status and Hover Actions -->
           <div class="package-card__header">
-            <span class="package-card__badge package-card__badge--active">
-              Active
-            </span>
+            <!-- Status Badge using new tag system -->
+            <div class="tag-group">
+              <span class="tag tag--success tag--sm">Active</span>
+              <!-- Example: Add category tag -->
+              <span class="tag tag--primary tag--sm">Premium</span>
+            </div>
             
             <!-- Hover Actions (Desktop Only) -->
             <div class="package-card__hover-actions">
@@ -190,27 +189,46 @@
     </div>
   {% endif %}
 
-  <!-- Inquiries Card -->
-  <div class="form-card">
-    <div class="inquiries-card">
-      <div class="inquiries-card__content">
-        <div class="inquiries-card__icon">
-          <i data-lucide="mail" class="w-6 h-6"></i>
-        </div>
-        <div>
-          <h3 class="inquiries-card__title">
-            Customer Inquiries
-          </h3>
-          <p class="inquiries-card__subtitle">
-            View and manage customer requests
-          </p>
-        </div>
+  <!-- Agency Card -->
+  <div class="form-card mb-6">
+    <div class="agency-card">
+      <!-- Agency Avatar -->
+      <div class="agency-card__avatar">
+        {{ agency.agencies_name[:2]|upper }}
       </div>
-      
-      <a href="/inquiries" class="btn-primary">
-        <span>View All</span>
-        <i data-lucide="arrow-right" class="w-4 h-4"></i>
-      </a>
+
+      <!-- Agency Info -->
+      <div class="agency-card__content">
+        <h1 class="agency-card__title">
+          {{ agency.agencies_name }}
+        </h1>
+        
+        <div class="agency-card__location">
+          <i data-lucide="map-pin" class="w-4 h-4"></i>
+          <span>{{ agency.city }}{% if agency.country %}, {{ agency.country }}{% endif %}</span>
+        </div>
+
+        {% if agency.description %}
+          <p class="agency-card__description">
+            {{ agency.description }}
+          </p>
+        {% endif %}
+      </div>
+
+      <!-- Edit Button -->
+      <div class="agency-card__actions">
+        <a href="/agency/{{ agency.registration_id }}/edit" class="btn-secondary">
+          <i data-lucide="edit-3" class="w-4 h-4"></i>
+          <span class="hidden sm:inline">Edit</span>
+        </a>
+        
+        {% if user.agencies|length > 1 %}
+          <a href="/select-agency" class="btn-secondary">
+            <i data-lucide="repeat" class="w-4 h-4"></i>
+            <span class="hidden sm:inline">Switch</span>
+          </a>
+        {% endif %}
+      </div>
     </div>
   </div>
 
@@ -234,3 +252,40 @@
 </script>
 
 {% endblock %}
+
+<!-- 
+  TAG SYSTEM EXAMPLES FOR YOUR REFERENCE:
+  
+  Status Tags:
+  <span class="tag tag--success">Active</span>
+  <span class="tag tag--warning">Draft</span>
+  <span class="tag tag--error">Expired</span>
+  <span class="tag tag--info">New</span>
+  
+  Category Tags:
+  <span class="tag tag--primary">Premium</span>
+  <span class="tag tag--accent">Economy</span>
+  <span class="tag tag--secondary">Standard</span>
+  
+  Outline Variants:
+  <span class="tag tag--success-outline">Active</span>
+  <span class="tag tag--primary-outline">Premium</span>
+  
+  Sizes:
+  <span class="tag tag--sm tag--success">Small</span>
+  <span class="tag tag--success">Medium (default)</span>
+  <span class="tag tag--lg tag--success">Large</span>
+  
+  With Icons:
+  <span class="tag tag--success tag--with-icon">
+    <i data-lucide="check" class="tag__icon"></i>
+    Active
+  </span>
+  
+  Tag Groups:
+  <div class="tag-group">
+    <span class="tag tag--success tag--sm">Active</span>
+    <span class="tag tag--primary tag--sm">Premium</span>
+    <span class="tag tag--info tag--sm">Featured</span>
+  </div>
+-->

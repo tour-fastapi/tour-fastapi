@@ -1,0 +1,218 @@
+/* ========================================================================
+   POPOVER CONTAINER
+   ======================================================================== */
+
+.popover {
+  position: absolute;
+  z-index: 1000;
+  background: hsl(var(--bg));
+  border: 1px solid hsl(var(--border));
+  border-radius: 0.75rem;
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  min-width: 12rem;
+  padding: 0.5rem;
+  opacity: 0;
+  transform: translateY(-0.5rem);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  pointer-events: none;
+}
+
+.popover--show {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+/* Popover arrow (optional) */
+.popover::before {
+  content: '';
+  position: absolute;
+  top: -0.5rem;
+  right: 1rem;
+  width: 1rem;
+  height: 1rem;
+  background: hsl(var(--bg));
+  border-left: 1px solid hsl(var(--border));
+  border-top: 1px solid hsl(var(--border));
+  transform: rotate(45deg);
+}
+
+/* ========================================================================
+   POPOVER CONTENT
+   ======================================================================== */
+
+.popover__content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+/* ========================================================================
+   POPOVER ITEMS (Links and Buttons)
+   ======================================================================== */
+
+.popover__item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem 0.75rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: hsl(var(--fg));
+  text-decoration: none;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  width: 100%;
+  text-align: left;
+}
+
+.popover__item:hover {
+  background: hsl(var(--muted) / 0.1);
+}
+
+.popover__item:active {
+  transform: scale(0.98);
+}
+
+/* Danger variant (for logout, delete, etc.) */
+.popover__item--danger {
+  color: hsl(0, 84%, 60%);
+}
+
+.popover__item--danger:hover {
+  background: hsl(0, 84%, 60% / 0.1);
+}
+
+/* Icon in popover item */
+.popover__icon {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+.popover__item--danger .popover__icon {
+  opacity: 1;
+}
+
+/* ========================================================================
+   POPOVER DIVIDER
+   ======================================================================== */
+
+.popover__divider {
+  height: 1px;
+  background: hsl(var(--border));
+  margin: 0.5rem 0;
+}
+
+/* ========================================================================
+   POPOVER HEADER (Optional)
+   ======================================================================== */
+
+.popover__header {
+  padding: 0.75rem;
+  border-bottom: 1px solid hsl(var(--border));
+  margin: -0.5rem -0.5rem 0.5rem -0.5rem;
+}
+
+.popover__title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: hsl(var(--fg));
+  margin: 0;
+}
+
+.popover__subtitle {
+  font-size: 0.75rem;
+  color: hsl(var(--muted));
+  margin: 0.25rem 0 0 0;
+}
+
+/* ========================================================================
+   USER MENU SPECIFIC STYLES
+   ======================================================================== */
+
+.user-menu {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.user-menu__trigger {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem;
+  border-radius: 0.75rem;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.user-menu__trigger:hover {
+  background: hsl(var(--muted) / 0.1);
+}
+
+.user-menu__trigger:active {
+  transform: scale(0.97);
+}
+
+.user-menu__avatar {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(145, 62%, 24%) 100%);
+  color: white;
+  font-weight: 600;
+  font-size: 0.875rem;
+  flex-shrink: 0;
+}
+
+.user-menu__name {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: hsl(var(--fg));
+  
+}
+
+@media (min-width: 768px) {
+  .user-menu__name {
+    display: block;
+  }
+}
+
+/* Position popover below user menu */
+.user-menu .popover {
+  top: calc(100% + 0.5rem);
+  right: 0;
+}
+
+/* ========================================================================
+   BACKDROP (Optional - for mobile)
+   ======================================================================== */
+
+.popover-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  background: transparent;
+  display: none;
+}
+
+.popover-backdrop--show {
+  display: block;
+}
+
+@media (min-width: 768px) {
+  .popover-backdrop {
+    display: none !important;
+  }
+}

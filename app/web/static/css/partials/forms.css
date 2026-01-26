@@ -287,7 +287,7 @@
   border-color: hsl(var(--destructive));
   box-shadow: 0 0 0 3px hsl(var(--destructive) / 0.3);
 }
-
+.form-error,
 .valid-feedback,
 .invalid-feedback {
   display: flex;
@@ -301,7 +301,7 @@
 .valid-feedback {
   color: hsl(var(--success));
 }
-
+.form-error,
 .invalid-feedback {
   color: hsl(var(--destructive));
 }

@@ -126,13 +126,37 @@
                   {% endif %}
                 {% endif %}
 
-                <div class="user-menu__avatar">J</div>
-                <span class="user-menu__name">John Doe</span>
+               
+                <button data-popover="userMenu" class="user-menu__trigger">
+                   <div class="user-menu__avatar">
+                    {{ user.first_name[:1]|upper if user.first_name else 'U' }}{{ user.last_name[:1]|upper if user.last_name else '' }}
+                  </div>
+                </button>
+                <!-- User Menu Popover -->
 
-                <form method="post" action="/logout" class="d-inline">
-                  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-                  <button class="btn-text">Logout</button>
-                </form>
+                <div id="userMenu" class="popover" style="display: none;">
+                  <div class="popover__content">
+                    <div  class="popover__item">
+                       <span class="user-menu__name">{{ user.first_name }} {{ user.last_name }}</span>
+                    </div>
+                     <div class="popover__divider"></div>
+                    <a href="userprofile" class="popover__item">
+                      <i data-lucide="user" class="popover__icon"></i>
+                      <span>Profile</span>
+                    </a>
+                     <div class="popover__divider"></div>
+                    <form method="post" action="/logout" style="margin: 0;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                    <button type="submit" class="popover__item popover__item--danger">
+                      <i data-lucide="log-out" class="popover__icon"></i>
+                      <span>Logout</span>
+                    </button>
+                  </form>
+                  </div>
+                </div>
+                
+
+               
               </div>
             {% else %}
               {% if path not in auth_pages %}
@@ -306,7 +330,105 @@ function hideToast() {
   }, 300); // Match CSS transition duration
 }
 
+
+// ============================================================================
+// POPOVER SYSTEM
+// ============================================================================
+(function() {
+  'use strict';
+  
+  let currentPopover = null;
+  
+  // Initialize all popovers
+  document.addEventListener('DOMContentLoaded', function() {
+    initPopovers();
+  });
+  
+  function initPopovers() {
+    const triggers = document.querySelectorAll('[data-popover]');
+    
+    triggers.forEach(trigger => {
+      const popoverId = trigger.getAttribute('data-popover');
+      const popover = document.getElementById(popoverId);
+      
+      if (!popover) return;
+      
+      // Toggle popover on click
+      trigger.addEventListener('click', function(e) {
+        e.stopPropagation();
+        
+        // Close other popovers
+        if (currentPopover && currentPopover !== popover) {
+          closePopover(currentPopover);
+        }
+        
+        // Toggle current popover
+        if (popover.classList.contains('popover--show')) {
+          closePopover(popover);
+        } else {
+          openPopover(popover, trigger);
+        }
+      });
+    });
+    
+    // Close popover when clicking outside
+    document.addEventListener('click', function(e) {
+      if (currentPopover && !currentPopover.contains(e.target)) {
+        closePopover(currentPopover);
+      }
+    });
+    
+    // Close popover on Escape key
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && currentPopover) {
+        closePopover(currentPopover);
+      }
+    });
+  }
+  
+  function openPopover(popover, trigger) {
+    popover.style.display = 'block';
+    
+    // Wait for next frame to trigger animation
+    requestAnimationFrame(() => {
+      popover.classList.add('popover--show');
+    });
+    
+    currentPopover = popover;
+    
+    // Update aria-expanded
+    if (trigger) {
+      trigger.setAttribute('aria-expanded', 'true');
+    }
+  }
+  
+  function closePopover(popover) {
+    popover.classList.remove('popover--show');
+    
+    // Hide after animation completes
+    setTimeout(() => {
+      if (!popover.classList.contains('popover--show')) {
+        popover.style.display = 'none';
+      }
+    }, 150);
+    
+    // Find and update trigger
+    const trigger = document.querySelector(`[data-popover="${popover.id}"]`);
+    if (trigger) {
+      trigger.setAttribute('aria-expanded', 'false');
+    }
+    
+    if (currentPopover === popover) {
+      currentPopover = null;
+    }
+  }
+  
+  // Expose globally for manual control if needed
+  window.openPopover = openPopover;
+  window.closePopover = closePopover;
+})();
 </script>
+
 
 </body>
 </html>

@@ -1,0 +1,321 @@
+/* ========================================================================
+   TAGS & BADGES SYSTEM
+   ======================================================================== */
+
+/* 
+  USAGE GUIDE:
+  
+  STATUS BADGES (for package/item status):
+  - .tag--success / .tag--success-outline → Active, Published, Completed
+  - .tag--warning / .tag--warning-outline → Pending, In Review, Draft
+  - .tag--error / .tag--error-outline → Inactive, Expired, Rejected
+  - .tag--info / .tag--info-outline → New, Featured, Updated
+  
+  CATEGORY TAGS (for package categories):
+  - .tag--primary / .tag--primary-outline → Premium, Featured packages
+  - .tag--secondary / .tag--secondary-outline → Standard, Regular packages
+  - .tag--accent / .tag--accent-outline → Economy, Budget packages
+  
+  SIZES:
+  - .tag--sm → Small (use in compact spaces, tables)
+  - .tag (default) → Medium (use in cards, general UI)
+  - .tag--lg → Large (use in headers, important highlights)
+  
+  EXAMPLES:
+  <span class="tag tag--success">Active</span>
+  <span class="tag tag--warning-outline tag--sm">Draft</span>
+  <span class="tag tag--primary tag--lg">Premium</span>
+*/
+
+/* ========================================================================
+   BASE TAG STYLES
+   ======================================================================== */
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+
+/* ========================================================================
+   SIZE VARIANTS
+   ======================================================================== */
+
+.tag--sm {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  border-radius: 0.375rem;
+  gap: 0.25rem;
+}
+
+.tag--lg {
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  border-radius: 0.625rem;
+  gap: 0.5rem;
+}
+
+/* ========================================================================
+   SUCCESS (Green) - Use for: Active, Published, Completed, Available
+   ======================================================================== */
+
+.tag--success {
+  background: hsl(142, 71%, 45% / 0.1);
+  color: hsl(142, 71%, 35%);
+}
+
+.tag--success-outline {
+  background: transparent;
+  color: hsl(142, 71%, 35%);
+  border: 1px solid hsl(142, 71%, 45% / 0.3);
+}
+
+.tag--success:hover,
+.tag--success-outline:hover {
+  background: hsl(142, 71%, 45% / 0.15);
+}
+
+/* ========================================================================
+   WARNING (Yellow/Orange) - Use for: Pending, Draft, In Review
+   ======================================================================== */
+
+.tag--warning {
+  background: hsl(38, 92%, 50% / 0.1);
+  color: hsl(25, 95%, 40%);
+}
+
+.tag--warning-outline {
+  background: transparent;
+  color: hsl(25, 95%, 40%);
+  border: 1px solid hsl(38, 92%, 50% / 0.3);
+}
+
+.tag--warning:hover,
+.tag--warning-outline:hover {
+  background: hsl(38, 92%, 50% / 0.15);
+}
+
+/* ========================================================================
+   ERROR (Red) - Use for: Inactive, Expired, Rejected, Cancelled
+   ======================================================================== */
+
+.tag--error {
+  background: hsl(0, 84%, 60% / 0.1);
+  color: hsl(0, 84%, 45%);
+}
+
+.tag--error-outline {
+  background: transparent;
+  color: hsl(0, 84%, 45%);
+  border: 1px solid hsl(0, 84%, 60% / 0.3);
+}
+
+.tag--error:hover,
+.tag--error-outline:hover {
+  background: hsl(0, 84%, 60% / 0.15);
+}
+
+/* ========================================================================
+   INFO (Blue) - Use for: New, Featured, Updated, Info
+   ======================================================================== */
+
+.tag--info {
+  background: hsl(217, 91%, 60% / 0.1);
+  color: hsl(217, 91%, 45%);
+}
+
+.tag--info-outline {
+  background: transparent;
+  color: hsl(217, 91%, 45%);
+  border: 1px solid hsl(217, 91%, 60% / 0.3);
+}
+
+.tag--info:hover,
+.tag--info-outline:hover {
+  background: hsl(217, 91%, 60% / 0.15);
+}
+
+/* ========================================================================
+   PRIMARY (Brand Green) - Use for: Premium, Featured, VIP, Priority
+   ======================================================================== */
+
+.tag--primary {
+  background: hsl(var(--primary) / 0.1);
+  color: hsl(145, 62%, 24%);
+}
+
+.tag--primary-outline {
+  background: transparent;
+  color: hsl(145, 62%, 24%);
+  border: 1px solid hsl(var(--primary) / 0.3);
+}
+
+.tag--primary:hover,
+.tag--primary-outline:hover {
+  background: hsl(var(--primary) / 0.15);
+}
+
+/* ========================================================================
+   SECONDARY (Gray) - Use for: Standard, Regular, Normal, Default
+   ======================================================================== */
+
+.tag--secondary {
+  background: hsl(var(--muted) / 0.15);
+  color: hsl(var(--muted));
+}
+
+.tag--secondary-outline {
+  background: transparent;
+  color: hsl(var(--muted));
+  border: 1px solid hsl(var(--muted) / 0.3);
+}
+
+.tag--secondary:hover,
+.tag--secondary-outline:hover {
+  background: hsl(var(--muted) / 0.2);
+}
+
+/* ========================================================================
+   ACCENT (Purple/Violet) - Use for: Economy, Budget, Special, Limited
+   ======================================================================== */
+
+.tag--accent {
+  background: hsl(270, 95%, 65% / 0.1);
+  color: hsl(270, 95%, 40%);
+}
+
+.tag--accent-outline {
+  background: transparent;
+  color: hsl(270, 95%, 40%);
+  border: 1px solid hsl(270, 95%, 65% / 0.3);
+}
+
+.tag--accent:hover,
+.tag--accent-outline:hover {
+  background: hsl(270, 95%, 65% / 0.15);
+}
+
+/* ========================================================================
+   NEUTRAL (Light Gray) - Use for: Archived, Disabled, Unavailable
+   ======================================================================== */
+
+.tag--neutral {
+  background: hsl(var(--muted) / 0.08);
+  color: hsl(var(--muted));
+}
+
+.tag--neutral-outline {
+  background: transparent;
+  color: hsl(var(--muted));
+  border: 1px solid hsl(var(--border));
+}
+
+.tag--neutral:hover,
+.tag--neutral-outline:hover {
+  background: hsl(var(--muted) / 0.12);
+}
+
+/* ========================================================================
+   INTERACTIVE TAGS (Clickable/Selectable)
+   ======================================================================== */
+
+.tag--interactive {
+  cursor: pointer;
+  user-select: none;
+}
+
+.tag--interactive:active {
+  transform: scale(0.97);
+}
+
+/* Tag with close button */
+.tag--closable {
+  padding-right: 0.375rem;
+}
+
+.tag__close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1rem;
+  height: 1rem;
+  border: none;
+  background: transparent;
+  color: currentColor;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+  padding: 0;
+  margin-left: 0.25rem;
+}
+
+.tag__close:hover {
+  opacity: 1;
+}
+
+/* ========================================================================
+   CATEGORY-SPECIFIC HELPERS
+   ======================================================================== */
+
+/* Package Categories */
+.tag--premium {
+  background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(145, 62%, 24%) 100%);
+  color: white;
+}
+
+.tag--deluxe {
+  background: linear-gradient(135deg, hsl(280, 100%, 60%) 0%, hsl(260, 100%, 50%) 100%);
+  color: white;
+}
+
+.tag--economy {
+  background: hsl(200, 95%, 50% / 0.1);
+  color: hsl(200, 95%, 35%);
+}
+
+/* Badge with icon */
+.tag--with-icon {
+  padding-left: 0.5rem;
+}
+
+.tag__icon {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+}
+
+.tag--sm .tag__icon {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+
+.tag--lg .tag__icon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+/* ========================================================================
+   BADGE GROUPS (Multiple tags together)
+   ======================================================================== */
+
+.tag-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.tag-group--sm {
+  gap: 0.375rem;
+}
+
+.tag-group--lg {
+  gap: 0.75rem;
+}
