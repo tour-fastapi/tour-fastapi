@@ -110,10 +110,12 @@
       <input
         type="text"
         id="cityInput"
+        name="cityInput"
         class="form-input"
         placeholder="Start typing city name"
         autocomplete="new-password"
         data-required
+        value="{{ agency.city or '' }}"
       />
 
       <ul id="citySuggestions" class="autosuggest-list is-hidden"></ul>
@@ -155,11 +157,12 @@
         </label>
         <input
           type="number"
-          name="since_year"
+          name="operating_since"
           class="form-input"
           placeholder="2015"
           data-required
-          value="{{ agency.operating_since if agency else '' }}"
+            value="{{ agency.operating_since or '' }}"
+
         />
         <p class="form-error is-hidden" aria-live="polite">
           This field is required
@@ -172,11 +175,12 @@
         </label>
         <input
           type="number"
-          name="pilgrims_served"
+          name="num_pilgrims_sent"
           class="form-input"
           placeholder="5000"
           data-required
-          value="{{ agency.num_pilgrims_sent if agency else '' }}"
+            value="{{ agency.num_pilgrims_sent or '' }}"
+
         />
         <p class="form-error is-hidden" aria-live="polite">
           This field is required
@@ -191,10 +195,11 @@
         </label>
         <input
           type="number"
-          name="umrah_count"
+          name="num_umrah_tours"
           class="form-input"
           data-required
-          value="{{ agency.num_umrah_tours if agency else '' }}"
+            value="{{ agency.num_umrah_tours or '' }}"
+
         />
         <p class="form-error is-hidden" aria-live="polite">
           This field is required
@@ -207,10 +212,11 @@
         </label>
         <input
           type="number"
-          name="hajj_count"
+          name="num_hajj_tours"
           class="form-input"
           data-required
-          value="{{ agency.num_hajj_tours if agency else '' }}"
+            value="{{ agency.num_hajj_tours or '' }}"
+
         />
         <p class="form-error is-hidden" aria-live="polite">
           This field is required
@@ -246,11 +252,13 @@
         </label>
         <input
           type="text"
-          name="contact_person"
+          name="branch_contact_person"
           class="form-input"
           data-required
           autocomplete="new-password"
+
           value="{{ branch.contact_person if branch else '' }}"
+
         />
         <p class="form-error is-hidden" aria-live="polite">
           This field is required
@@ -263,11 +271,12 @@
         </label>
         <input
           type="tel"
-          name="phone"
+          name="branch_contact_number"
           class="form-input phone-input"
           data-required
           autocomplete="new-password"
-          value="{{ branch.contact_number if branch else '' }}"
+            value="{{ branch.contact_number if branch else '' }}"
+
         />
         <p class="form-error is-hidden" aria-live="polite">
           This field is required
@@ -286,6 +295,8 @@
             name="public_registration_code"
             class="form-input"
             placeholder="e.g., TAA-AB1234"
+              value="{{ agency.public_registration_code if agency else '' }}"
+
             
           />
         </div>
@@ -326,27 +337,52 @@
 
   <!-- ================= Logo ================= -->
   <div class="form-section">
-    <h3 class="form-section-title">Branding</h3>
+  <h3 class="form-section-title">Branding</h3>
 
+  {% if agency and agency.logo_path %}
     <div class="form-group">
-      <label class="form-label">
-        Agency Logo <span class="required">*</span>
-      </label>
-      <input
-        type="file"
-        name="logo"
-        accept="image/*"
-        class="form-file"
-        data-required
-      />
+      <label class="form-label">Current Logo</label>
+
+      <div class="logo-preview">
+        <img
+          {# src="/{{ agency.logo_path }}" #}
+          src="/media/agency/{{ agency.registration_id }}/logo.webp"
+          alt="Agency logo"
+          style="max-height: 96px; max-width: 200px;"
+        />
+      </div>
+
       <p class="form-helper">
-        PNG, JPG or WebP • Max 2MB
-      </p>
-      <p class="form-error is-hidden" aria-live="polite">
-        This field is required
+        Upload a new logo only if you want to replace the existing one.
       </p>
     </div>
+  {% endif %}
+
+  <div class="form-group">
+    <label class="form-label">
+      {{ 'Change Logo' if agency else 'Agency Logo' }}
+      {% if not agency %}<span class="required">*</span>{% endif %}
+    </label>
+
+    <input
+      type="file"
+  name="logo"
+  id="logo"
+  accept="image/*"
+  class="form-file"
+      
+    />
+
+    <p class="form-helper">
+      PNG, JPG or WebP • Max 2MB
+    </p>
+
+    <p class="form-error is-hidden" aria-live="polite">
+      This field is required
+    </p>
   </div>
+</div>
+
 
   <!-- ================= Actions ================= -->
   <div class="form-actions">

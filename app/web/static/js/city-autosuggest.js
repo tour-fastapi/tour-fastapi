@@ -3,14 +3,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
   fetch('/static/data/cities.json')
     .then(res => res.json())
-    .then(data => cities = data);
+    .then(data => {
+      cities = data;
+      hydrateCityFromValue(); // ✅ NEW
+    });
 
   const input = document.getElementById('cityInput');
   const list = document.getElementById('citySuggestions');
   const card = document.getElementById('cityCard');
   const selector = document.getElementById('citySelector');
 
-  if (!input) return; // safety
+  if (!input) return;
 
   input.addEventListener('input', () => {
     const value = input.value.toLowerCase().trim();
@@ -36,7 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   function selectCity(data) {
-    document.querySelector('[name="city"]').value = data.city;
+    document.querySelector('input[type="hidden"][name="city"]').value = data.city;
     document.querySelector('[name="country"]').value = data.country;
     document.querySelector('[name="currency_code"]').value = data.currency;
 
@@ -48,7 +51,21 @@ document.addEventListener('DOMContentLoaded', () => {
     card.classList.remove('is-hidden');
   }
 
-  document.getElementById('editCity').addEventListener('click', () => {
+  // ✅ NEW: hydrate card on edit page
+  function hydrateCityFromValue() {
+    const cityValue = input.value?.trim();
+    if (!cityValue) return; // ✅ add mode — do nothing
+
+    const match = cities.find(
+      c => c.city.toLowerCase() === cityValue.toLowerCase()
+    );
+
+    if (match) {
+      selectCity(match);
+    }
+  }
+
+  document.getElementById('editCity')?.addEventListener('click', () => {
     card.classList.add('is-hidden');
     selector.classList.remove('is-hidden');
     input.focus();

@@ -193,9 +193,22 @@
   <div class="form-card mb-6">
     <div class="agency-card">
       <!-- Agency Avatar -->
-      <div class="agency-card__avatar">
-        {{ agency.agencies_name[:2]|upper }}
-      </div>
+     {% if agency.logo_path %}
+  <!-- Show Logo -->
+  <div class="agency-card__avatar" style="background: transparent; padding: 0;">
+    <img 
+      {# src="/{{ agency.logo_path }}" #}
+          src="/media/agency/{{ agency.registration_id }}/logo.webp"
+      alt="{{ agency.agencies_name }} logo" 
+      style="width: 100%; height: 100%; object-fit: contain; border-radius: 1rem;"
+    />
+  </div>
+{% else %}
+  <!-- Show Initials Avatar -->
+  <div class="agency-card__avatar">
+    {{ agency.agencies_name[:2]|upper }}
+  </div>
+{% endif %}
 
       <!-- Agency Info -->
       <div class="agency-card__content">
