@@ -17,6 +17,12 @@
 @import "./partials/package-banner.css";
 @import "./partials/package-details.css";
 @import "./partials/forms.css";
+@import "./partials/modal.css";
+@import "./partials/agency-dashboard.css";
+@import "./partials/add-agency.css";
+@import "./partials/city-card.css";
+@import "./partials/tags.css";
+@import "./partials/popover.css";
 
 @tailwind base;
 

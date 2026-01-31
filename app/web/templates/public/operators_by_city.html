@@ -47,9 +47,20 @@
             <div class="operator-card__header-top">
               <div class="operator-card__logo-section">
                 <div class="operator-card__logo">
-                  <div class="operator-card__avatar">
-                    {{ ui.agency_badge(a, 56, True) }}
-                  </div>
+                 {% if a.logo_path %}
+                <img
+                  
+                  src="/media/agency/{{ a.registration_id }}/logo.webp"
+                  
+                  alt="{{ a.agencies_name }} logo"
+                  class="operator-card__logo-img"
+                  loading="lazy"
+                />
+              {% else %}
+                <div class="operator-card__avatar">
+                  {{ ui.agency_badge(a, 56, True) }}
+                </div>
+              {% endif %}
                 </div>
                 <div class="operator-card__info">
                   <h3 class="operator-card__name">{{ a.agencies_name }}s</h3>

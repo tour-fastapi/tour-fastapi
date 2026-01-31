@@ -310,6 +310,7 @@
   .operator-card__actions {
     @apply flex items-center;
     gap: 12px;
+    justify-content: flex-end
   }
 
   .operator-card__action-primary {

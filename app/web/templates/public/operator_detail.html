@@ -41,62 +41,81 @@
        BANNER
        =========================== -->
   <div class="operator-banner">
-    <div class="operator-banner__content">
-      <div class="operator-banner__container">
-
-        <h1 class="operator-banner__title">{{ agency.agencies_name }}</h1>
-
-        <!-- Location -->
-        {% if is_present(loc_city) or is_present(loc_country) %}
-        <div class="operator-banner__meta">
-          <div class="operator-banner__location">
-            <i data-lucide="map-pin" class="icon icon--sm"></i>
-            <span>
-              {{ loc_city if is_present(loc_city) else '' }}{% if is_present(loc_city) and is_present(loc_country) %}, {% endif %}{{ loc_country if is_present(loc_country) else '' }}
-            </span>
-          </div>
+    
+    <div class="operator-banner__content ">
+      
+      
+      <div class="operator-banner__container flex">
+        <div class="operator-banner__logo">
+          {% if agency.logo_path %}
+            <img
+              src="/media/agency/{{ agency.registration_id }}/logo.webp"
+              alt="{{ agency.agencies_name }} logo"
+              class="operator-banner__logo-img"
+              loading="eager"
+              width="80"
+            />
+          {% else %}
+            <div class="operator-banner__logo-fallback">
+              {{ ui.agency_badge(agency, 72, True) }}
+            </div>
+          {% endif %}
         </div>
-        {% endif %}
+        <div>
+          <h1 class="operator-banner__title">{{ agency.agencies_name }}</h1>
 
-        <!-- Stats -->
-        {% if has_any_stat %}
-        <div class="operator-banner__stats">
-
-          {% if agency.num_umrah_tours is not none %}
-          <div class="operator-banner__stat">
-            <span class="operator-banner__stat-value">{{ agency.num_umrah_tours }}+</span>
-            Umrah Tours
+          <!-- Location -->
+          {% if is_present(loc_city) or is_present(loc_country) %}
+          <div class="operator-banner__meta">
+            <div class="operator-banner__location">
+              <i data-lucide="map-pin" class="icon icon--sm"></i>
+              <span>
+                {{ loc_city if is_present(loc_city) else '' }}{% if is_present(loc_city) and is_present(loc_country) %}, {% endif %}{{ loc_country if is_present(loc_country) else '' }}
+              </span>
+            </div>
           </div>
           {% endif %}
 
-          {% if agency.num_hajj_tours is not none %}
-          <div class="operator-banner__stat">
-            <span class="operator-banner__stat-value">{{ agency.num_hajj_tours }}+</span>
-            Hajj Tours
+          <!-- Stats -->
+          {% if has_any_stat %}
+          <div class="operator-banner__stats">
+
+            {% if agency.num_umrah_tours is not none %}
+            <div class="operator-banner__stat">
+              <span class="operator-banner__stat-value">{{ agency.num_umrah_tours }}+</span>
+              Umrah Tours
+            </div>
+            {% endif %}
+
+            {% if agency.num_hajj_tours is not none %}
+            <div class="operator-banner__stat">
+              <span class="operator-banner__stat-value">{{ agency.num_hajj_tours }}+</span>
+              Hajj Tours
+            </div>
+            {% endif %}
+
+            {% if agency.num_pilgrims_sent is not none %}
+            <div class="operator-banner__stat">
+              <span class="operator-banner__stat-value">{{ agency.num_pilgrims_sent }}+</span>
+              Pilgrims Served
+            </div>
+            {% endif %}
+
+            {% if agency.operating_since is not none %}
+            <div class="operator-banner__stat">
+              Since <span class="operator-banner__stat-value">{{ agency.operating_since }}</span>
+            </div>
+            {% endif %}
+
+            {% if is_present(agency.public_registration_code) %}
+            <div class="operator-banner__stat">
+              Reg. <span class="operator-banner__stat-value">{{ agency.public_registration_code }}</span>
+            </div>
+            {% endif %}
+
           </div>
           {% endif %}
-
-          {% if agency.num_pilgrims_sent is not none %}
-          <div class="operator-banner__stat">
-            <span class="operator-banner__stat-value">{{ agency.num_pilgrims_sent }}+</span>
-            Pilgrims Served
-          </div>
-          {% endif %}
-
-          {% if agency.operating_since is not none %}
-          <div class="operator-banner__stat">
-            Since <span class="operator-banner__stat-value">{{ agency.operating_since }}</span>
-          </div>
-          {% endif %}
-
-          {% if is_present(agency.public_registration_code) %}
-          <div class="operator-banner__stat">
-            Reg. <span class="operator-banner__stat-value">{{ agency.public_registration_code }}</span>
-          </div>
-          {% endif %}
-
         </div>
-        {% endif %}
 
       </div>
     </div>

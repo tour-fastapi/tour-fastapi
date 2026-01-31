@@ -1,0 +1,539 @@
+{% extends "base.html" %}
+{% block content %}
+
+<!-- Main Content -->
+<main class="flex-1 flex items-center justify-center px-4 py-8 md:py-12" style="min-height: calc(100vh - 400px);">
+  <div class="w-full max-w-md">
+    
+    <!-- Header Section -->
+    <div class="text-center mb-6 md:mb-8">
+      <div 
+        class="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
+        style="background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(145, 62%, 24%) 100%); color: white;">
+        <i data-lucide="user" class="w-8 h-8"></i>
+      </div>
+      <h1 class="mb-2" style="font-size: clamp(1.5rem, 4vw, 2rem); font-weight: 700;">
+        Create your account
+      </h1>
+      <p class="text-sm md:text-base" style="color: hsl(var(--muted));">
+        Reach your customers, Grow your business.
+      </p>
+    </div>
+
+    <!-- Plus Plan Promotional Banner -->
+    <a href="/plans" class="block mb-6 group">
+      <div 
+        class="p-4 md:p-5 rounded-xl border-2 transition-all hover:shadow-lg hover:scale-[1.02] active:scale-[0.99] cursor-pointer"
+        style="background: linear-gradient(135deg, hsl(var(--primary) / 0.05) 0%, hsl(var(--primary) / 0.1) 100%); border-color: hsl(var(--primary));">
+        <div class="flex items-start gap-3">
+          <div 
+            class="w-10 h-10 rounded-lg flex items-center justify-center shrink-0"
+            style="background: hsl(var(--primary)); color: white;">
+            <i data-lucide="sparkles" class="w-5 h-5"></i>
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2 mb-1">
+              <h3 style="font-weight: 700; color: hsl(var(--fg));">
+                Plus Plan
+              </h3>
+              <span 
+                class="px-2 py-0.5 rounded text-xs"
+                style="background: hsl(var(--primary)); color: white; font-weight: 600;">
+                FREE
+              </span>
+            </div>
+            <p class="text-sm leading-relaxed mb-2" style="color: hsl(var(--muted));">
+              Get 1 year free access • Save $120
+            </p>
+            <div class="flex items-center gap-1.5 text-xs group-hover:gap-2 transition-all" style="color: hsl(var(--primary)); font-weight: 600;">
+              View all plans
+              <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </a>
+
+    <!-- Flash Messages (Backend Alerts) -->
+    {% if flashes %}
+      <div id="flashMessages">
+        {% for f in flashes %}
+          <div class="alert alert--{{ 'error' if f.type == 'error' else 'success' if f.type == 'success' else 'warning' if f.type == 'warning' else 'info' }}">
+            <i data-lucide="{{ 'alert-circle' if f.type == 'error' else 'check-circle' if f.type == 'success' else 'alert-triangle' if f.type == 'warning' else 'info' }}" class="alert__icon"></i>
+            <div class="alert__content">
+              <div class="alert__title">{{ f.type|capitalize }}</div>
+              <div class="alert__message">{{ f.text }}</div>
+            </div>
+            <button type="button" class="alert__close" onclick="closeFlashAlert(this)">
+              <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <!-- Client-side Alert Container (for frontend validation) -->
+    <div id="clientAlertContainer" style="display: none;">
+      <!-- Error Alert -->
+      <div class="alert alert--error" id="clientErrorAlert" style="display: none;">
+        <i data-lucide="alert-circle" class="alert__icon"></i>
+        <div class="alert__content">
+          <div class="alert__title">Error</div>
+          <div class="alert__message" id="clientErrorMessage">Please fix the errors below.</div>
+        </div>
+        <button type="button" class="alert__close" onclick="closeAlert('clientErrorAlert')">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Signup Form Card -->
+    <div class="form-card">
+      <form method="post" action="/register" id="signupForm" class="space-y-5" novalidate autocomplete="off">
+        
+        <!-- CSRF Token -->
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}"/>
+        
+        <!-- Name Fields - Side by Side -->
+        <div class="form-group--inline">
+          <div class="form-group">
+            <label for="firstName" class="form-label form-label--required">
+              First name
+            </label>
+            <div class="form-input-wrapper">
+              <input
+                type="text"
+                id="firstName"
+                name="first_name"
+                placeholder="John"
+                class="form-input"
+                value="{{ form_data.first_name if form_data else '' }}"
+                autocomplete="off"
+                required
+              />
+              <div class="invalid-feedback" style="display: none;">
+                First name is required.
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="lastName" class="form-label form-label--required">
+              Last name
+            </label>
+            <div class="form-input-wrapper">
+              <input
+                type="text"
+                id="lastName"
+                name="last_name"
+                placeholder="Doe"
+                class="form-input"
+                value="{{ form_data.last_name if form_data else '' }}"
+                autocomplete="off"
+                required
+              />
+              <div class="invalid-feedback" style="display: none;">
+                Last name is required.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Email Field -->
+        <div class="form-group">
+          <label for="email" class="form-label form-label--required">
+            Email address
+          </label>
+          <div class="form-input-wrapper">
+            <i data-lucide="mail" class="form-input-icon"></i>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              placeholder="you@example.com"
+              class="form-input form-input--with-icon"
+              value="{{ form_data.email if form_data else '' }}"
+              required
+              autocomplete="off"
+            />
+            <div class="invalid-feedback" style="display: none;">
+              Please enter a valid email address.
+            </div>
+          </div>
+          <p class="form-help-text">
+            We'll send a verification code to this email
+          </p>
+        </div>
+
+        <!-- Password Field -->
+        <div class="form-group">
+          <label for="password" class="form-label form-label--required">
+            Password
+          </label>
+          <div class="form-input-wrapper">
+            <i data-lucide="lock" class="form-input-icon"></i>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              placeholder="Create a strong password"
+              class="form-input form-input--with-icon form-input--with-action"
+              required
+              minlength="8"
+              autocomplete="off"
+            />
+            <button
+              type="button"
+              class="form-input-action form-password-toggle"
+              id="togglePassword"
+              aria-label="Toggle password visibility"
+            >
+              <i data-lucide="eye" class="w-4 h-4" id="eyeIcon"></i>
+            </button>
+            <div class="invalid-feedback" style="display: none;">
+              Password must be at least 8 characters.
+            </div>
+          </div>
+          
+          <!-- Password Requirements (shown when user types) -->
+          <div class="form-password-requirements" id="passwordRequirements" style="display: none;">
+            <div class="form-password-requirement" id="req-length">
+              <i data-lucide="x" class="form-password-requirement__icon form-password-requirement__icon--unmet"></i>
+              <span class="form-password-requirement__text--unmet">At least 8 characters</span>
+            </div>
+            <div class="form-password-requirement" id="req-number">
+              <i data-lucide="x" class="form-password-requirement__icon form-password-requirement__icon--unmet"></i>
+              <span class="form-password-requirement__text--unmet">Contains a number</span>
+            </div>
+            <div class="form-password-requirement" id="req-uppercase">
+              <i data-lucide="x" class="form-password-requirement__icon form-password-requirement__icon--unmet"></i>
+              <span class="form-password-requirement__text--unmet">Contains uppercase</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Create Account Button -->
+        <button
+          type="submit"
+          class="form-submit-btn"
+          id="submitBtn"
+        >
+          <span id="submitBtnText">Create account</span>
+          <span id="submitBtnLoader" style="display: none;">
+            <i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i>
+            Creating account...
+          </span>
+        </button>
+
+        <!-- Terms -->
+        <p class="form-terms-text">
+          By signing up, you agree to our
+          <a href="/terms" target="_blank" rel="noopener">Terms of Service</a>
+          and
+          <a href="/privacy" target="_blank" rel="noopener">Privacy Policy</a>
+        </p>
+      </form>
+    </div>
+
+    <!-- Login Link -->
+    <p class="form-footer-link mt-6">
+      Already have an account?
+      <a href="/login">Login</a>
+    </p>
+  </div>
+</main>
+
+<!-- Form Validation & Interaction Script -->
+<script>
+  // Password visibility toggle
+  const togglePassword = document.getElementById('togglePassword');
+  const passwordInput = document.getElementById('password');
+  const eyeIcon = document.getElementById('eyeIcon');
+
+  if (togglePassword && passwordInput) {
+    togglePassword.addEventListener('click', function() {
+      const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+      passwordInput.setAttribute('type', type);
+      
+      // Toggle icon
+      eyeIcon.setAttribute('data-lucide', type === 'password' ? 'eye' : 'eye-off');
+      lucide.createIcons();
+    });
+  }
+
+  // Password requirements validation
+  const passwordRequirements = document.getElementById('passwordRequirements');
+  
+  if (passwordInput) {
+    passwordInput.addEventListener('input', function() {
+      const password = this.value;
+      
+      // Show requirements when user starts typing
+      if (password.length > 0) {
+        passwordRequirements.style.display = 'flex';
+      } else {
+        passwordRequirements.style.display = 'none';
+      }
+
+      // Check length requirement
+      const reqLength = document.getElementById('req-length');
+      const lengthMet = password.length >= 8;
+      updateRequirement(reqLength, lengthMet);
+
+      // Check number requirement
+      const reqNumber = document.getElementById('req-number');
+      const numberMet = /\d/.test(password);
+      updateRequirement(reqNumber, numberMet);
+
+      // Check uppercase requirement
+      const reqUppercase = document.getElementById('req-uppercase');
+      const uppercaseMet = /[A-Z]/.test(password);
+      updateRequirement(reqUppercase, uppercaseMet);
+    });
+  }
+
+  function updateRequirement(element, isMet) {
+    const icon = element.querySelector('i');
+    const text = element.querySelector('span');
+    
+    if (isMet) {
+      icon.setAttribute('data-lucide', 'check-circle-2');
+      icon.classList.remove('form-password-requirement__icon--unmet');
+      icon.classList.add('form-password-requirement__icon--met');
+      text.classList.remove('form-password-requirement__text--unmet');
+      text.classList.add('form-password-requirement__text--met');
+    } else {
+      icon.setAttribute('data-lucide', 'x');
+      icon.classList.remove('form-password-requirement__icon--met');
+      icon.classList.add('form-password-requirement__icon--unmet');
+      text.classList.remove('form-password-requirement__text--met');
+      text.classList.add('form-password-requirement__text--unmet');
+    }
+    
+    lucide.createIcons();
+  }
+
+  // Frontend form validation (before submitting to backend)
+  const form = document.getElementById('signupForm');
+  
+  if (form) {
+    form.addEventListener('submit', function(event) {
+      // Hide any previous error alerts when re-submitting
+      closeAlert('clientErrorAlert');
+      
+      // Remove previous validation classes
+      form.querySelectorAll('.form-input').forEach(input => {
+        input.classList.remove('is-valid', 'is-invalid');
+        const feedback = input.parentElement.querySelector('.invalid-feedback');
+        if (feedback) feedback.style.display = 'none';
+      });
+
+      let isValid = true;
+      const errors = [];
+
+      // Validate first name (REQUIRED - must be filled and at least 2 chars)
+      const firstName = document.getElementById('firstName');
+      if (!firstName.value.trim()) {
+        firstName.classList.add('is-invalid');
+        const feedback = firstName.parentElement.querySelector('.invalid-feedback');
+        if (feedback) {
+          feedback.textContent = 'First name is required';
+          feedback.style.display = 'block';
+        }
+        errors.push('First name is required');
+        isValid = false;
+      } else if (firstName.value.trim().length < 2) {
+        firstName.classList.add('is-invalid');
+        const feedback = firstName.parentElement.querySelector('.invalid-feedback');
+        if (feedback) {
+          feedback.textContent = 'First name must be at least 2 characters';
+          feedback.style.display = 'block';
+        }
+        errors.push('First name must be at least 2 characters');
+        isValid = false;
+      } else {
+        firstName.classList.add('is-valid');
+      }
+
+      // Validate last name (REQUIRED - must be filled and at least 2 chars)
+      const lastName = document.getElementById('lastName');
+      if (!lastName.value.trim()) {
+        lastName.classList.add('is-invalid');
+        const feedback = lastName.parentElement.querySelector('.invalid-feedback');
+        if (feedback) {
+          feedback.textContent = 'Last name is required';
+          feedback.style.display = 'block';
+        }
+        errors.push('Last name is required');
+        isValid = false;
+      } else if (lastName.value.trim().length < 2) {
+        lastName.classList.add('is-invalid');
+        const feedback = lastName.parentElement.querySelector('.invalid-feedback');
+        if (feedback) {
+          feedback.textContent = 'Last name must be at least 2 characters';
+          feedback.style.display = 'block';
+        }
+        errors.push('Last name must be at least 2 characters');
+        isValid = false;
+      } else {
+        lastName.classList.add('is-valid');
+      }
+
+      // Validate email (required)
+      const email = document.getElementById('email');
+      const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!email.value.trim()) {
+        email.classList.add('is-invalid');
+        const feedback = email.parentElement.querySelector('.invalid-feedback');
+        if (feedback) {
+          feedback.textContent = 'Email is required';
+          feedback.style.display = 'block';
+        }
+        errors.push('Email is required');
+        isValid = false;
+      } else if (!emailPattern.test(email.value)) {
+        email.classList.add('is-invalid');
+        const feedback = email.parentElement.querySelector('.invalid-feedback');
+        if (feedback) {
+          feedback.textContent = 'Please enter a valid email address';
+          feedback.style.display = 'block';
+        }
+        errors.push('Invalid email format');
+        isValid = false;
+      } else {
+        email.classList.add('is-valid');
+      }
+
+      // Validate password (required)
+      const password = document.getElementById('password');
+      const passwordValue = password.value;
+      
+      if (!passwordValue) {
+        password.classList.add('is-invalid');
+        const feedback = password.parentElement.querySelector('.invalid-feedback');
+        if (feedback) {
+          feedback.textContent = 'Password is required';
+          feedback.style.display = 'block';
+        }
+        errors.push('Password is required');
+        isValid = false;
+      } else {
+        const passwordValid = passwordValue.length >= 8 && 
+                             /\d/.test(passwordValue) && 
+                             /[A-Z]/.test(passwordValue);
+        
+        if (!passwordValid) {
+          password.classList.add('is-invalid');
+          const feedback = password.parentElement.querySelector('.invalid-feedback');
+          if (feedback) {
+            feedback.textContent = 'Password must meet all requirements';
+            feedback.style.display = 'block';
+          }
+          errors.push('Password does not meet requirements');
+          isValid = false;
+        } else {
+          password.classList.add('is-valid');
+        }
+      }
+
+      // If validation fails, prevent submission and show error
+      if (!isValid) {
+        event.preventDefault();
+        event.stopPropagation();
+        
+        // Show client-side error alert
+        showAlert('clientErrorAlert', errors.join(', '));
+        
+        // Scroll to first error
+        const firstInvalid = form.querySelector('.is-invalid');
+        if (firstInvalid) {
+          firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          firstInvalid.focus();
+        }
+      } else {
+        // ✅ Validation passed - Show loading state
+        setButtonLoading(true);
+      }
+      
+      // If valid, form will submit naturally to backend
+    });
+  }
+
+  // Button loading state management
+  function setButtonLoading(isLoading) {
+    const submitBtn = document.getElementById('submitBtn');
+    const btnText = document.getElementById('submitBtnText');
+    const btnLoader = document.getElementById('submitBtnLoader');
+    
+    if (isLoading) {
+      submitBtn.disabled = true;
+      submitBtn.style.opacity = '0.7';
+      submitBtn.style.cursor = 'not-allowed';
+      btnText.style.display = 'none';
+      btnLoader.style.display = 'flex';
+      btnLoader.style.alignItems = 'center';
+      btnLoader.style.justifyContent = 'center';
+      btnLoader.style.gap = '0.5rem';
+      
+      // Re-initialize icons for spinner
+      lucide.createIcons();
+    } else {
+      submitBtn.disabled = false;
+      submitBtn.style.opacity = '1';
+      submitBtn.style.cursor = 'pointer';
+      btnText.style.display = 'inline';
+      btnLoader.style.display = 'none';
+    }
+  }
+
+  // Re-enable button if backend returns with errors (page reload scenario)
+  document.addEventListener('DOMContentLoaded', function() {
+    const hasBackendErrors = document.querySelector('#flashMessages .alert--error');
+    if (hasBackendErrors) {
+      setButtonLoading(false);
+    }
+  });
+
+  // Alert functions for client-side validation
+  function showAlert(alertId, message) {
+    const alertContainer = document.getElementById('clientAlertContainer');
+    const alert = document.getElementById(alertId);
+    const messageElement = document.getElementById('clientErrorMessage');
+    
+    if (messageElement && message) {
+      messageElement.textContent = message;
+    }
+    
+    alertContainer.style.display = 'block';
+    alert.style.display = 'flex';
+    
+    // Re-initialize icons for alert
+    if (typeof lucide !== 'undefined') {
+      lucide.createIcons();
+    }
+    
+    // NO AUTO-HIDE - alert stays until user manually closes it or form passes validation
+  }
+
+  function closeAlert(alertId) {
+    const alertContainer = document.getElementById('clientAlertContainer');
+    const alert = document.getElementById(alertId);
+    
+    if (alert) {
+      alert.style.display = 'none';
+    }
+    
+    if (alertContainer) {
+      alertContainer.style.display = 'none';
+    }
+  }
+
+  function closeFlashAlert(button) {
+    const alert = button.closest('.alert');
+    if (alert) {
+      alert.style.display = 'none';
+    }
+  }
+</script>
+
+{% endblock %}

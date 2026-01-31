@@ -1,0 +1,218 @@
+{# ========================================================================
+   INQUIRY MODAL - Simple Form Submission (No AJAX)
+   ======================================================================== #}
+
+<div class="modal-overlay" id="inquiryModal" style="display: none;">
+  <div class="modal-container">
+    <div class="modal-content">
+      
+      {# Modal Header #}
+      <div class="modal-header">
+        <h2 class="modal-title" id="inquiryModalTitle">Send Inquiry</h2>
+        <button type="button" class="modal-close" id="closeInquiryModal" aria-label="Close">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      {# Modal Body #}
+      <div class="modal-body">
+        <form method="post" action="/packages/{{ pkg.package_id }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+          <input type="hidden" name="source" value="web">
+          {# Honeypot field #}
+          <input type="text" name="website" value="" style="display:none" tabindex="-1" autocomplete="off">
+
+          {# Full Name Field #}
+          <div class="form-group">
+            <label for="inq-name" class="form-label form-label--required">
+              Full Name
+            </label>
+            <div class="form-input-wrapper">
+              <i data-lucide="user" class="form-input-icon"></i>
+              <input
+                type="text"
+                id="inq-name"
+                name="name"
+                class="form-input form-input--with-icon"
+                placeholder="Your full name"
+                required
+                minlength="2"
+              />
+            </div>
+          </div>
+
+          {# Phone Number Field with Country Code #}
+          <div class="form-group">
+            <label for="inq-phone" class="form-label form-label--required">
+              Phone Number
+            </label>
+            <div style="display: flex; gap: 0.75rem;">
+              {# Country Code Dropdown #}
+              <div style="flex: 0 0 auto; min-width: 120px;">
+                <select
+                  id="inq-country-code"
+                  name="country_code"
+                  class="form-input"
+                  style="height: 100%;"
+                >
+                  <option value="+91" selected>🇮🇳 +91</option>
+                  <option value="+1">🇺🇸 +1</option>
+                  <option value="+44">🇬🇧 +44</option>
+                  <option value="+971">🇦🇪 +971</option>
+                  <option value="+966">🇸🇦 +966</option>
+                  <option value="+974">🇶🇦 +974</option>
+                  <option value="+965">🇰🇼 +965</option>
+                  <option value="+968">🇴🇲 +968</option>
+                  <option value="+973">🇧🇭 +973</option>
+                  <option value="+20">🇪🇬 +20</option>
+                  <option value="+92">🇵🇰 +92</option>
+                  <option value="+880">🇧🇩 +880</option>
+                  <option value="+60">🇲🇾 +60</option>
+                  <option value="+62">🇮🇩 +62</option>
+                  <option value="+65">🇸🇬 +65</option>
+                </select>
+              </div>
+              
+              {# Phone Number Input #}
+              <div class="form-input-wrapper" style="flex: 1;">
+                <i data-lucide="phone" class="form-input-icon"></i>
+                <input
+                  type="tel"
+                  id="inq-phone"
+                  name="phone_number"
+                  class="form-input form-input--with-icon"
+                  placeholder="Enter phone number"
+                  required
+                  minlength="6"
+                  maxlength="15"
+                  pattern="[0-9]{6,15}"
+                />
+              </div>
+            </div>
+            <p class="form-help-text">
+              Select country code and enter your phone number
+            </p>
+          </div>
+
+          {# Message Field #}
+          <div class="form-group">
+            <label for="inq-msg" class="form-label form-label--required">
+              Your Message
+            </label>
+            <div class="form-input-wrapper">
+              <textarea
+                id="inq-msg"
+                name="inquiry"
+                class="form-textarea"
+                rows="4"
+                placeholder="Write your query or request here..."
+                required
+                minlength="10"
+              ></textarea>
+            </div>
+          </div>
+
+          {# CAPTCHA Field #}
+          <div class="form-group">
+            <label for="inq-captcha" class="form-label form-label--required">
+              Security Check
+            </label>
+            <div class="form-captcha">
+              <div class="form-captcha__question">
+                <span class="form-captcha__label">What is</span>
+                <span class="form-captcha__math">{{ captcha_q }}</span>
+              </div>
+              <input
+                type="text"
+                id="inq-captcha"
+                name="captcha_answer"
+                class="form-input"
+                placeholder="Answer"
+                required
+                pattern="[0-9]+"
+                style="max-width: 120px;"
+              />
+            </div>
+          </div>
+
+          {# Submit Button #}
+          <button type="submit" class="form-submit-btn">
+            Send Inquiry
+          </button>
+        </form>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+{# ========================================================================
+   MODAL JAVASCRIPT - Open/Close + Dynamic Operator Name
+   ======================================================================== #}
+<script>
+(function() {
+  'use strict';
+
+  const modal = document.getElementById('inquiryModal');
+  const modalTitle = document.getElementById('inquiryModalTitle');
+
+  // Open modal with optional operator name
+  window.openInquiryModal = function(operatorName) {
+    // Update title with operator name if provided
+    if (operatorName && operatorName.trim()) {
+      modalTitle.textContent = 'Send Inquiry to ' + operatorName;
+    } else {
+      modalTitle.textContent = 'Send Inquiry';
+    }
+
+    modal.style.display = 'flex';
+    document.body.classList.add('modal-open');
+    
+    // Trigger animation
+    setTimeout(() => {
+      modal.classList.add('is-visible');
+    }, 10);
+    
+    // Focus first field
+    const firstInput = document.getElementById('inq-name');
+    if (firstInput) firstInput.focus();
+  };
+
+  // Close modal
+  window.closeInquiryModal = function() {
+    modal.classList.remove('is-visible');
+    setTimeout(() => {
+      modal.style.display = 'none';
+      document.body.classList.remove('modal-open');
+      // Reset form
+      const form = modal.querySelector('form');
+      if (form) form.reset();
+      // Reset title
+      modalTitle.textContent = 'Send Inquiry';
+    }, 300);
+  };
+
+  // Close button
+  const closeBtn = document.getElementById('closeInquiryModal');
+  if (closeBtn) {
+    closeBtn.addEventListener('click', closeInquiryModal);
+  }
+
+  // Close on overlay click
+  if (modal) {
+    modal.addEventListener('click', function(e) {
+      if (e.target === modal) {
+        closeInquiryModal();
+      }
+    });
+  }
+
+  // Close on Escape key
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && modal && modal.classList.contains('is-visible')) {
+      closeInquiryModal();
+    }
+  });
+
+})();
+</script>

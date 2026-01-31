@@ -1,0 +1,35 @@
+.form-page {
+  @apply py-8 px-4;
+}
+
+.form-container {
+  @apply max-w-xl mx-auto;
+}
+
+.form-header {
+  @apply mb-6;
+}
+
+.form-title {
+  @apply text-xl font-semibold;
+}
+
+.form-subtitle {
+  @apply text-sm text-muted mt-1;
+}
+
+.form-section {
+  @apply mb-8;
+}
+
+.form-section-title {
+  @apply text-sm font-medium mb-4 text-gray-700;
+}
+
+.form-grid-2 {
+  @apply grid grid-cols-1 md:grid-cols-2 gap-4;
+}
+
+.required {
+  @apply text-red-500;
+}

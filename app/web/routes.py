@@ -1043,7 +1043,7 @@ def agency_new_submit(
     branch_is_main: Optional[str] = Form(None),
     currency_code: str = Form(...),
     # ✅ accept optional file as UploadFile via File()
-    logo_file: Optional[UploadFile] = File(None),
+    logo: Optional[UploadFile] = File(None),
     csrf_token: str = Form(...),
     db: Session = Depends(get_db),
 ):
@@ -1160,11 +1160,14 @@ def agency_new_submit(
 
     # ✅ Process logo (optional), identical behavior to Edit flow
     try:
-        if logo_file is not None and getattr(logo_file, "filename", ""):
-            if not (logo_file.content_type or "").startswith("image/"):
+        if logo is not None and getattr(logo, "filename", ""):
+
+
+
+            if not (logo.content_type or "").startswith("image/"):
                 raise HTTPException(status_code=400, detail="Upload must be an image file")
 
-            raw = _read_limited(logo_file, MAX_UPLOAD_BYTES)
+            raw = _read_limited(logo, MAX_UPLOAD_BYTES)
             webp_bytes = _validate_and_normalize_to_webp(raw)
 
             target_dir = _agency_dir(agency.registration_id)
@@ -1177,7 +1180,9 @@ def agency_new_submit(
                 f.write(webp_bytes)
             os.replace(tmp_path, final_path)
 
-            agency.logo_path = str(final_path)
+            #agency.logo_path = str(final_path)
+            agency.logo_path = f"media/agency/{agency.registration_id}/logo.webp"  # ✅ Relative path
+
             agency.logo_uploaded_at = datetime.utcnow()
 
             try:
@@ -1233,7 +1238,7 @@ def agency_edit_page(
 
     flashes = pop_flashes(request)
     return templates.TemplateResponse(
-        "agency/edit.html",
+        "agency/new.html",
         {
             "request": request,
             "user": user,
@@ -1248,7 +1253,7 @@ def agency_edit_page(
 
 
 @router.post("/agency/{registration_id}/edit")
-def agency_edit_submit(
+async def agency_edit_submit(   
     request: Request,
     registration_id: int,
     agencies_name: str = Form(...),
@@ -1270,11 +1275,14 @@ def agency_edit_submit(
     branch_contact_person: str = Form(""),
     branch_contact_number: str = Form(""),
     branch_is_main: Optional[str] = Form(None),
+    logo: Optional[UploadFile] = File(None),  # ✅ ADD THIS LINE
     csrf_token: str = Form(...),
     db: Session = Depends(get_db),
 ):
     require_csrf(request, csrf_token)
     user = require_user(request, db)
+
+    
 
     def _to_int_or_none(s: str) -> Optional[int]:
         s = (s or "").strip()
@@ -1288,20 +1296,34 @@ def agency_edit_submit(
         flash(request, "Agency not found or not yours.", "error")
         return RedirectResponse(url="/select-agency", status_code=303)
 
-    if not agencies_name.strip() or not city.strip() or not country.strip() or not agency_email.strip():
-        flash(request, "Agency name, city, country, and email are required.", "error")
+    if not agencies_name.strip() or not city.strip() or not country.strip() or not agency_email.strip() or not description.strip():
+        flash(request, "Agency name, description, city, country, and email are required.", "error")
         return RedirectResponse(url=f"/agency/{registration_id}/edit", status_code=303)
     if not branch_name.strip():
         flash(request, "Branch name is required.", "error")
         return RedirectResponse(url=f"/agency/{registration_id}/edit", status_code=303)
 
     city_name = city.strip()
-    city_row = db.query(City).filter(City.name == city_name).first()
+
+    city_row = db.query(City).filter(
+        City.name.ilike(city_name)
+    ).first()
+
     if not city_row:
-        city_row = City(name=city_name)
-        db.add(city_row)
-        db.commit()
-        db.refresh(city_row)
+        city_row = City(
+            name=city_name,
+            #country=country,
+            #currency_code=currency_code
+        )
+    db.add(city_row)
+    db.flush()  
+    print("SAVING AGENCY CITY:", agency.city)
+
+        #city_row = City(name=city_name)
+        #db.add(city_row)
+        #db.commit()
+        #db.refresh(city_row)
+        
 
     agency.agencies_name = agencies_name.strip()
     agency.city = city_name
@@ -1341,7 +1363,89 @@ def agency_edit_submit(
     if main_branch.country:
         agency.country = main_branch.country
 
-    db.commit()
+    # ✅ Process logo upload (BEFORE commit)
+    try:
+        if logo is not None and getattr(logo, "filename", ""):
+            MEDIA_ROOT = Path("media").resolve()
+            LOGO_NAME = "logo.webp"
+            MAX_UPLOAD_BYTES = 5 * 1024 * 1024
+            ALLOWED_FORMATS = {"PNG", "JPEG", "WEBP"}
+            MAX_W, MAX_H = 2000, 2000
+
+            def _agency_dir(reg_id: int) -> Path:
+                return MEDIA_ROOT / "agency" / str(reg_id)
+
+            def _logo_path(reg_id: int) -> Path:
+                return _agency_dir(reg_id) / LOGO_NAME
+
+            def _read_limited(upload: UploadFile, limit: int = MAX_UPLOAD_BYTES) -> bytes:
+                data = upload.file.read(limit + 1)
+                if len(data) > limit:
+                    raise HTTPException(status_code=413, detail=f"File too large (>{limit} bytes)")
+                if not data:
+                    raise HTTPException(status_code=400, detail="Empty upload")
+                return data
+
+            def _validate_and_normalize_to_webp(raw: bytes) -> bytes:
+                try:
+                    im = Image.open(BytesIO(raw))
+                    im.load()
+                except UnidentifiedImageError:
+                    raise HTTPException(status_code=400, detail="Unsupported or corrupted image")
+
+                if im.format not in ALLOWED_FORMATS:
+                    raise HTTPException(status_code=400, detail=f"Only PNG, JPEG or WebP allowed (got {im.format})")
+
+                if im.mode == "RGBA":
+                    bg = Image.new("RGB", im.size, (255, 255, 255))
+                    bg.paste(im, mask=im.split()[3])
+                    im = bg
+                elif im.mode != "RGB":
+                    im = im.convert("RGB")
+
+                if im.width > MAX_W or im.height > MAX_H:
+                    im.thumbnail((MAX_W, MAX_H))
+
+                out = BytesIO()
+                im.save(out, format="WEBP", quality=85, method=6)
+                return out.getvalue()
+
+            if not (logo.content_type or "").startswith("image/"):
+                raise HTTPException(status_code=400, detail="Upload must be an image file")
+
+            raw = _read_limited(logo, MAX_UPLOAD_BYTES)
+            webp_bytes = _validate_and_normalize_to_webp(raw)
+
+            target_dir = _agency_dir(agency.registration_id)
+            target_dir.mkdir(parents=True, exist_ok=True)
+
+            tmp_path = target_dir / (LOGO_NAME + ".tmp")
+            final_path = _logo_path(agency.registration_id)
+
+            with open(tmp_path, "wb") as f:
+                f.write(webp_bytes)
+            os.replace(tmp_path, final_path)
+
+            #agency.logo_path = str(final_path)
+            agency.logo_path = f"media/agency/{agency.registration_id}/logo.webp"
+
+            agency.logo_uploaded_at = datetime.utcnow()
+
+            try:
+                img = Image.open(final_path)
+                agency.logo_width, agency.logo_height = img.size
+            except Exception:
+                agency.logo_width = None
+                agency.logo_height = None
+
+            flash(request, "Logo uploaded successfully.", "success")
+            
+    except HTTPException as hx:
+        flash(request, f"Logo upload failed: {hx.detail}", "error")
+    except Exception as e:
+        flash(request, f"Logo upload failed: {str(e)}", "error")
+
+    db.commit()  # ✅ Commit after logo processing
 
     flash(request, "Agency updated.", "success")
     return RedirectResponse(
@@ -1704,15 +1808,18 @@ def package_detail(package_id: int, request: Request, db: Session = Depends(get_
         is_public=True,
     )
 
-@router.post("/packages/{package_id}/inquire")
+@router.post("/packages/{package_id}")
 def package_inquire_submit(
     request: Request,
     package_id: int,
     name: str = Form(...),
+    country_code: str = Form("+91"),  # ✅ Add this
     phone_number: str = Form(...),
     inquiry: str = Form(...),
     source: str = Form(""),
     website: str = Form(""),  # honeypot
+    
+    
     captcha_answer: str = Form(...),
     csrf_token: str = Form(...),
     db: Session = Depends(get_db),
@@ -1768,7 +1875,9 @@ def package_inquire_submit(
         flash(request, "Could not save inquiry. Please try again.", "error")
         return RedirectResponse(url=f"/packages/{package_id}", status_code=303)
 
-    flash(request, "Thanks! Your inquiry was sent.", "success")
+    # flash(request, "Thanks! Your inquiry was sent.", "success")
+    
+
     return RedirectResponse(url=f"/packages/{package_id}", status_code=303)
 
 
