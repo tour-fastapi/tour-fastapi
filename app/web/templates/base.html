@@ -60,8 +60,16 @@
   <!-- SEO Meta -->
   <meta name="title" content="{{ final_title }}">
   <meta name="description" content="{{ final_description }}">
+  <meta name="static-version" content="{{ static_version() }}">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
   {% if canonical_url %}
-    <link rel="canonical" href="{{ canonical_url }}">
+    
+    <link rel="stylesheet" href="/static/css/styles.css?v={{ static_version() }}">
+
   {% endif %}
 
   {% if is_package_detail %}
