@@ -1,4 +1,7 @@
-from __future__ import annotations
+from __future__ import annotations  
+from fastapi import Response
+
+
 
 import hashlib
 import random
@@ -42,6 +45,8 @@ from app.web.deps import (
 )
 
 from datetime import datetime  # you already import datetime above, fine if duplicate
+static_version = int(datetime.utcnow().timestamp())
+
 # ⬇ add these
 import os
 from io import BytesIO
@@ -51,6 +56,8 @@ from PIL import Image, UnidentifiedImageError
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/web/templates")
+templates.env.globals["static_version"] = lambda: int(datetime.utcnow().timestamp())
+
 
 
 def format_money(amount, currency_symbol=None, currency_position=None, currency_code=None):
@@ -125,6 +132,17 @@ CURRENCY_SYMBOLS = {
     "AED": "AED",     # or "د.إ" if your font supports it
 }
 
+@router.get("/")
+def home(request: Request):
+    static_version = int(datetime.utcnow().timestamp())
+
+    return templates.TemplateResponse(
+        "base.html",
+        {
+            "request": request,
+            "static_version": static_version,
+        }
+    )
 
 def get_currency_ctx_for_agency(agency: Agency | None) -> dict:
     """
@@ -1806,7 +1824,12 @@ def package_detail(package_id: int, request: Request, db: Session = Depends(get_
             "captcha_q": new_captcha(request, captcha_tag),
         },
         is_public=True,
+        
     )
+    response.headers["X-Robots-Tag"] = "noindex, nofollow"
+    return response    
+    
+
 
 @router.post("/packages/{package_id}")
 def package_inquire_submit(
