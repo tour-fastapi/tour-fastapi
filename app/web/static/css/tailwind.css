@@ -23,6 +23,8 @@
 @import "./partials/city-card.css";
 @import "./partials/tags.css";
 @import "./partials/popover.css";
+@import "./partials/package-banner-selector.css";
+@import "./partials/admin.css";
 
 @tailwind base;
 

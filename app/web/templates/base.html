@@ -204,6 +204,16 @@
     </div>
   {% endif %}
 
+  {% if request.session.flashes %}
+  <div class="flash-container">
+    {% for f in request.session.flashes %}
+      <div class="flash flash--{{ f.type }}">
+        {{ f.text }}
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}
+
   <main class="">
     {% block content %}{% endblock %}
   </main>

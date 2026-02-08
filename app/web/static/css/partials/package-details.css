@@ -383,3 +383,39 @@
     @apply px-6 py-8;
   }
 }
+
+.package-details__airline-logo {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+}
+
+.package-details__airline-code {
+  font-size: 13px;
+  font-weight: 500;
+  color: #6b7280;
+  margin-left: 6px;
+}
+
+.package-details__card-status--direct {
+  color: #047857;
+  font-weight: 500;
+}
+
+.package-details__card-status--via {
+  color: #92400e;
+  font-weight: 500;
+}
+
+.package-details__airline-logo {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+}
+
+.package-details__airline-code {
+  font-size: 13px;
+  font-weight: 500;
+  color: #6b7280;
+  margin-left: 6px;
+}

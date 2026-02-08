@@ -577,3 +577,14 @@
     }
   }
 }
+
+.flash {
+  padding: 10px 14px;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.flash--success { background: #ecfdf5; color: #065f46; }
+.flash--warning { background: #fffbeb; color: #92400e; }
+.flash--error   { background: #fef2f2; color: #991b1b; }
