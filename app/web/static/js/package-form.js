@@ -55,4 +55,37 @@ function toggleDescriptionField(checkbox, descInput) {
   }
 }
 
+  // ============================================
+  // VIA TOGGLE (Onward + Return)
+  // ============================================
+
+  function setupViaToggle(typeName, fieldId) {
+    const radios = document.querySelectorAll(`input[name="${typeName}"]`);
+    const viaField = document.getElementById(fieldId);
+
+    if (!radios.length || !viaField) return;
+
+    function updateVisibility() {
+      const selected = document.querySelector(`input[name="${typeName}"]:checked`);
+      if (selected && selected.value === "via") {
+        viaField.classList.remove("is-hidden");
+      } else {
+        viaField.classList.add("is-hidden");
+      }
+    }
+
+    // Run once on page load
+    updateVisibility();
+
+    // Listen to changes
+    radios.forEach(radio => {
+      radio.addEventListener("change", updateVisibility);
+    });
+  }
+
+  // Initialize for both flights
+  setupViaToggle("onward_type", "onwardViaField");
+  setupViaToggle("return_type", "returnViaField");
+
+
 });

@@ -124,15 +124,18 @@
             {% if user %}
               <div class="user-menu">
                 {% if is_admin %}
-                  <button class="btn-outline">Admin</button>
-                  <span class="nav-link disabled" aria-disabled="true" title="Admin accounts don't use agency dashboard">Dashboard</span>
-                {% else %}
-                  {% if nav_agency %}
-                    <a href="/agency/{{ nav_agency.registration_id }}/dashboard" class="btn-text">Dashboard</a>
-                  {% else %}
-                    <a href="/select-agency" class="btn-outline btn-outline-secondary">Dashboard</a>
-                  {% endif %}
-                {% endif %}
+              <button class="btn-outline">Admin</button>
+              <span class="nav-link disabled"
+                    aria-disabled="true"
+                    title="Admin accounts don't use agency dashboard">
+                Dashboard
+              </span>
+            {% elif nav_agency %}
+              <a href="/agency/{{ nav_agency.registration_id }}/dashboard"
+                class="btn-text">
+                Dashboard
+              </a>
+            {% endif %}
 
                
                 <button data-popover="userMenu" class="user-menu__trigger">
@@ -446,6 +449,82 @@ function hideToast() {
   window.closePopover = closePopover;
 })();
 </script>
+<script>
+/**
+ * ============================================================================
+ * GLOBAL CANCEL + UNSAVED CHANGES HANDLER
+ * Works for all forms that have .js-cancel-back button
+ * ============================================================================
+ */
+(function () {
+  'use strict';
+
+  let formChanged = false;
+  let isSubmitting = false; // ✅ NEW
+
+  document.addEventListener('DOMContentLoaded', function () {
+
+    const forms = document.querySelectorAll('form');
+
+    // ------------------------------------------------------------
+    // 1️⃣ Detect changes in any form
+    // ------------------------------------------------------------
+    forms.forEach(form => {
+      form.addEventListener('input', () => {
+        formChanged = true;
+      });
+
+      form.addEventListener('change', () => {
+        formChanged = true;
+      });
+
+      // ✅ NEW: if user submits (Save / Publish / Draft), don't show leave warning
+      form.addEventListener('submit', () => {
+        isSubmitting = true;
+      });
+    });
+
+    // ------------------------------------------------------------
+    // 2️⃣ Cancel button click handler
+    // ------------------------------------------------------------
+    const cancelButtons = document.querySelectorAll('.js-cancel-back');
+
+    cancelButtons.forEach(btn => {
+      btn.addEventListener('click', function () {
+
+        if (formChanged) {
+          const confirmLeave = confirm(
+            "You have unsaved changes.\n\nAny unsaved changes will be lost.\n\nDo you really want to leave?"
+          );
+
+          if (!confirmLeave) return;
+        }
+
+        // Go back safely
+        if (document.referrer && document.referrer !== window.location.href) {
+          window.history.back();
+        } else {
+          window.location.href = "/";
+        }
+      });
+    });
+
+    // ------------------------------------------------------------
+    // 3️⃣ Warn if user tries browser back/close
+    // ------------------------------------------------------------
+    window.addEventListener('beforeunload', function (e) {
+      // ✅ skip warning when submitting
+      if (!formChanged || isSubmitting) return;
+
+      e.preventDefault();
+      e.returnValue = '';
+    });
+
+  });
+})();
+</script>
+
+
 
 
 </body>

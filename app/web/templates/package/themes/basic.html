@@ -26,6 +26,8 @@
 
 {% set has_tentative = pkg.travel_month and pkg.travel_year %}
 {% set has_exact = onward or ret %}
+{% set dt = (pkg.date_type if pkg and pkg.date_type else 'tentative') %}
+
 
 <!-- ===============================
      PACKAGE BANNER
@@ -123,145 +125,178 @@
 
     <!-- Flights -->
     <section class="package-details__section">
-      <h2 class="package-details__heading">Flight Details</h2>
+  <h2 class="package-details__heading">Flight Details</h2>
 
-      {% if has_tentative and not has_exact %}
-<section class="package-details__section">
-  
+  {# ======================================================
+     TENTATIVE MODE (Month/Year + preferred airline)
+  ====================================================== #}
+  {% if dt == "tentative" %}
+    {% if pkg and pkg.travel_month and pkg.travel_year %}
+      <div class="package-details__card">
+        <div class="package-details__label">TENTATIVE TRAVEL</div>
 
-  <div class="package-details__card">
-    <div class="package-details__label">TENTATIVE TRAVEL</div>
+        <div class="package-details__card-content">
+          <div class="package-details__icon-box">
+            {# Prefer ICAO logo, fallback to IATA #}
+            {% set logo_code = ((pkg.tentative_airline_icao or pkg.tentative_airline_iata or '') | lower) %}
 
-    <div class="package-details__card-content">
-      <div class="package-details__icon-box">
-        <i data-lucide="calendar" class="package-details__icon"></i>
-      </div>
+            {% if logo_code %}
+              <img
+                src="/media/airline-logos/{{ logo_code }}.png"
+                alt="{{ pkg.tentative_airline or 'Airline' }}"
+                class="package-details__airline-logo"
+                onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block';"
+              />
+              <i data-lucide="calendar" class="package-details__icon" style="display:none;"></i>
+            {% else %}
+              <i data-lucide="calendar" class="package-details__icon"></i>
+            {% endif %}
+          </div>
 
-      <div class="package-details__card-info">
+          <div class="package-details__card-info">
+            <div class="package-details__card-title">
+              {{ month_names[pkg.travel_month] }} {{ pkg.travel_year }}
+            </div>
 
-        <!-- Month + Year -->
-        <div class="package-details__card-title">
-          {{ month_names[pkg.travel_month] }} {{ pkg.travel_year }}
+            <div class="package-details__card-meta">
+              {% if pkg.tentative_airline %}
+                {{ pkg.tentative_airline }}
+              {% else %}
+                Airline not specified
+              {% endif %}
+            </div>
+          </div>
         </div>
+      </div>
+    {% endif %}
+  {% endif %}
 
-        <!-- Airline (optional) -->
-        <div class="package-details__card-meta">
-          {% if pkg.tentative_airline %}
-            Preferred Airline: {{ pkg.tentative_airline }}
+  {# ======================================================
+     EXACT MODE (Onward + Return cards)
+  ====================================================== #}
+  {% if dt == "exact" %}
+    <div class="package-details__grid package-details__grid--two-col">
+
+      {# ------------------ ONWARD ------------------ #}
+      <div class="package-details__card">
+        <div class="package-details__label">ONWARD FLIGHT</div>
+
+        <div class="package-details__card-content">
+          <div class="package-details__icon-box">
+          {% set logo_code = ((onward.airline_icao if onward else '') or (onward.airline_iata if onward else '') or '') | lower %}
+
+          {% if logo_code %}
+            <img
+              src="/media/airline-logos/{{ logo_code }}.png"
+              alt="{{ onward.airline_name if onward else 'Airline' }}"
+              class="package-details__airline-logo"
+              onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block';"
+            />
+            <i data-lucide="plane" class="package-details__icon package-details__icon--rotate-45" style="display:none;"></i>
           {% else %}
-            Airline not specified
+            <i data-lucide="plane" class="package-details__icon package-details__icon--rotate-45"></i>
           {% endif %}
         </div>
 
-      </div>
-    </div>
-  </div>
-</section>
+          <div class="package-details__card-info">
+            <div class="package-details__card-title">
+              {{ onward.airline_name if onward and onward.airline_name else 'Airline not specified' }}
+
+              {% if onward and (onward.airline_iata or onward.airline_icao) %}
+                <span class="package-details__airline-code">
+                  {{ onward.airline_iata or onward.airline_icao }}
+                </span>
+              {% endif %}
+            </div>
+
+            <div class="package-details__card-meta">
+              {% if onward and onward.flight_date %}
+  {{ onward.flight_date.strftime('%b %d, %Y') }}
+{% else %}
+  Date not specified
 {% endif %}
-
-
-      <div class="package-details__grid package-details__grid--two-col">
-
-        <!-- Onward Flight -->
-         <!-- Onward Flight -->
-<div class="package-details__card">
-  <div class="package-details__label">ONWARD FLIGHT</div>
-
-  <div class="package-details__card-content">
-
-    <!-- Airline Logo -->
-    <div class="package-details__icon-box">
-      {% if onward and onward.airline_iata %}
-        <img
-          src="/media/airline-logos/{{ onward.airline_iata | lower }}.svg"
-          alt="{{ onward.airline_name }}"
-          class="package-details__airline-logo"
-          onerror="this.style.display='none'"
-        />
-      {% else %}
-        <i data-lucide="plane"
-           class="package-details__icon package-details__icon--rotate-45"></i>
-      {% endif %}
-    </div>
-
-    <!-- Flight Info -->
-    <div class="package-details__card-info">
-
-      <!-- Airline -->
-      <div class="package-details__card-title">
-        {{ onward.airline_name if onward and onward.airline_name else 'Airline not specified' }}
-
-        {% if onward and onward.airline_iata %}
-          <span class="package-details__airline-code">
-            {{ onward.airline_iata }}
-          </span>
-        {% endif %}
-      </div>
-
-      <!-- Date + Route -->
-      <div class="package-details__card-meta">
-        {% if onward and onward.flight_date %}
-          {{ onward.flight_date | date('%b %d, %Y') }}
-        {% else %}
-          Date not specified
-        {% endif %}
-        • {{ origin_code }} → {{ destination_code }}
-      </div>
-
-      <!-- Flight Type -->
-      {% if onward and onward.flight_type == 'direct' %}
-        <div class="package-details__card-status package-details__card-status--direct">
-          ✓ Direct Flight
-        </div>
-      {% elif onward and onward.flight_type == 'via' %}
-        <div class="package-details__card-status package-details__card-status--via">
-          Via {{ onward.via_city or '—' }}
-        </div>
-      {% else %}
-        <div class="package-details__card-status package-details__card-status--muted">
-          Flight type not specified
-        </div>
-      {% endif %}
-
-    </div>
-  </div>
-</div>
-
-        <div class="package-details__card is-hidden">
-          <div class="package-details__label">ONWARD FLIGHT</div>
-          <div class="package-details__card-content">
-            <div class="package-details__icon-box">
-              <i data-lucide="plane" class="package-details__icon package-details__icon--rotate-45"></i>
+              • {{ origin_code }} → {{ destination_code }}
             </div>
-            <div class="package-details__card-info">
-              <div class="package-details__card-title">{{ onward_text or 'Not specified' }}</div>
-              <div class="package-details__card-title">Saudia SV 752</div>
-              <div class="package-details__card-meta">Mar 15, 2024 • BOM → JED</div>
-              <div class="package-details__card-status">✓ Direct Flight</div>
-            </div>
+
+            {% if onward and onward.flight_type == 'direct' %}
+              <div class="package-details__card-status package-details__card-status--direct">
+                ✓ Direct Flight
+              </div>
+            {% elif onward and onward.flight_type == 'via' %}
+              <div class="package-details__card-status package-details__card-status--via">
+                Via {{ onward.via_city or '—' }}
+              </div>
+            {% else %}
+              <div class="package-details__card-status package-details__card-status--muted">
+                Flight type not specified
+              </div>
+            {% endif %}
           </div>
         </div>
-        <!-- Return Flight -->
-        <div class="package-details__card">
-          <div class="package-details__label">RETURN FLIGHT</div>
-          <div class="package-details__card-content">
-            <div class="package-details__icon-box">
+      </div>
+
+      {# ------------------ RETURN ------------------ #}
+      <div class="package-details__card">
+        <div class="package-details__label">RETURN FLIGHT</div>
+
+        <div class="package-details__card-content">
+          <div class="package-details__icon-box">
+            {% set logo_code = ((ret.airline_icao if ret else '') or (ret.airline_iata if ret else '') or '') | lower %}
+
+            {% if logo_code %}
+              <img
+                src="/media/airline-logos/{{ logo_code }}.png"
+                alt="{{ ret.airline_name if ret else 'Airline' }}"
+                class="package-details__airline-logo"
+                onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block';"
+              />
+              <i data-lucide="plane" class="package-details__icon package-details__icon--rotate-minus-45" style="display:none;"></i>
+            {% else %}
               <i data-lucide="plane" class="package-details__icon package-details__icon--rotate-minus-45"></i>
+            {% endif %}
+          </div>
+
+          <div class="package-details__card-info">
+            <div class="package-details__card-title">
+              {{ ret.airline_name if ret and ret.airline_name else 'Airline not specified' }}
+
+              {% if ret and (ret.airline_iata or ret.airline_icao) %}
+                <span class="package-details__airline-code">
+                  {{ ret.airline_iata or ret.airline_icao }}
+                </span>
+              {% endif %}
             </div>
-            <div class="package-details__card-info">
-              <div class="package-details__card-title">{{ return_text or 'Not specified' }}</div>
-              <div class="package-details__card-title">Air India AI 966</div>
-              <div class="package-details__card-meta">Mar 29, 2024 • JED → BOM</div>
-              <div class="package-details__card-status">Via Doha • 3h layover</div>
+
+            <div class="package-details__card-meta">
+              {% if ret and ret.flight_date %}
+  {{ ret.flight_date.strftime('%b %d, %Y') }}
+{% else %}
+  Date not specified
+{% endif %}
+              • {{ destination_code }} → {{ origin_code }}
             </div>
+
+            {% if ret and ret.flight_type == 'direct' %}
+              <div class="package-details__card-status package-details__card-status--direct">
+                ✓ Direct Flight
+              </div>
+            {% elif ret and ret.flight_type == 'via' %}
+              <div class="package-details__card-status package-details__card-status--via">
+                Via {{ ret.via_city or '—' }}
+              </div>
+            {% else %}
+              <div class="package-details__card-status package-details__card-status--muted">
+                Flight type not specified
+              </div>
+            {% endif %}
           </div>
         </div>
-
-        
-
-        
       </div>
-    </section>
+
+    </div>
+  {% endif %}
+</section>
+
 
     <!-- Stays -->
     <section class="package-details__section">

@@ -80,7 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('editCity')?.addEventListener('click', () => {
     card.classList.add('is-hidden');
     selector.classList.remove('is-hidden');
-    input.focus();
+    //input.focus();
   });
 
   function openAddCityModal(cityName) {

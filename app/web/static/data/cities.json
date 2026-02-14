@@ -445,5 +445,40 @@
     "city": "Doha",
     "country": "Qatar",
     "currency": "QAR"
+  },
+  {
+    "city": "Riffa",
+    "country": "Bahrain",
+    "currency": "BHD"
+  },
+  {
+    "city": "Ar Rayyan",
+    "country": "Qatar",
+    "currency": "QAR"
+  },
+  {
+    "city": "Alkhawr",
+    "country": "Qatar",
+    "currency": "QAR"
+  },
+  {
+    "city": "Sitrah",
+    "country": "Bahrain",
+    "currency": "BHD"
+  },
+  {
+    "city": "Testcityxonwards",
+    "country": "Qatar",
+    "currency": "QAR"
+  },
+  {
+    "city": "Nencitytest",
+    "country": "Qatar",
+    "currency": "QAR"
+  },
+  {
+    "city": "Viacityreturnx",
+    "country": "Qatar",
+    "currency": "QAR"
   }
 ]

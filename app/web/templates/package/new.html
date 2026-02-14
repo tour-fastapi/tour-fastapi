@@ -8,6 +8,9 @@
 {% set return_has = ret and (ret.flight_date or ret.airline_name or ret.flight_type or ret.via_city) %}
 {% set has_exact = onward_has or return_has %}
 
+{% set dt = (pkg.date_type if pkg and pkg.date_type else 'tentative') %}
+
+
 <main class="wrapper px-4 py-6 max-w-5xl mx-auto">
 
   <h1 class="text-xl font-semibold mb-6">Add Package</h1>
@@ -136,9 +139,7 @@
       </div>
     </div>
 
-    <!-- =========================
-      TRAVEL DATES
-    ========================== -->
+   
     <!-- =========================
   TRAVEL DATES
 ========================== -->
@@ -154,7 +155,7 @@
       type="radio"
       name="date_type"
       value="tentative"
-      {{ 'checked' if not has_exact else '' }}
+      {{ 'checked' if dt == 'tentative' else '' }}
     >
         Tentative (Month & Year)
       </label>
@@ -163,7 +164,7 @@
       type="radio"
       name="date_type"
       value="exact"
-      {{ 'checked' if has_exact else '' }}
+      {{ 'checked' if dt == 'exact' else '' }}
     >
         Exact Dates
       </label>
@@ -177,7 +178,7 @@
 
 
 
-  <div id="tentativeDates" class="date-mode-section {{ 'is-hidden' if has_exact else '' }}">
+  <div id="tentativeDates" class="date-mode-section {{ 'is-hidden' if dt == 'exact' else '' }}">
     <div class="grid md:grid-cols-2 gap-4">
       <div>
         <label class="form-label">Travel Month</label>
@@ -260,7 +261,7 @@
   <!-- ========================================
        EXACT MODE: Full Flight Details
   ======================================== -->
-<div id="exactDates" class="date-mode-section {{ '' if has_exact else 'is-hidden' }}">
+<div id="exactDates" class="date-mode-section {{ '' if dt == 'exact' else 'is-hidden' }}">
     <div class="form-grid-2">
       
       <!-- ========== ONWARD FLIGHT ========== -->
@@ -269,10 +270,10 @@
 
         <div class="form-field">
           <label>Date</label>
-          <input type="date" name="onward_date" value="{{ onward.flight_date if onward else '' }}">
+          <input type="date" name="onward_date" value="{{ onward.flight_date.isoformat() if onward and onward.flight_date else '' }}">
         </div>
 
-        <!-- AIRLINE SELECTOR -->
+        <!-- AIRLINE SELECTOR --> 
         <div class="form-field">
           <label>Airline</label>
           
@@ -315,18 +316,26 @@
           <label>Type</label>
           <div class="radio-group">
             <label>
-              <input type="radio" name="onward_type" value="direct" {{ 'checked' if not onward or onward.flight_type == 'direct' else '' }}>
+              <input type="radio"
+                    name="onward_type"
+                    value="direct"
+                    {{ 'checked' if not onward or not onward.flight_type or onward.flight_type == 'direct' else '' }}>
               Direct
             </label>
+
             <label>
-              <input type="radio" name="onward_type" value="via" {{ 'checked' if onward and onward.flight_type == 'via' else '' }}>
+              <input type="radio"
+                    name="onward_type"
+                    value="via"
+                    {{ 'checked' if onward and onward.flight_type == 'via' else '' }}>
               Via
             </label>
           </div>
+
         </div>
 
         <!-- VIA CITY (shows when "Via" is selected) -->
-        <div class="form-field" id="onwardViaField">
+        <div class="form-field {{ '' if onward and onward.flight_type == 'via' else 'is-hidden' }}" id="onwardViaField">
           <label>Via City</label>
           
           <!-- Hidden input -->
@@ -363,7 +372,7 @@
 
         <div class="form-field">
           <label>Date</label>
-          <input type="date" name="return_date" value="{{ ret.flight_date if ret else '' }}">
+          <input type="date" name="return_date" value="{{ ret.flight_date.isoformat() if ret and ret.flight_date else '' }}">
         </div>
 
         <!-- AIRLINE SELECTOR -->
@@ -409,18 +418,27 @@
           <label>Type</label>
           <div class="radio-group">
             <label>
-              <input type="radio" name="return_type" value="direct" {{ 'checked' if not ret or ret.flight_type == 'direct' else '' }}>
+              <input type="radio"
+                    name="return_type"
+                    value="direct"
+                    {{ 'checked' if not ret or not ret.flight_type or ret.flight_type == 'direct' else '' }}>
               Direct
             </label>
+
             <label>
-              <input type="radio" name="return_type" value="via" {{ 'checked' if ret and ret.flight_type == 'via' else '' }}>
+              <input type="radio"
+                    name="return_type"
+                    value="via"
+                    {{ 'checked' if ret and ret.flight_type == 'via' else '' }}>
               Via
             </label>
           </div>
+
         </div>
 
         <!-- VIA CITY (shows when "Via" is selected) -->
-        <div class="form-field" id="returnViaField">
+        <div class="form-field {{ '' if ret and ret.flight_type == 'via' else 'is-hidden' }}" id="returnViaField">
+
           <label>Via City</label>
           
           <!-- Hidden input -->
@@ -748,24 +766,34 @@
     <!-- =========================
       FOOTER ACTIONS
     ========================== -->
-    <div class="flex justify-end gap-3">
+    <div class="form-actions form-actions--split">
       <button
-        type="submit"
-        name="submit_action"
-        value="draft"
-        class="btn-secondary"
+        type="button"
+        class="btn btn-secondary js-cancel-back"
+        data-confirm="true"
       >
-        Save as Draft
+        Cancel
       </button>
 
-      <button
-        type="submit"
-        name="submit_action"
-        value="publish"
-        class="btn-primary"
-      >
-        Save & Publish
-      </button>
+      <div class="flex flex-1 justify-end gap-3">
+        <button
+          type="submit"
+          name="submit_action"
+          value="draft"
+          class="btn-secondary"
+        >
+          Save as Draft
+        </button>
+
+        <button
+          type="submit"
+          name="submit_action"
+          value="publish"
+          class="btn-primary"
+        >
+          Save & Publish
+        </button>
+      </div>
     </div>
 
   </form>
@@ -773,5 +801,10 @@
 </main>
 <script src="/static/js/hotels-autosuggest.js" ></script>
 <script src="/static/js/airline-autosuggest.js" ></script>
+
+<script src="/static/js/package-via-city.js" defer></script>
 <script src="/static/js/package-form.js" ></script>
+
+
+{% include './partials/_add-city-modal.html' %}
 {% endblock %}

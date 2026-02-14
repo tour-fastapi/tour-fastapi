@@ -1790,6 +1790,9 @@ def package_detail(package_id: int, request: Request, db: Session = Depends(get_
     onward = flights_by_leg.get("onward")
     ret    = flights_by_leg.get("return")
 
+    onward_text = _fmt_flight(onward)
+    return_text = _fmt_flight(ret)
+
     stays = {s.city: s for s in (pkg.stays or [])}
     mecca = stays.get("Mecca")
     med   = stays.get("Medinah")
@@ -1811,8 +1814,7 @@ def package_detail(package_id: int, request: Request, db: Session = Depends(get_
     theme_key = normalize_theme_key(raw_theme)  # premium_aurora | premium | basic
     theme_template = f"package/themes/{theme_key}.html"
 
-    onward_text = _fmt_flight(onward) or "—"
-    return_text = _fmt_flight(ret) or "—"
+    
 
     mecca_dates = _fmt_dates(mecca) or "—"
     med_dates   = _fmt_dates(med)   or "—"
@@ -1884,6 +1886,9 @@ def package_detail(package_id: int, request: Request, db: Session = Depends(get_
             "pkg": pkg,
             "agency": agency,
 
+            "onward": onward,   # ✅ ADD
+            "ret": ret,         # ✅ ADD  
+
             "onward_text": onward_text,
             "return_text": return_text,
 
@@ -1901,7 +1906,7 @@ def package_detail(package_id: int, request: Request, db: Session = Depends(get_
             # primary hotels
             "mecca_hotel_name": mecca_hotel_name,
             "mecca_hotel_link": mecca_hotel_link,
-            "med_hotel_name":   med_hotel_name,
+            "med_hotel_name":   med_hotel_name, 
             "med_hotel_link":   med_hotel_link,
 
             # ✅ NEW: lists used by basic / premium / premium_aurora templates
@@ -2079,6 +2084,8 @@ def package_new_submit(
     travel_year: str = Form(""),
     date_type: str = Form("tentative"),
 
+    
+
     banner_image: str = Form("dynamic-tawaf-at-night.jpg"),
 
 
@@ -2096,15 +2103,23 @@ def package_new_submit(
     onward_type: str = Form(""),
     onward_via: str = Form(""),
     onward_airline: str = Form(""),
+    onward_airline_iata: str = Form(""),
+    onward_airline_icao: str = Form(""),
 
     return_date: str = Form(""),
     return_type: str = Form(""),
     return_via: str = Form(""),
     return_airline: str = Form(""),
+    return_airline_iata: str = Form(""),
+    return_airline_icao: str = Form(""),
 
     tentative_airline: str = Form(""),
     tentative_airline_iata: str = Form(""),
     tentative_airline_icao: str = Form(""),
+
+    
+
+    
 
     
 
@@ -2214,6 +2229,8 @@ def package_new_submit(
 
     print("DEBUG mecca_similar_list:", mecca_similar_list)
     print("DEBUG medinah_similar_list:", medinah_similar_list)
+    print("RAW onward_via:", repr(onward_via))
+    print("RAW return_via:", repr(return_via))
 
 
 
@@ -2251,6 +2268,15 @@ def package_new_submit(
 
     tm = _to_int_or_none(travel_month)
     ty = _to_int_or_none(travel_year)
+    
+
+
+    
+    
+
+    print("RAW date_type:", repr(date_type))
+
+
 
     if tm is not None and not (1 <= tm <= 12):
         flash(request, "Travel month must be between 1 and 12.", "error")
@@ -2273,6 +2299,9 @@ def package_new_submit(
     # ----------------------------------------------------------------------
     # 1) Create Package  (IMPORTANT: do NOT pass theme=... here)
     # ----------------------------------------------------------------------
+    dt = (date_type or "tentative").strip().lower()
+    dt = dt if dt in ("tentative", "exact") else "tentative"
+
     pkg = Package(
         registration_id=agency.registration_id,
         package_type=t_raw,
@@ -2281,8 +2310,16 @@ def package_new_submit(
         days=int(days),
         price=price,
         description=_norm(description),
-        travel_month=tm,
-        travel_year=ty,
+        
+        
+        date_type=dt,   # ✅ ADD THIS
+        travel_month=(tm if dt == "tentative" else None),
+        travel_year=(ty if dt == "tentative" else None),
+
+        tentative_airline=(tentative_airline or None) if dt == "tentative" else None,
+        tentative_airline_iata=(tentative_airline_iata or None) if dt == "tentative" else None,
+        tentative_airline_icao=(tentative_airline_icao or None) if dt == "tentative" else None,
+
         status=("draft" if submit_action == "draft" else "active"),
         banner_image=banner_image,
 
@@ -2290,6 +2327,8 @@ def package_new_submit(
     )
     db.add(pkg)
     db.flush()  # ensures pkg.package_id is available
+
+    
 
     # If you added a separate text column like `detail_theme` on packages, set it safely:
     try:
@@ -2338,31 +2377,55 @@ def package_new_submit(
             )
         )
 
+        # ----------------------------------------------------------------------
+    # 5) Flights  (ONLY when dt == "exact")
     # ----------------------------------------------------------------------
-    # 5) Flights
-    # ----------------------------------------------------------------------
-    if any([onward_date, onward_type, onward_via, onward_airline]):
-        db.add(
-            PackageFlight(
-                package_id=pkg.package_id,
-                leg="onward",
-                flight_date=_to_date(onward_date),
-                flight_type=_norm(onward_type) if onward_type in ("direct", "via") else None,
-                via_city=_norm(onward_via),
-                airline_name=_norm(onward_airline),
+    if dt == "exact":
+
+        # ONWARD
+        if any([
+            (onward_date or "").strip(),
+            (onward_type or "").strip(),
+            (onward_via or "").strip(),
+            (onward_airline or "").strip(),
+            (onward_airline_iata or "").strip(),
+            (onward_airline_icao or "").strip(),
+        ]):
+            db.add(
+                PackageFlight(
+                    package_id=pkg.package_id,
+                    leg="onward",
+                    flight_date=_to_date(onward_date),
+                    flight_type=_norm(onward_type) if onward_type in ("direct", "via") else None,
+                    via_city=_norm(onward_via) if (onward_type == "via") else None,
+                    airline_name=_norm(onward_airline),
+                    airline_iata=_norm(onward_airline_iata),
+                    airline_icao=_norm(onward_airline_icao),
+                )
             )
-        )
-    if any([return_date, return_type, return_via, return_airline]):
-        db.add(
-            PackageFlight(
-                package_id=pkg.package_id,
-                leg="return",
-                flight_date=_to_date(return_date),
-                flight_type=_norm(return_type) if return_type in ("direct", "via") else None,
-                via_city=_norm(return_via),
-                airline_name=_norm(return_airline),
+
+        # RETURN
+        if any([
+            (return_date or "").strip(),
+            (return_type or "").strip(),
+            (return_via or "").strip(),
+            (return_airline or "").strip(),
+            (return_airline_iata or "").strip(),
+            (return_airline_icao or "").strip(),
+        ]):
+            db.add(
+                PackageFlight(
+                    package_id=pkg.package_id,
+                    leg="return",
+                    flight_date=_to_date(return_date),
+                    flight_type=_norm(return_type) if return_type in ("direct", "via") else None,
+                    via_city=_norm(return_via) if (return_type == "via") else None,
+                    airline_name=_norm(return_airline),
+                    airline_iata=_norm(return_airline_iata),
+                    airline_icao=_norm(return_airline_icao),
+                )
             )
-        )
+
 
     # ----------------------------------------------------------------------
     # 6) Stays
@@ -2452,7 +2515,7 @@ def package_new_submit(
             distance_text=mecca_distance_text_val,
             distance_m=mecca_distance_m_val,
             hotel_id=mecca_hotel_id,
-            #similar_hotel_ids=similar_ids,
+            similar_hotel_ids=similar_ids,
         )
         db.add(mecca_stay)
 
@@ -2480,7 +2543,7 @@ def package_new_submit(
             distance_text=med_distance_text_val,
             distance_m=med_distance_m_val,
             hotel_id=med_hotel_id,
-            #similar_hotel_ids=similar_ids,
+            similar_hotel_ids=similar_ids,
         )
         db.add(med_stay)
 
@@ -2488,20 +2551,23 @@ def package_new_submit(
         # 7.5) Auto-compute "or similar" hotels ONLY if user didn't select any
         # ----------------------------------------------------------------------
         if mecca_stay and mecca_stay.hotel_id and not mecca_stay.similar_hotel_ids:
-            mecca_stay.similar_hotel_ids = find_similar_hotel_ids(
+            ids = find_similar_hotel_ids(
                 db=db,
                 base_hotel_id=mecca_stay.hotel_id,
                 city="Mecca",
                 limit=4,
-            ) or None
+            ) or []
+            mecca_stay.similar_hotel_ids = ",".join(map(str, ids)) if ids else None
 
         if med_stay and med_stay.hotel_id and not med_stay.similar_hotel_ids:
-            med_stay.similar_hotel_ids = find_similar_hotel_ids(
+            ids = find_similar_hotel_ids(
                 db=db,
                 base_hotel_id=med_stay.hotel_id,
                 city="Medinah",
                 limit=4,
-            ) or None
+            ) or []
+            med_stay.similar_hotel_ids = ",".join(map(str, ids)) if ids else None
+
 
 
 
@@ -2863,11 +2929,15 @@ def package_edit_submit(
     onward_type: str = Form(""),
     onward_via: str = Form(""),
     onward_airline: str = Form(""),
+    onward_airline_iata: str = Form(""),
+    onward_airline_icao: str = Form(""),
 
     return_date: str = Form(""),
     return_type: str = Form(""),
     return_via: str = Form(""),
     return_airline: str = Form(""),
+    return_airline_iata: str = Form(""),
+    return_airline_icao: str = Form(""),
 
     tentative_airline: str = Form(""),
     tentative_airline_iata: str = Form(""),
@@ -2988,6 +3058,9 @@ def package_edit_submit(
     print("RAW travel_month:", repr(travel_month))
     print("RAW travel_year :", repr(travel_year))   
 
+    print("RAW onward_via:", repr(onward_via))
+    print("RAW return_via:", repr(return_via))
+
     tm = _to_int_or_none(travel_month)
     ty = _to_int_or_none(travel_year)
 
@@ -2999,11 +3072,23 @@ def package_edit_submit(
         flash(request, "Travel year must be 2026 or later.", "error")
         return RedirectResponse(url=f"/package/{package_id}/edit", status_code=303)
 
-    pkg.travel_month = tm
-    pkg.travel_year = ty
-    pkg.tentative_airline = tentative_airline or None
-    pkg.tentative_airline_iata = tentative_airline_iata or None
-    pkg.tentative_airline_icao = tentative_airline_icao or None
+    
+
+    # ✅ 1. Normalize date_type
+
+    dt = (date_type or "tentative").strip().lower()
+    dt = dt if dt in ("tentative", "exact") else "tentative"
+    
+    # ✅ 2. Store it
+    pkg.date_type = dt
+
+    # ✅ 3. Save tentative fields ONLY when saving tentative mode
+    if dt == "tentative":
+        pkg.travel_month = tm
+        pkg.travel_year = ty
+        pkg.tentative_airline = tentative_airline or None
+        pkg.tentative_airline_iata = tentative_airline_iata or None
+        pkg.tentative_airline_icao = tentative_airline_icao or None
 
     
     
@@ -3023,10 +3108,12 @@ def package_edit_submit(
             db.add(PackageAirline(package_id=pkg.package_id, airline_id=aid))
 
 
-        # ----------------------------
+    # ----------------------------
     # Flights (onward + return)
     # ----------------------------
-    def upsert_flight(leg: str, d: str, t: str, via: str, airline: str):
+    def upsert_flight(leg: str, d: str, t: str, via: str, airline: str,
+    airline_iata: str,
+    airline_icao: str,):
         row = db.query(PackageFlight).filter_by(
             package_id=pkg.package_id,
             leg=leg
@@ -3036,7 +3123,9 @@ def package_edit_submit(
             (d or "").strip(),
             (t or "").strip(),
             (via or "").strip(),
-            (airline or "").strip()
+            (airline or "").strip(),
+            (airline_iata or "").strip(),
+            (airline_icao or "").strip(),
         ])
 
         # If nothing provided → delete existing row
@@ -3055,30 +3144,45 @@ def package_edit_submit(
 
         row.flight_date = _to_date(d)
         row.flight_type = _norm(t) if t in ("direct", "via") else None
-        row.via_city = _norm(via)
+
+       
+
         row.airline_name = _norm(airline)
+        row.airline_iata = _norm(airline_iata)
+        row.airline_icao = _norm(airline_icao)
+
+        if row.flight_type == "via":
+            row.via_city = _norm(via)
+            print(f"✅ {leg} via saved as:", row.via_city)
+        else:
+            row.via_city = None   # ✅ REMOVE via when direct
+            print(f"🧹 {leg} via cleared (direct flight)")
+        
+
+        print(f"✅ SAVED {leg}:", row.airline_name, row.airline_iata, row.airline_icao, row.via_city)
+  
 
     # Save flights only in exact mode
-    if date_type == "exact":
+    if dt == "exact":
         upsert_flight(
             "onward",
             onward_date,
             onward_type,
             onward_via,
-            onward_airline
+            onward_airline,
+            onward_airline_iata,
+            onward_airline_icao,
         )
         upsert_flight(
             "return",
             return_date,
             return_type,
             return_via,
-            return_airline
+            return_airline,
+            return_airline_iata,
+            return_airline_icao,
         )
-    else:
-        # Switched back to tentative → remove exact flights
-        db.query(PackageFlight).filter(
-            PackageFlight.package_id == pkg.package_id
-        ).delete(synchronize_session=False)
+   
 
 
     # ----------------------------
