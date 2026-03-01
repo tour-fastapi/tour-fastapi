@@ -1,0 +1,245 @@
+<!-- Add City Modal Partial -->
+<div class="modal-overlay" id="addCityModal" style="display: none;">
+  <div class="modal-container">
+    <div class="modal-content">
+
+      <!-- Modal Header -->
+      <div class="modal-header">
+        <h2 class="modal-title">Add New City</h2>
+        <button type="button" class="modal-close" onclick="closeAddCityModal()" aria-label="Close">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="newCityName">City Name</label>
+          <input id="newCityName" type="text" readonly class="form-input" />
+        </div>
+        <div class="form-group">
+        <label for="newCityCountry">Country</label>
+          <input id="newCityCountry" type="text" class="form-input" />
+          <ul id="countrySuggestions" class="autosuggest-list is-hidden"></ul>
+        </div>
+
+        <div style="margin-top: 1rem; display: flex; gap: 0.5rem;">
+          <button id="saveNewCity" class="form-submit-btn">
+            <span id="saveCityBtnText">Save</span>
+            <span id="saveCityBtnLoader" style="display: none;">
+              <i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i>
+              Saving...
+            </span>
+          </button>
+          <button type="button" class="form-submit-btn" onclick="closeAddCityModal()" style="background: hsl(var(--muted)/0.2); color: hsl(var(--fg));">
+            Cancel
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  
+
+(function() {
+  'use strict';
+
+  const modal = document.getElementById('addCityModal');
+  const cityInput = document.getElementById('newCityName');
+  const countryInput = document.getElementById('newCityCountry');
+  const countryList = document.getElementById('countrySuggestions');
+  const saveBtn = document.getElementById('saveNewCity');
+
+  let countries = []; // Load countries JSON
+  let cities = window.cities || []; // existing cities array from your autosuggest
+
+  // ========================================================================
+  // LOAD COUNTRIES JSON
+  // ========================================================================
+  fetch('/static/data/countries.json')
+    .then(res => res.json())
+    .then(data => countries = data);
+
+  // ========================================================================
+  // OPEN MODAL
+  // ========================================================================
+  window.openAddCityModal = function(prefillCity) {
+    cityInput.value = prefillCity || '';
+    countryInput.value = '';
+    countryList.innerHTML = '';
+    countryList.classList.add('is-hidden');
+
+    modal.classList.remove('is-hidden');
+    document.body.classList.add('modal-open');
+
+    // Optional: focus country input
+    countryInput.focus();
+  };
+
+  // ========================================================================
+  // CLOSE MODAL
+  // ========================================================================
+  window.closeAddCityModal = function() {
+    modal.classList.add('is-hidden');
+    document.body.classList.remove('modal-open');
+
+    // Reset fields
+    cityInput.value = '';
+    countryInput.value = '';
+    countryList.innerHTML = '';
+    countryList.classList.add('is-hidden');
+
+    setButtonLoading(false);
+  };
+
+  // ========================================================================
+  // COUNTRY AUTOSUGGEST
+  // ========================================================================
+  countryInput.addEventListener('input', () => {
+    const value = countryInput.value.toLowerCase().trim();
+    countryList.innerHTML = '';
+
+    if (!value) {
+      countryList.classList.add('is-hidden');
+      return;
+    }
+
+    const matches = countries.filter(c => c.name.toLowerCase().includes(value));
+    matches.forEach(c => {
+      const li = document.createElement('li');
+      li.textContent = c.name;
+      li.onclick = () => {
+        countryInput.value = c.name;
+        countryList.classList.add('is-hidden');
+      };
+      countryList.appendChild(li);
+    });
+
+    countryList.classList.toggle('is-hidden', matches.length === 0);
+  });
+
+  // ========================================================================
+  // SAVE BUTTON
+  // ========================================================================
+  saveBtn.addEventListener('click', async () => {
+    const city = cityInput.value.trim();
+    const countryName = countryInput.value.trim();
+    const countryData = countries.find(c => c.name === countryName);
+
+    // Normalize city name (Title Case)
+    const normalizedCity = city
+      .toLowerCase()
+      .replace(/\b\w/g, char => char.toUpperCase());
+
+    // Prevent duplicate city (frontend)
+    const cityExists = cities.some(
+      c =>
+        c.city.toLowerCase() === normalizedCity.toLowerCase() &&
+        c.country === countryData.name
+    );
+
+    if (cityExists) {
+        showToast('City already exists');
+
+      setButtonLoading(false);
+      return;
+    }
+
+    if (!city) return alert('City name is required');
+    if (!countryData) return alert('Select a valid country');
+
+    setButtonLoading(true);
+
+    try {
+      const res = await fetch('/add_city', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          city: normalizedCity,
+          country: countryData.name,
+          currency: countryData.currency
+        })
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+
+  const newCity = {
+    city: normalizedCity,
+    country: countryData.name,
+    currency: countryData.currency
+  };
+
+  // Update local cities array (for autosuggest)
+  cities.push(newCity);
+
+  // ⏳ Keep loading visible for 2 seconds
+  setTimeout(() => {
+    closeAddCityModal();
+
+    if (typeof selectCity === 'function') {
+      console.log("✅ selectCity exists, calling it", newCity);
+      selectCity(newCity);
+    }
+
+    showToast('City added successfully');
+    setButtonLoading(false);
+  }, 2000);
+
+}
+      
+
+
+    } catch (err) {
+      console.error(err);
+      alert('Something went wrong while saving');
+      setButtonLoading(false);
+    }
+  });
+
+  // ========================================================================
+  // BUTTON LOADING STATE
+  // ========================================================================
+  function setButtonLoading(isLoading) {
+    if (!saveBtn) return;
+    if (isLoading) {
+      saveBtn.disabled = true;
+      saveBtn.textContent = 'Saving...';
+    } else {
+      saveBtn.disabled = false;
+      saveBtn.textContent = 'Save';
+    }
+  }
+
+  function setButtonLoading(isLoading) {
+  const btn = document.getElementById('saveNewCity');
+  const btnText = document.getElementById('saveCityBtnText');
+  const btnLoader = document.getElementById('saveCityBtnLoader');
+
+  if (isLoading) {
+    btn.disabled = true;
+    btnText.style.display = 'none';
+    btnLoader.style.display = 'flex';
+  } else {
+    btn.disabled = false;
+    btnText.style.display = 'block';
+    btnLoader.style.display = 'none';
+  }
+}
+
+  // ========================================================================
+  // OPTIONAL: CLOSE MODAL ON ESCAPE
+  // ========================================================================
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !modal.classList.contains('is-hidden')) {
+      closeAddCityModal();
+    }
+  });
+
+})();
+</script>
+

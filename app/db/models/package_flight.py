@@ -25,6 +25,10 @@ class PackageFlight(Base):
     via_city: Mapped[Optional[str]] = mapped_column(String(100))
     airline_name: Mapped[Optional[str]] = mapped_column(String(120))
 
+    # ✅ ADD THESE (for logos)
+    airline_iata: Mapped[Optional[str]] = mapped_column(String(10))
+    airline_icao: Mapped[Optional[str]] = mapped_column(String(10))
+
     created_at: Mapped[Optional[DateTime]] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     package = relationship("Package", back_populates="flights")

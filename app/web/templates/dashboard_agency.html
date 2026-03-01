@@ -81,16 +81,32 @@
 
   <!-- Packages List -->
   {% if packages %}
+  {% set category_label_map = {
+    "basic": "Basic",
+    "premium": "Premium",
+    "premium_aurora": "Premium Plus"
+  } %}
     <div class="mb-6">
       {% for p in packages %}
+      
         <div class="package-card">
           <!-- Header with Status and Hover Actions -->
           <div class="package-card__header">
             <!-- Status Badge using new tag system -->
             <div class="tag-group">
-              <span class="tag tag--success tag--sm">Active</span>
+              
+            {% if p.status == "draft" %}
+                <span class="status-badge status-draft">Draft</span>
+            {% elif p.status == "active" %}
+                <span class="status-badge status-published">Published</span>
+
+            {% endif %}
               <!-- Example: Add category tag -->
-              <span class="tag tag--primary tag--sm">Premium</span>
+              {% if p.package_class %}
+                <span class="tag tag--primary tag--sm">
+                {{ category_label_map.get(p.package_class, p.package_class|title) }}
+                </span>
+              {% endif %}
             </div>
             
             <!-- Hover Actions (Desktop Only) -->
@@ -133,16 +149,41 @@
               <span>{{ '%.2f'|format(p.price) }}</span>
             </div>
           </div>
-
+          <p>{% if p.status == "active" %}
+  <a
+    href="/package/{{ p.package_id }}/itinerary/wizard"
+    class="btn-secondary mb-2 hidden"
+    onclick="event.stopPropagation()"
+  >
+    <i data-lucide="map" class="w-4 h-4"></i>
+    <span>
+      {{ "Edit Itinerary" if p.has_itinerary else "Add Itinerary" }}
+    </span>
+  </a>
+{% endif %}</p>
+<p>
           <!-- View Details Button -->
-          <a 
-            href="/packages/{{ p.package_id }}" 
-            class="package-card__view-btn"
-            onclick="event.stopPropagation()"
-          >
-            <span>View Details</span>
-            <i data-lucide="arrow-right" class="w-4 h-4"></i>
-          </a>
+          {% if p.status == "draft" %}
+  <a
+    href="/package/{{ p.package_id }}/edit"
+    class="package-card__view-btn"
+    onclick="event.stopPropagation()"
+  >
+    <span>Edit Package</span>
+    <i data-lucide="edit" class="w-4 h-4"></i>
+  </a>
+{% else %}
+  <a
+    href="/packages/{{ p.package_id }}"
+    class="package-card__view-btn"
+    onclick="event.stopPropagation()"
+  >
+    <span>View Details</span>
+    <i data-lucide="arrow-right" class="w-4 h-4"></i>
+  </a>
+{% endif %}
+</p>
+
 
           <!-- Mobile Action Buttons (Always Visible) -->
           <div class="package-card__mobile-actions">

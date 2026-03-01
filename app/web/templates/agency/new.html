@@ -389,10 +389,19 @@
 
 
   <!-- ================= Actions ================= -->
-  <div class="form-actions">
-    <button type="submit" class="btn btn-primary" data-mode="create">
-      {{ 'Update Agency' if agency else 'Create Agency' }}
+  <div class="form-actions form-actions--split">
+    <button
+      type="button"
+      class="btn btn-secondary js-cancel-back"
+      data-confirm="true"
+    >
+      Cancel
     </button>
+    <div class="flex flex-1 justify-end gap-3">
+      <button type="submit" class="btn btn-primary" data-mode="create">
+        {{ 'Update Agency' if agency else 'Create Agency' }}
+      </button>
+    </div>
   </div>
 
 </form>
@@ -401,5 +410,7 @@
 </section>
 <script src="/static/js/city-autosuggest.js" defer></script>
 <script src="/static/js/agency-form.js" defer></script>
+{% include './partials/_add-city-modal.html' %}
+
 
 {% endblock %}

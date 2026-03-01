@@ -31,6 +31,15 @@ class Package(Base):
 
     travel_month: Mapped[Optional[int]] = mapped_column(SmallInteger)
     travel_year:  Mapped[Optional[int]] = mapped_column(SmallInteger)
+    date_type: Mapped[str] = mapped_column(
+        String(20),
+        nullable=False,
+        server_default="tentative"
+    )
+    tentative_airline: Mapped[Optional[str]] = mapped_column(String(100))
+    tentative_airline_iata: Mapped[Optional[str]] = mapped_column(String(10))
+    tentative_airline_icao: Mapped[Optional[str]] = mapped_column(String(10))
+
 
     created_at: Mapped[Optional[DateTime]] = mapped_column(
         DateTime(timezone=True), server_default=func.now()

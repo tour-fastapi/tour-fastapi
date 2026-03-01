@@ -1,0 +1,212 @@
+[
+  {
+    "iata": "SV",
+    "icao": "SVA",
+    "name": "Saudia",
+    "logo": "SVA.png",
+    "country": "Saudi Arabia"
+  },
+  {
+    "iata": "AI",
+    "icao": "AIC",
+    "name": "Air India",
+    "logo": "AIC.png",
+    "country": "India"
+  },
+  {
+    "iata": "6E",
+    "icao": "IGO",
+    "name": "IndiGo",
+    "logo": "IGO.png",
+    "country": "India"
+  },
+  {
+    "iata": "QR",
+    "icao": "QTR",
+    "name": "Qatar Airways",
+    "logo": "QTR.png",
+    "country": "Qatar"
+  },
+  {
+    "iata": "EK",
+    "icao": "UAE",
+    "name": "Emirates",
+    "logo": "UAE.png",
+    "country": "United Arab Emirates"
+  },
+  {
+    "iata": "EY",
+    "icao": "ETD",
+    "name": "Etihad Airways",
+    "logo": "ETD.png",
+    "country": "United Arab Emirates"
+  },
+  {
+    "iata": "WY",
+    "icao": "OMA",
+    "name": "Oman Air",
+    "logo": "OMA.png",
+    "country": "Oman"
+  },
+  {
+    "iata": "FZ",
+    "icao": "FDB",
+    "name": "flydubai",
+    "logo": "FDB.png",
+    "country": "United Arab Emirates"
+  },
+  {
+    "iata": "XY",
+    "icao": "KNE",
+    "name": "flynas",
+    "logo": "KNE.png",
+    "country": "Saudi Arabia"
+  },
+  {
+    "iata": "MS",
+    "icao": "MSR",
+    "name": "EgyptAir",
+    "logo": "MSR.png",
+    "country": "Egypt"
+  },
+  {
+    "iata": "TK",
+    "icao": "THY",
+    "name": "Turkish Airlines",
+    "logo": "THY.png",
+    "country": "Turkey"
+  },
+  {
+    "iata": "SG",
+    "icao": "SEJ",
+    "name": "SpiceJet",
+    "logo": "SEJ.png",
+    "country": "India"
+  },
+  {
+    "iata": "UK",
+    "icao": "VTI",
+    "name": "Vistara",
+    "logo": "VTI.png",
+    "country": "India"
+  },
+  {
+    "iata": "G9",
+    "icao": "ABY",
+    "name": "Air Arabia",
+    "logo": "ABY.png",
+    "country": "United Arab Emirates"
+  },
+  {
+    "iata": "IX",
+    "icao": "AXB",
+    "name": "Air India Express",
+    "logo": "AXB.png",
+    "country": "India"
+  },
+  {
+    "iata": "KU",
+    "icao": "KAC",
+    "name": "Kuwait Airways",
+    "logo": "KAC.png",
+    "country": "Kuwait"
+  },
+  {
+    "iata": "GF",
+    "icao": "GFA",
+    "name": "Gulf Air",
+    "logo": "GFA.png",
+    "country": "Bahrain"
+  },
+  {
+    "iata": "RJ",
+    "icao": "RJA",
+    "name": "Royal Jordanian",
+    "logo": "RJA.png",
+    "country": "Jordan"
+  },
+  {
+    "iata": "PK",
+    "icao": "PIA",
+    "name": "Pakistan International Airlines",
+    "logo": "PIA.png",
+    "country": "Pakistan"
+  },
+  {
+    "iata": "PA",
+    "icao": "SRG",
+    "name": "AirBlue",
+    "logo": "SRG.png",
+    "country": "Pakistan"
+  },
+  {
+    "iata": "J9",
+    "icao": "JZR",
+    "name": "Jazeera Airways",
+    "logo": "JZR.png",
+    "country": "Kuwait"
+  },
+  {
+    "iata": "NP",
+    "icao": "NIA",
+    "name": "Nile Air",
+    "logo": "NIA.png",
+    "country": "Egypt"
+  },
+  {
+    "iata": "F3",
+    "icao": "FEG",
+    "name": "FlyEgypt",
+    "logo": "FEG.png",
+    "country": "Egypt"
+  },
+  {
+    "iata": "SM",
+    "icao": "NMB",
+    "name": "Air Cairo",
+    "logo": "NMB.png",
+    "country": "Egypt"
+  },
+  {
+    "iata": "BS",
+    "icao": "BOS",
+    "name": "US-Bangla Airlines",
+    "logo": "BOS.png",
+    "country": "Bangladesh"
+  },
+  {
+    "iata": "BG",
+    "icao": "BBC",
+    "name": "Biman Bangladesh Airlines",
+    "logo": "BBC.png",
+    "country": "Bangladesh"
+  },
+  {
+    "iata": "UL",
+    "icao": "ALK",
+    "name": "SriLankan Airlines",
+    "logo": "ALK.png",
+    "country": "Sri Lanka"
+  },
+  {
+    "iata": "MH",
+    "icao": "MAS",
+    "name": "Malaysia Airlines",
+    "logo": "MAS.png",
+    "country": "Malaysia"
+  },
+  {
+    "iata": "AK",
+    "icao": "AXM",
+    "name": "AirAsia",
+    "logo": "AXM.png",
+    "country": "Malaysia"
+  },
+  {
+    "iata": "GA",
+    "icao": "GIA",
+    "name": "Garuda Indonesia",
+    "logo": "GIA.png",
+    "country": "Indonesia"
+  }
+]

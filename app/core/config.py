@@ -15,7 +15,7 @@ class Settings(BaseSettings):
 
     # JWT (you currently have duplicates, keeping both for compatibility)
     JWT_ALGO: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MIN: int = 30
+    ACCESS_TOKEN_EXPIRE_MIN: int = 60
     REFRESH_TOKEN_EXPIRE_MIN: int = 60 * 24 * 7  # 7 days
 
     JWT_SECRET: str = "Mavia@123"

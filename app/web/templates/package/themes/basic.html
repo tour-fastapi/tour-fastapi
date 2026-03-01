@@ -24,6 +24,11 @@
 {% set banner_name = pkg.banner_image or 'dynamic-tawaf-at-night.jpg' %}
 {% set banner_url = '/media/packages-banners/larger-ones/' ~ banner_name ~ '?v=' ~ pkg.package_id %}
 
+{% set has_tentative = pkg.travel_month and pkg.travel_year %}
+{% set has_exact = onward or ret %}
+{% set dt = (pkg.date_type if pkg and pkg.date_type else 'tentative') %}
+
+
 <!-- ===============================
      PACKAGE BANNER
 ================================ --> 
@@ -49,12 +54,13 @@
             {% if pkg.package_class %}
               <span class="package-banner__meta-badge">{{ pkg.package_class|title }}</span>
             {% endif %}
-
+            {% if pkg.days %}
             <span class="package-banner__meta-separator">•</span>
             <span class="package-banner__meta-badge">
               <i data-lucide="calendar"></i>
               {{ pkg.days }} Days
             </span>
+            {% endif %}
 
             {% if onward_text %}
               <span class="package-banner__meta-separator">•</span>
@@ -120,46 +126,178 @@
 
     <!-- Flights -->
     <section class="package-details__section">
-      <h2 class="package-details__heading">Flight Details</h2>
+  <h2 class="package-details__heading">Flight Details</h2>
 
-      <div class="package-details__grid package-details__grid--two-col">
+  {# ======================================================
+     TENTATIVE MODE (Month/Year + preferred airline)
+  ====================================================== #}
+  {% if dt == "tentative" %}
+    {% if pkg and pkg.travel_month and pkg.travel_year %}
+      <div class="package-details__card">
+        <div class="package-details__label">TENTATIVE TRAVEL</div>
 
-        <!-- Onward Flight -->
-        <div class="package-details__card">
-          <div class="package-details__label">ONWARD FLIGHT</div>
-          <div class="package-details__card-content">
-            <div class="package-details__icon-box">
-              <i data-lucide="plane" class="package-details__icon package-details__icon--rotate-45"></i>
+        <div class="package-details__card-content">
+          <div class="package-details__icon-box">
+            {# Prefer ICAO logo, fallback to IATA #}
+            {% set logo_code = ((pkg.tentative_airline_icao or pkg.tentative_airline_iata or '') | lower) %}
+
+            {% if logo_code %}
+              <img
+                src="/media/airline-logos/{{ logo_code }}.png"
+                alt="{{ pkg.tentative_airline or 'Airline' }}"
+                class="package-details__airline-logo"
+                onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block';"
+              />
+              <i data-lucide="calendar" class="package-details__icon" style="display:none;"></i>
+            {% else %}
+              <i data-lucide="calendar" class="package-details__icon"></i>
+            {% endif %}
+          </div>
+
+          <div class="package-details__card-info">
+            <div class="package-details__card-title">
+              {{ month_names[pkg.travel_month] }} {{ pkg.travel_year }}
             </div>
-            <div class="package-details__card-info">
-              <div class="package-details__card-title">{{ onward_text or 'Not specified' }}</div>
-              <div class="package-details__card-title">Saudia SV 752</div>
-              <div class="package-details__card-meta">Mar 15, 2024 • BOM → JED</div>
-              <div class="package-details__card-status">✓ Direct Flight</div>
+
+            <div class="package-details__card-meta">
+              {% if pkg.tentative_airline %}
+                {{ pkg.tentative_airline }}
+              {% else %}
+                Airline not specified
+              {% endif %}
             </div>
           </div>
         </div>
-        <!-- Return Flight -->
-        <div class="package-details__card">
-          <div class="package-details__label">RETURN FLIGHT</div>
-          <div class="package-details__card-content">
-            <div class="package-details__icon-box">
-              <i data-lucide="plane" class="package-details__icon package-details__icon--rotate-minus-45"></i>
-            </div>
-            <div class="package-details__card-info">
-              <div class="package-details__card-title">{{ return_text or 'Not specified' }}</div>
-              <div class="package-details__card-title">Air India AI 966</div>
-              <div class="package-details__card-meta">Mar 29, 2024 • JED → BOM</div>
-              <div class="package-details__card-status">Via Doha • 3h layover</div>
-            </div>
-          </div>
-        </div>
-
-        
-
-        
       </div>
-    </section>
+    {% endif %}
+  {% endif %}
+
+  {# ======================================================
+     EXACT MODE (Onward + Return cards)
+  ====================================================== #}
+  {% if dt == "exact" %}
+    <div class="package-details__grid package-details__grid--two-col">
+
+      {# ------------------ ONWARD ------------------ #}
+      <div class="package-details__card">
+        <div class="package-details__label">ONWARD FLIGHT</div>
+
+        <div class="package-details__card-content">
+          <div class="package-details__icon-box">
+          {% set logo_code = ((onward.airline_icao if onward else '') or (onward.airline_iata if onward else '') or '') | lower %}
+
+          {% if logo_code %}
+            <img
+              src="/media/airline-logos/{{ logo_code }}.png"
+              alt="{{ onward.airline_name if onward else 'Airline' }}"
+              class="package-details__airline-logo"
+              onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block';"
+            />
+            <i data-lucide="plane" class="package-details__icon package-details__icon--rotate-45" style="display:none;"></i>
+          {% else %}
+            <i data-lucide="plane" class="package-details__icon package-details__icon--rotate-45"></i>
+          {% endif %}
+        </div>
+
+          <div class="package-details__card-info">
+            <div class="package-details__card-title">
+              {{ onward.airline_name if onward and onward.airline_name else 'Airline not specified' }}
+
+              {% if onward and (onward.airline_iata or onward.airline_icao) %}
+                <span class="package-details__airline-code">
+                  {{ onward.airline_iata or onward.airline_icao }}
+                </span>
+              {% endif %}
+            </div>
+
+            <div class="package-details__card-meta">
+              {% if onward and onward.flight_date %}
+  {{ onward.flight_date.strftime('%b %d, %Y') }}
+{% else %}
+  Date not specified
+{% endif %}
+              • {{ origin_code }} → {{ destination_code }}
+            </div>
+
+            {% if onward and onward.flight_type == 'direct' %}
+              <div class="package-details__card-status package-details__card-status--direct">
+                ✓ Direct Flight
+              </div>
+            {% elif onward and onward.flight_type == 'via' %}
+              <div class="package-details__card-status package-details__card-status--via">
+                Via {{ onward.via_city or '—' }}
+              </div>
+            {% else %}
+              <div class="package-details__card-status package-details__card-status--muted">
+                Flight type not specified
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      {# ------------------ RETURN ------------------ #}
+      <div class="package-details__card">
+        <div class="package-details__label">RETURN FLIGHT</div>
+
+        <div class="package-details__card-content">
+          <div class="package-details__icon-box">
+            {% set logo_code = ((ret.airline_icao if ret else '') or (ret.airline_iata if ret else '') or '') | lower %}
+
+            {% if logo_code %}
+              <img
+                src="/media/airline-logos/{{ logo_code }}.png"
+                alt="{{ ret.airline_name if ret else 'Airline' }}"
+                class="package-details__airline-logo"
+                onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block';"
+              />
+              <i data-lucide="plane" class="package-details__icon package-details__icon--rotate-minus-45" style="display:none;"></i>
+            {% else %}
+              <i data-lucide="plane" class="package-details__icon package-details__icon--rotate-minus-45"></i>
+            {% endif %}
+          </div>
+
+          <div class="package-details__card-info">
+            <div class="package-details__card-title">
+              {{ ret.airline_name if ret and ret.airline_name else 'Airline not specified' }}
+
+              {% if ret and (ret.airline_iata or ret.airline_icao) %}
+                <span class="package-details__airline-code">
+                  {{ ret.airline_iata or ret.airline_icao }}
+                </span>
+              {% endif %}
+            </div>
+
+            <div class="package-details__card-meta">
+              {% if ret and ret.flight_date %}
+  {{ ret.flight_date.strftime('%b %d, %Y') }}
+{% else %}
+  Date not specified
+{% endif %}
+              • {{ destination_code }} → {{ origin_code }}
+            </div>
+
+            {% if ret and ret.flight_type == 'direct' %}
+              <div class="package-details__card-status package-details__card-status--direct">
+                ✓ Direct Flight
+              </div>
+            {% elif ret and ret.flight_type == 'via' %}
+              <div class="package-details__card-status package-details__card-status--via">
+                Via {{ ret.via_city or '—' }}
+              </div>
+            {% else %}
+              <div class="package-details__card-status package-details__card-status--muted">
+                Flight type not specified
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+    </div>
+  {% endif %}
+</section>
+
 
     <!-- Stays -->
     <section class="package-details__section">
@@ -168,29 +306,66 @@
       <div class="package-details__grid package-details__grid--two-col">
         <!-- Makkah -->
         <div class="package-details__card">
-          <div class="package-details__label">MAKKAH</div>
+          <div class="package-details__label">
+            MAKKAH
+            {% if mecca and mecca.nights %}
+            <span class="package-details__tag">{{ med.nights }} Nights</span>
+              
+            </span>
+                
+              {% endif %}
+          </div>
           <div class="package-details__card-content">
-            <div class="package-details__icon-box">
+            <div class="package-details__icon-box is-hidden">
               <i data-lucide="home" class="package-details__icon"></i>
             </div>
             <div class="package-details__card-info">
               <div class="package-details__card-title">{{ mecca_hotel_name or '—' }}</div>
-              <div class="package-details__card-meta">10 Nights</div>
-              <div class="package-details__card-meta">{{ mecca_distance_label }}</div>
+              
+              {% if mecca_hotel %}
+                <div class="package-details__card-meta">
+                  <div class="hotel-stars">{{ "★" * mecca_hotel.stars }}</div>
+                  <div class="hotel-info">
+                    <span class="hotel-distance">{{ mecca_hotel.distance_km }}km</span> •
+                    <span class="hotel-walking"> {{ mecca_hotel.walking_minutes }} min walk</span>
+                  </div>
+                </div>
+                
+              {% else %}
+                <div class="package-details__card-meta">—</div>
+              {% endif %}
             </div>
           </div>
         </div>
         <!-- Madinah -->
         <div class="package-details__card">
-          <div class="package-details__label">MADINAH</div>
+          <div class="package-details__label">
+            MADINAH
+            {% if med and med.nights %}
+            <span class="package-details__tag">{{ med.nights }} Nights</span>
+              
+            </span>
+            {% endif %}
+          </div>
           <div class="package-details__card-content">
-            <div class="package-details__icon-box">
+            <div class="package-details__icon-box is-hidden">
               <i data-lucide="home" class="package-details__icon"></i>
             </div>
             <div class="package-details__card-info">
               <div class="package-details__card-title">{{ med_hotel_name or '—' }}</div>
-              <div class="package-details__card-meta">5 Nights</div>
-              <div class="package-details__card-meta">{{ med_distance_label }}</div>
+             
+              {% if med_hotel %}
+                <div class="package-details__card-meta">
+                  <div class="hotel-stars">{{ "★" * med_hotel.stars }}</div>
+                  <div class="hotel-info">
+                    <span class="hotel-distance">{{ med_hotel.distance_km }}km</span> •
+                    <span class="hotel-walking"> {{ med_hotel.walking_minutes }} min walk</span>
+                  </div>
+                </div>
+                
+              {% else %}
+                <div class="package-details__card-meta">—</div>
+              {% endif %}
             </div>
           </div>
         </div>
@@ -228,7 +403,7 @@
     {% endif %}
 
     <!-- Pricing - Children Section -->
-    <section class="package-details__section">
+    <section class="package-details__section is-hidden">
       <h2 class="package-details__heading">Pricing - Children</h2>
       
       <div class="package-details__pricing-card package-details__pricing-card--complex">
@@ -386,7 +561,7 @@
     </section>
 
     <!-- Itinerary Section -->
-    <section class="package-details__section">
+    <section class="package-details__section is-hidden">
       <h2 class="package-details__heading">Day-by-Day Itinerary</h2>
       
       <div class="package-details__itinerary">
@@ -449,7 +624,7 @@
     </section>
 
     <!-- Terms & Conditions Section -->
-    <section class="package-details__section">
+    <section class="package-details__section is-hidden">
       <h2 class="package-details__heading">Terms & Conditions</h2>
       
       <div class="package-details__terms">

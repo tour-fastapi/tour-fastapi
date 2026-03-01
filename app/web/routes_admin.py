@@ -26,7 +26,7 @@ from app.db.models.inquiry import Inquiry
 from app.db.models.agency_branch import AgencyBranch
 from app.db.models.hotel import Hotel
 
-router = APIRouter()
+router = APIRouter(prefix="/admin")
 templates = Jinja2Templates(directory="app/web/templates")
 
 #------------------
@@ -131,7 +131,7 @@ def admin_dashboard(request: Request, db: Session = Depends(get_db)):
         "hotels": db.query(Hotel).count(),
     }
     return templates.TemplateResponse(
-        "admin/dashboard.html",
+        "/dashboard.html",
         _ctx(request, db, title="Admin • Dashboard", stats=stats),
     )
 
@@ -140,7 +140,7 @@ def admin_dashboard(request: Request, db: Session = Depends(get_db)):
 # ---------------------------
 from sqlalchemy.orm import selectinload
 
-@router.get("/admin/users", response_class=HTMLResponse)
+@router.get("/users", response_class=HTMLResponse)
 def admin_users(
     request: Request,
     db: Session = Depends(get_db),
@@ -163,7 +163,7 @@ def admin_users(
 
     # ✅ Render the user list template
     return templates.TemplateResponse(
-        "admin/users_list.html",  # make sure the filename matches your template
+        "/users_list.html",  # make sure the filename matches your template
         _ctx(
             request,
             db,
@@ -179,7 +179,7 @@ def admin_users(
 # ---------------------------
 # Admin: Packages list
 # ---------------------------
-@router.get("/admin/packages", response_class=HTMLResponse)
+@router.get("/packages", response_class=HTMLResponse)
 def admin_packages(
     request: Request,
     db: Session = Depends(get_db),
@@ -194,7 +194,7 @@ def admin_packages(
     items = q.limit(limit).offset((page - 1) * limit).all()
 
     return templates.TemplateResponse(
-        "admin/packages_list.html",
+        "/packages_list.html",
         _ctx(
             request,
             db,
@@ -216,7 +216,7 @@ from sqlalchemy.orm import selectinload
 from sqlalchemy.orm import selectinload
 from sqlalchemy import func, case
 
-@router.get("/admin/agencies", response_class=HTMLResponse)
+@router.get("/agencies", response_class=HTMLResponse)
 def admin_agencies(
     request: Request,
     db: Session = Depends(get_db),
@@ -252,7 +252,7 @@ def admin_agencies(
     items = q.limit(limit).offset((page - 1) * limit).all()
 
     response = templates.TemplateResponse(
-        "admin/agencies_list.html",
+        "/agencies_list.html",
         _ctx(
             request,
             db,
@@ -274,7 +274,7 @@ def admin_agencies(
 # ---------------------------
 # Admin: Agency detail
 # ---------------------------
-@router.get("/admin/agencies/{registration_id}", response_class=HTMLResponse)
+@router.get("/agencies/{registration_id}", response_class=HTMLResponse)
 def admin_agency_detail(
     registration_id: int,
     request: Request,
@@ -292,7 +292,7 @@ def admin_agency_detail(
     )
     if not agency:
         flash(request, "Agency not found.", "error")
-        return RedirectResponse(url="/admin/agencies", status_code=303)
+        return RedirectResponse(url="/agencies", status_code=303)
 
     # ✅ Mark as viewed and commit if needed
     if not getattr(agency, "viewed_by_admin", False):
@@ -329,7 +329,7 @@ def admin_agency_detail(
     )
 
     return templates.TemplateResponse(
-        "admin/agency_detail.html",
+        "/agency_detail.html",
         _ctx(
             request,
             db,
@@ -342,7 +342,7 @@ def admin_agency_detail(
         ),
     )
 
-@router.post("/admin/agencies/{registration_id}/edit")
+@router.post("/agencies/{registration_id}/edit")
 async def admin_agency_update(
     registration_id: int,
     request: Request,
@@ -371,7 +371,7 @@ async def admin_agency_update(
 
     # 🔴 IMPORTANT CHANGE: go back to list, not detail
     return RedirectResponse(
-        url="/admin/agencies",
+        url="/agencies",
         status_code=status.HTTP_303_SEE_OTHER,
     )
 
@@ -390,7 +390,7 @@ def mark_agency_updated_for_admin(agency):
 # ---------------------------
 # Admin: Inquiries list
 # ---------------------------
-@router.get("/admin/inquiries", response_class=HTMLResponse)
+@router.get("/inquiries", response_class=HTMLResponse)
 def admin_inquiries(
     request: Request,
     db: Session = Depends(get_db),
@@ -405,7 +405,7 @@ def admin_inquiries(
     items = q.limit(limit).offset((page - 1) * limit).all()
 
     return templates.TemplateResponse(
-        "admin/inquiries_list.html",
+        "/inquiries_list.html",
         _ctx(
             request,
             db,
@@ -420,7 +420,7 @@ def admin_inquiries(
 # ---------------------------
 # Admin: Void / Unvoid Agency
 # ---------------------------
-@router.post("/admin/agencies/{registration_id}/void")
+@router.post("/agencies/{registration_id}/void")
 def admin_void_agency(
     registration_id: int,
     request: Request,
@@ -440,13 +440,13 @@ def admin_void_agency(
     if not reason:
         flash(request, "Reason is required to block an agency.", "error")
         return RedirectResponse(
-            url=f"/admin/agencies/{registration_id}", status_code=303
+            url=f"/agencies/{registration_id}", status_code=303
         )
     
     agency = db.query(Agency).filter(Agency.registration_id == registration_id).first()
     if not agency:
         flash(request, "Agency not found.", "error")
-        return RedirectResponse(url="/admin/agencies", status_code=303)
+        return RedirectResponse(url="/agencies", status_code=303)
 
     # --- mark blocked in DB ---
     agency.is_blocked = True
@@ -474,11 +474,11 @@ def admin_void_agency(
         send_brevo_email(to_email, subject, html_content)
 
     flash(request, f"Agency '{agency.agencies_name}' has been blocked.", "success")
-    return RedirectResponse(url=f"/admin/agencies/{registration_id}", status_code=303)
+    return RedirectResponse(url=f"/agencies/{registration_id}", status_code=303)
 
 
 
-@router.post("/admin/agencies/{registration_id}/unvoid")
+@router.post("/agencies/{registration_id}/unvoid")
 def admin_unvoid_agency(
     registration_id: int,
     request: Request,
@@ -494,7 +494,7 @@ def admin_unvoid_agency(
     agency = db.query(Agency).filter(Agency.registration_id == registration_id).first()
     if not agency:
         flash(request, "Agency not found.", "error")
-        return RedirectResponse(url="/admin/agencies", status_code=303)
+        return RedirectResponse(url="/agencies", status_code=303)
 
     # --- mark unblocked in DB ---
     agency.is_blocked = False
@@ -521,9 +521,9 @@ def admin_unvoid_agency(
         send_brevo_email(to_email, subject, html_content)
 
     flash(request, f"Agency '{agency.agencies_name}' has been unblocked.", "success")
-    return RedirectResponse(url=f"/admin/agencies/{registration_id}", status_code=303)
+    return RedirectResponse(url=f"/agencies/{registration_id}", status_code=303)
 
-@router.get("/admin/hotels", response_class=HTMLResponse)
+@router.get("/hotels", response_class=HTMLResponse)
 def admin_hotels_choice(request: Request, db: Session = Depends(get_db)):
     # ✅ Use the same guard you use everywhere else
     user_or_redirect = _admin_guard(request, db)
@@ -531,11 +531,11 @@ def admin_hotels_choice(request: Request, db: Session = Depends(get_db)):
         return user_or_redirect
 
     return templates.TemplateResponse(
-        "admin/hotels_choice.html",
+        "/hotels_choice.html",
         _ctx(request, db, title="Admin — Hotels"),
     )
 
-@router.get("/admin/hotels/{city}", response_class=HTMLResponse)
+@router.get("/hotels/{city}", response_class=HTMLResponse)
 def admin_hotels_list(
     city: str,
     request: Request,
@@ -558,7 +558,7 @@ def admin_hotels_list(
     )
 
     return templates.TemplateResponse(
-        "admin/hotels_list.html",
+        "/hotels_list.html",
         _ctx(
             request,
             db,

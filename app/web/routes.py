@@ -34,6 +34,10 @@ from app.db.models.package_price import PackagePrice
 from app.db.models.user import User
 from app.services.email_brevo import send_email_brevo
 from app.services.otp_session import check_code_and_update, get_otp_ctx, new_otp_ctx
+import json
+import os  # ← Add this
+from fastapi.responses import JSONResponse
+
 from app.web.deps import (
     COOKIE_NAME,
     flash,
@@ -42,10 +46,86 @@ from app.web.deps import (
     pop_flashes,
     require_csrf,
     require_user,
+    require_user_ui
 )
 
+
+
+
+
+    
+# ⚠️ DO NOT MOVE — router must be defined before any route decorators
+router = APIRouter()
+
+CITIES_FILE = os.path.join("app", "web", "static", "data", "cities.json")
+
+@router.post("/add_city")
+async def add_city(request: Request):
+    """
+    Adds a new city to cities.json
+    Expects JSON: { "city": "...", "country": "...", "currency": "..." }
+    """
+    try:
+        data = await request.json()
+        city_name = data.get("city", "").strip()
+        country_name = data.get("country", "").strip()
+        currency_code = data.get("currency", "").strip()
+
+        if not city_name or not country_name or not currency_code:
+            return JSONResponse(status_code=400, content={"detail": "Missing required fields"})
+
+        # Read existing cities
+        if os.path.exists(CITIES_FILE):
+            with open(CITIES_FILE, "r", encoding="utf-8") as f:
+                cities = json.load(f)
+        else:
+            cities = []
+
+        # Check if city already exists
+        if any(c["city"].lower() == city_name.lower() and c["country"].lower() == country_name.lower() for c in cities):
+            return JSONResponse(status_code=400, content={"detail": "City already exists"})
+
+        # Append new city
+        new_city = {
+            "city": city_name,
+            "country": country_name,
+            "currency": currency_code
+        }
+        cities.append(new_city)
+
+        # Write back to JSON file
+        with open(CITIES_FILE, "w", encoding="utf-8") as f:
+            json.dump(cities, f, ensure_ascii=False, indent=2)
+
+        return JSONResponse(status_code=200, content={"detail": "City added successfully", "city": new_city})
+
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"detail": str(e)})
+
+@router.post("/logout")
+def logout(request: Request):
+    # Clear session completely
+    request.session.clear()
+
+    # Redirect to login
+    response = RedirectResponse(url="/login", status_code=303)
+
+    # Delete auth cookie
+    response.delete_cookie(
+        key="access_token",
+        path="/",
+    )
+
+    # Flash message (stored in new session)
+    flash(request, "You have been logged out successfully.", "success")
+
+    return response
+
+
 from datetime import datetime  # you already import datetime above, fine if duplicate
-static_version = int(datetime.utcnow().timestamp())
+def static_version():
+    return int(datetime.utcnow().timestamp())
+
 
 # ⬇ add these
 import os
@@ -54,10 +134,27 @@ from pathlib import Path
 from fastapi import UploadFile, File, HTTPException
 from PIL import Image, UnidentifiedImageError
 
-router = APIRouter()
-templates = Jinja2Templates(directory="app/web/templates")
-templates.env.globals["static_version"] = lambda: int(datetime.utcnow().timestamp())
 
+
+templates = Jinja2Templates(directory="app/web/templates")
+templates.env.globals["static_version"] = static_version
+
+
+@router.post("/logout")
+def logout(request: Request, csrf_token: str = Form(...)):
+    require_csrf(request, csrf_token)
+
+    # clear auth
+    resp = RedirectResponse(url="/login", status_code=303)
+    clear_access_cookie(resp)
+
+    request.session.pop("otp_ctx", None)
+    request.session.pop("active_agency", None)
+
+    # flash message
+    flash(request, "You have been logged out successfully.", "success")
+
+    return resp
 
 
 def format_money(amount, currency_symbol=None, currency_position=None, currency_code=None):
@@ -134,13 +231,13 @@ CURRENCY_SYMBOLS = {
 
 @router.get("/")
 def home(request: Request):
-    static_version = int(datetime.utcnow().timestamp())
+    
 
     return templates.TemplateResponse(
         "base.html",
         {
             "request": request,
-            "static_version": static_version,
+            
         }
     )
 
@@ -661,13 +758,7 @@ def login_submit(
 
 
 
-@router.post("/logout")
-def logout(request: Request, csrf_token: str = Form(...)):
-    require_csrf(request, csrf_token)
-    resp = RedirectResponse(url="/", status_code=303)
-    clear_access_cookie(resp)
-    request.session.pop("otp_ctx", None)
-    return resp
+
 
 
 @router.get("/verify", response_class=HTMLResponse)
@@ -761,10 +852,11 @@ def verify_resend(request: Request, csrf_token: str = Form(...), db: Session = D
 def dashboard_agency(request: Request, registration_id: int, db: Session = Depends(get_db)):
     
 
-    user_or_redirect = require_user(request, db)
-    if not isinstance(user_or_redirect, dict) and hasattr(user_or_redirect, "status_code"):
-        return user_or_redirect
-    user = user_or_redirect
+    user = require_user_ui(request, db)
+    if isinstance(user, RedirectResponse):
+        return user
+
+    
     flashes = pop_flashes(request)
 
     set_active_agency(request, registration_id)
@@ -837,7 +929,11 @@ def dashboard_agency(request: Request, registration_id: int, db: Session = Depen
 
 @router.get("/inquiries", response_class=HTMLResponse)
 def inquiries_list(request: Request, db: Session = Depends(get_db)):
-    user = require_user(request, db)
+    
+    user = require_user_ui(request, db)
+    if isinstance(user, RedirectResponse):
+        return user
+    
     flashes = pop_flashes(request)
 
     active_id = get_active_agency_id(request)
@@ -875,7 +971,9 @@ def inquiries_list(request: Request, db: Session = Depends(get_db)):
 
 @router.get("/inquiries/{inquiry_id}", response_class=HTMLResponse)
 def inquiries_detail(inquiry_id: int, request: Request, db: Session = Depends(get_db)):
-    user = require_user(request, db)
+    user = require_user_ui(request, db)
+    if isinstance(user, RedirectResponse):
+        return user
     flashes = pop_flashes(request)
 
     active_id = get_active_agency_id(request)
@@ -919,7 +1017,9 @@ def inquiries_detail(inquiry_id: int, request: Request, db: Session = Depends(ge
 @router.post("/inquiries/mark-all-seen")
 def inquiries_mark_all_seen(request: Request, csrf_token: str = Form(...), db: Session = Depends(get_db)):
     require_csrf(request, csrf_token)
-    user = require_user(request, db)
+    user = require_user_ui(request, db)
+    if isinstance(user, RedirectResponse):
+        return user
 
     active_id = get_active_agency_id(request)
     if not active_id:
@@ -940,7 +1040,11 @@ def inquiries_mark_all_seen(request: Request, csrf_token: str = Form(...), db: S
 
 @router.get("/select-agency", response_class=HTMLResponse)
 def select_agency_page(request: Request, db: Session = Depends(get_db)):
-    user = require_user(request, db)
+    
+    user = require_user_ui(request, db)
+    if isinstance(user, RedirectResponse):
+        return user
+
     flashes = pop_flashes(request)
     agencies = (
         db.query(Agency)
@@ -977,7 +1081,10 @@ def select_agency_submit(
     db: Session = Depends(get_db),
 ):
     require_csrf(request, csrf_token)
-    user = require_user(request, db)
+
+    user = require_user_ui(request, db)
+    if isinstance(user, RedirectResponse):
+        return user
 
     agency = (
         db.query(Agency)
@@ -991,7 +1098,7 @@ def select_agency_submit(
     set_active_agency(request, agency.registration_id)
     flash(request, f"Switched to: {agency.agencies_name}", "success")
     return RedirectResponse(
-        url=f"/agency/{agency.registration_id}/dashboard",
+        url=f"/agency/{Agency.registration_id}/dashboard",
         status_code=303,
     )
 
@@ -1003,7 +1110,9 @@ def agency_new_page(
     request: Request,
     db: Session = Depends(get_db),
 ):
-    user = require_user(request, db)
+    user = require_user_ui(request, db)
+    if isinstance(user, RedirectResponse):
+        return user
 
     existing = db.query(Agency).filter(Agency.user_id == user.id).count()
     if existing >= 1:
@@ -1066,7 +1175,10 @@ def agency_new_submit(
     db: Session = Depends(get_db),
 ):
     require_csrf(request, csrf_token)
-    user = require_user(request, db)
+    
+    user = require_user_ui(request, db)
+    if isinstance(user, RedirectResponse):
+        return user
 
     # ---- tiny local helpers (no imports from routes_media to avoid ImportError) ----
     MEDIA_ROOT = Path("media").resolve()
@@ -1232,7 +1344,9 @@ def agency_edit_page(
     registration_id: int,
     db: Session = Depends(get_db),
 ):
-    user = require_user(request, db)
+    user = require_user_ui(request, db)
+    if isinstance(user, RedirectResponse):
+        return user
 
     agency = (
         db.query(Agency)
@@ -1298,8 +1412,10 @@ async def agency_edit_submit(
     db: Session = Depends(get_db),
 ):
     require_csrf(request, csrf_token)
-    user = require_user(request, db)
-
+    
+    user = require_user_ui(request, db)
+    if isinstance(user, RedirectResponse):
+        return user
     
 
     def _to_int_or_none(s: str) -> Optional[int]:
@@ -1480,7 +1596,11 @@ def agency_delete_submit(
     db: Session = Depends(get_db),
 ):
     require_csrf(request, csrf_token)
-    user = require_user(request, db)
+
+    user = require_user_ui(request, db)
+    if isinstance(user, RedirectResponse):
+        return user
+
     agency = (
         db.query(Agency)
         .filter(Agency.registration_id == registration_id, Agency.user_id == user.id)
@@ -1494,6 +1614,7 @@ def agency_delete_submit(
     db.delete(agency)
     db.commit()
     flash(request, "Agency deleted", "success")
+    print("DELETE HIT")
     return RedirectResponse(url="/select-agency", status_code=303)
 
 
@@ -1699,6 +1820,9 @@ def package_detail(package_id: int, request: Request, db: Session = Depends(get_
     onward = flights_by_leg.get("onward")
     ret    = flights_by_leg.get("return")
 
+    onward_text = _fmt_flight(onward)
+    return_text = _fmt_flight(ret)
+
     stays = {s.city: s for s in (pkg.stays or [])}
     mecca = stays.get("Mecca")
     med   = stays.get("Medinah")
@@ -1720,8 +1844,7 @@ def package_detail(package_id: int, request: Request, db: Session = Depends(get_
     theme_key = normalize_theme_key(raw_theme)  # premium_aurora | premium | basic
     theme_template = f"package/themes/{theme_key}.html"
 
-    onward_text = _fmt_flight(onward) or "—"
-    return_text = _fmt_flight(ret) or "—"
+    
 
     mecca_dates = _fmt_dates(mecca) or "—"
     med_dates   = _fmt_dates(med)   or "—"
@@ -1784,6 +1907,26 @@ def package_detail(package_id: int, request: Request, db: Session = Depends(get_
     csrf_token = get_csrf_token(request)
     captcha_tag = f"pkg-inq:{pkg.package_id}"
 
+    def load_hotels(path: str) -> list[dict]:
+        p = Path(path)
+        if not p.exists():
+            return []
+        return json.loads(p.read_text(encoding="utf-8"))
+
+    makkah_hotels = load_hotels("app/web/static/data/hotels-makkah.json")
+    madinah_hotels = load_hotels("app/web/static/data/hotels-madinah.json")
+
+    def find_by_uid(hotels: list[dict], uid: int | None) -> dict | None:
+        if uid is None:
+            return None
+        for h in hotels:
+            if h.get("uid") == uid:
+                return h
+        return None
+
+    mecca_hotel = find_by_uid(makkah_hotels, mecca.hotel_uid if mecca else None)
+    med_hotel   = find_by_uid(madinah_hotels, med.hotel_uid if med else None)
+
     return render(
         "public/package_detail.html",
         request,
@@ -1792,6 +1935,9 @@ def package_detail(package_id: int, request: Request, db: Session = Depends(get_
             "title": pkg.package_name,
             "pkg": pkg,
             "agency": agency,
+
+            "onward": onward,   # ✅ ADD
+            "ret": ret,         # ✅ ADD  
 
             "onward_text": onward_text,
             "return_text": return_text,
@@ -1810,12 +1956,17 @@ def package_detail(package_id: int, request: Request, db: Session = Depends(get_
             # primary hotels
             "mecca_hotel_name": mecca_hotel_name,
             "mecca_hotel_link": mecca_hotel_link,
-            "med_hotel_name":   med_hotel_name,
+            "med_hotel_name":   med_hotel_name, 
             "med_hotel_link":   med_hotel_link,
 
             # ✅ NEW: lists used by basic / premium / premium_aurora templates
             "mecca_similar_hotels": mecca_similar_hotels,
             "med_similar_hotels":   med_similar_hotels,
+            # ✅ add these (for nights + later meta)
+            "mecca": mecca,
+            "med": med,
+            "mecca_hotel": mecca_hotel,
+            "med_hotel": med_hotel,
             **currency_ctx,
             
 
@@ -1911,8 +2062,11 @@ def package_new_page(
     request: Request,
     agency_id: int = Query(...),
     db: Session = Depends(get_db),
+    
 ):
-    user = require_user(request, db)
+    user = require_user_ui(request, db)
+    if isinstance(user, RedirectResponse):
+        return user
 
     from app.db.models.hotel import Hotel
 
@@ -1957,6 +2111,9 @@ def package_new_page(
             "request": request,
             "title": "Add Package",
             "agency": agency,
+            "pkg": None,
+            "onward": None,
+            "ret": None,
             "flashes": flashes,
             "csrf_token": get_csrf_token(request),
             "mecca_hotels": mecca_hotels,      
@@ -1983,10 +2140,16 @@ def package_new_submit(
     package_class: str = Form(""),
     travel_month: str = Form(""),
     travel_year: str = Form(""),
+    date_type: str = Form("tentative"),
+
+    
+
     banner_image: str = Form("dynamic-tawaf-at-night.jpg"),
 
 
-    airline_ids: Optional[List[int]] = Form(None),
+    #airline_ids: Optional[List[int]] = Form(None),
+    airline_ids: List[int] = Form(default=[]),
+
 
     price_double: str = Form(""),
     price_triple: str = Form(""),
@@ -1998,15 +2161,33 @@ def package_new_submit(
     onward_type: str = Form(""),
     onward_via: str = Form(""),
     onward_airline: str = Form(""),
+    onward_airline_iata: str = Form(""),
+    onward_airline_icao: str = Form(""),
 
     return_date: str = Form(""),
     return_type: str = Form(""),
     return_via: str = Form(""),
     return_airline: str = Form(""),
+    return_airline_iata: str = Form(""),
+    return_airline_icao: str = Form(""),
+
+    tentative_airline: str = Form(""),
+    tentative_airline_iata: str = Form(""),
+    tentative_airline_icao: str = Form(""),
+
+    
+
+    
+
+    
+
+    
 
     mecca_check_in: str = Form(""),
     mecca_check_out: str = Form(""),
     mecca_hotel: str = Form(""),
+    mecca_hotel_uid: str = Form(""),
+    mecca_nights: str = Form(""),
     mecca_link: str = Form(""),
     mecca_distance_m: str = Form(""),
     mecca_distance_text: str = Form(""),
@@ -2014,12 +2195,16 @@ def package_new_submit(
     med_check_in: str = Form(""),
     med_check_out: str = Form(""),
     med_hotel: str = Form(""),
+    med_hotel_uid: str = Form(""),
+    med_nights: str = Form(""),
+
     med_link: str = Form(""),
     med_distance_m: str = Form(""),
     med_distance_text: str = Form(""),
     mecca_similar: Optional[str] = Form(None),
     medinah_similar: Optional[str] = Form(None),
 
+    
 
 
     incl_meals_enabled: Optional[str] = Form(None),
@@ -2037,6 +2222,9 @@ def package_new_submit(
     incl_visa_enabled: Optional[str] = Form(None),
     incl_visa_desc: str = Form(""),
 
+
+
+
     # NEW — ZIYARAT
     incl_ziyarat_enabled: Optional[str] = Form(None),
     incl_ziyarat_desc: str = Form(""),
@@ -2052,9 +2240,18 @@ def package_new_submit(
     theme_key: str = Form("basic"),      # stored in package_theme table
 
     db: Session = Depends(get_db),
+
+    
 ):
+    print("RAW tentative_airline:", repr(tentative_airline))
+    print("RAW tentative_airline_iata:", repr(tentative_airline_iata))
+    print("RAW tentative_airline_icao:", repr(tentative_airline_icao))
+
     require_csrf(request, csrf_token)
-    user = require_user(request, db)
+
+    user = require_user_ui(request, db)
+    if isinstance(user, RedirectResponse):
+        return user
 
     ALLOWED_BANNERS = {
         "dynamic-tawaf-at-night.jpg",
@@ -2099,6 +2296,8 @@ def package_new_submit(
 
     print("DEBUG mecca_similar_list:", mecca_similar_list)
     print("DEBUG medinah_similar_list:", medinah_similar_list)
+    print("RAW onward_via:", repr(onward_via))
+    print("RAW return_via:", repr(return_via))
 
 
 
@@ -2136,6 +2335,16 @@ def package_new_submit(
 
     tm = _to_int_or_none(travel_month)
     ty = _to_int_or_none(travel_year)
+    
+
+
+    
+    
+
+    print("RAW date_type:", repr(date_type))
+
+
+
     if tm is not None and not (1 <= tm <= 12):
         flash(request, "Travel month must be between 1 and 12.", "error")
         return RedirectResponse(url=f"/package/new?agency_id={agency_id}", status_code=303)
@@ -2157,6 +2366,9 @@ def package_new_submit(
     # ----------------------------------------------------------------------
     # 1) Create Package  (IMPORTANT: do NOT pass theme=... here)
     # ----------------------------------------------------------------------
+    dt = (date_type or "tentative").strip().lower()
+    dt = dt if dt in ("tentative", "exact") else "tentative"
+
     pkg = Package(
         registration_id=agency.registration_id,
         package_type=t_raw,
@@ -2165,8 +2377,16 @@ def package_new_submit(
         days=int(days),
         price=price,
         description=_norm(description),
-        travel_month=tm,
-        travel_year=ty,
+        
+        
+        date_type=dt,   # ✅ ADD THIS
+        travel_month=(tm if dt == "tentative" else None),
+        travel_year=(ty if dt == "tentative" else None),
+
+        tentative_airline=(tentative_airline or None) if dt == "tentative" else None,
+        tentative_airline_iata=(tentative_airline_iata or None) if dt == "tentative" else None,
+        tentative_airline_icao=(tentative_airline_icao or None) if dt == "tentative" else None,
+
         status=("draft" if submit_action == "draft" else "active"),
         banner_image=banner_image,
 
@@ -2174,6 +2394,8 @@ def package_new_submit(
     )
     db.add(pkg)
     db.flush()  # ensures pkg.package_id is available
+
+    
 
     # If you added a separate text column like `detail_theme` on packages, set it safely:
     try:
@@ -2222,31 +2444,55 @@ def package_new_submit(
             )
         )
 
+        # ----------------------------------------------------------------------
+    # 5) Flights  (ONLY when dt == "exact")
     # ----------------------------------------------------------------------
-    # 5) Flights
-    # ----------------------------------------------------------------------
-    if any([onward_date, onward_type, onward_via, onward_airline]):
-        db.add(
-            PackageFlight(
-                package_id=pkg.package_id,
-                leg="onward",
-                flight_date=_to_date(onward_date),
-                flight_type=_norm(onward_type) if onward_type in ("direct", "via") else None,
-                via_city=_norm(onward_via),
-                airline_name=_norm(onward_airline),
+    if dt == "exact":
+
+        # ONWARD
+        if any([
+            (onward_date or "").strip(),
+            (onward_type or "").strip(),
+            (onward_via or "").strip(),
+            (onward_airline or "").strip(),
+            (onward_airline_iata or "").strip(),
+            (onward_airline_icao or "").strip(),
+        ]):
+            db.add(
+                PackageFlight(
+                    package_id=pkg.package_id,
+                    leg="onward",
+                    flight_date=_to_date(onward_date),
+                    flight_type=_norm(onward_type) if onward_type in ("direct", "via") else None,
+                    via_city=_norm(onward_via) if (onward_type == "via") else None,
+                    airline_name=_norm(onward_airline),
+                    airline_iata=_norm(onward_airline_iata),
+                    airline_icao=_norm(onward_airline_icao),
+                )
             )
-        )
-    if any([return_date, return_type, return_via, return_airline]):
-        db.add(
-            PackageFlight(
-                package_id=pkg.package_id,
-                leg="return",
-                flight_date=_to_date(return_date),
-                flight_type=_norm(return_type) if return_type in ("direct", "via") else None,
-                via_city=_norm(return_via),
-                airline_name=_norm(return_airline),
+
+        # RETURN
+        if any([
+            (return_date or "").strip(),
+            (return_type or "").strip(),
+            (return_via or "").strip(),
+            (return_airline or "").strip(),
+            (return_airline_iata or "").strip(),
+            (return_airline_icao or "").strip(),
+        ]):
+            db.add(
+                PackageFlight(
+                    package_id=pkg.package_id,
+                    leg="return",
+                    flight_date=_to_date(return_date),
+                    flight_type=_norm(return_type) if return_type in ("direct", "via") else None,
+                    via_city=_norm(return_via) if (return_type == "via") else None,
+                    airline_name=_norm(return_airline),
+                    airline_iata=_norm(return_airline_iata),
+                    airline_icao=_norm(return_airline_icao),
+                )
             )
-        )
+
 
     # ----------------------------------------------------------------------
     # 6) Stays
@@ -2323,7 +2569,8 @@ def package_new_submit(
             mecca_distance_m,
             mecca_distance_text,
         )
-        similar_ids = ",".join(map(str, mecca_similar)) if mecca_similar else None
+        similar_ids = ",".join(map(str, mecca_similar_list)) if mecca_similar_list else None
+
         mecca_stay = PackageStay(
             
             package_id=pkg.package_id,
@@ -2336,6 +2583,8 @@ def package_new_submit(
             distance_m=mecca_distance_m_val,
             hotel_id=mecca_hotel_id,
             similar_hotel_ids=similar_ids,
+            hotel_uid=int(mecca_hotel_uid) if mecca_hotel_uid else None,
+            nights=int(mecca_nights) if mecca_nights else None,
         )
         db.add(mecca_stay)
 
@@ -2350,7 +2599,8 @@ def package_new_submit(
             med_distance_m,
             med_distance_text,
         )
-        similar_ids = ",".join(map(str, medinah_similar)) if medinah_similar else None
+        similar_ids = ",".join(map(str, medinah_similar_list)) if medinah_similar_list else None
+
         med_stay = PackageStay(
             
             package_id=pkg.package_id,
@@ -2363,6 +2613,8 @@ def package_new_submit(
             distance_m=med_distance_m_val,
             hotel_id=med_hotel_id,
             similar_hotel_ids=similar_ids,
+            hotel_uid=int(med_hotel_uid) if med_hotel_uid else None,
+            nights=int(med_nights) if med_nights else None,
         )
         db.add(med_stay)
 
@@ -2370,20 +2622,23 @@ def package_new_submit(
         # 7.5) Auto-compute "or similar" hotels ONLY if user didn't select any
         # ----------------------------------------------------------------------
         if mecca_stay and mecca_stay.hotel_id and not mecca_stay.similar_hotel_ids:
-            mecca_stay.similar_hotel_ids = find_similar_hotel_ids(
+            ids = find_similar_hotel_ids(
                 db=db,
                 base_hotel_id=mecca_stay.hotel_id,
                 city="Mecca",
                 limit=4,
-            ) or None
+            ) or []
+            mecca_stay.similar_hotel_ids = ",".join(map(str, ids)) if ids else None
 
         if med_stay and med_stay.hotel_id and not med_stay.similar_hotel_ids:
-            med_stay.similar_hotel_ids = find_similar_hotel_ids(
+            ids = find_similar_hotel_ids(
                 db=db,
                 base_hotel_id=med_stay.hotel_id,
                 city="Medinah",
                 limit=4,
-            ) or None
+            ) or []
+            med_stay.similar_hotel_ids = ",".join(map(str, ids)) if ids else None
+
 
 
 
@@ -2438,8 +2693,16 @@ def package_new_submit(
 
     db.commit()
 
-    flash(request, "Package added! Let’s add the day-by-day itinerary (you can skip it).", "info")
-    return RedirectResponse(url=f"/package/{pkg.package_id}/itinerary/wizard?day=1", status_code=303)
+    if submit_action == "draft":
+        flash(request, "Package saved as draft.", "success")
+    else:
+        flash(request, "Package published successfully.", "success")
+
+    return RedirectResponse(
+        url=f"/agency/{agency.registration_id}/dashboard",
+        #url=f"/agency/{agency_id}/dashboard",#
+        status_code=303
+    )
 
 
 
@@ -2452,7 +2715,10 @@ def package_set_status(
     db: Session = Depends(get_db),
 ):
     require_csrf(request, csrf_token)
-    user = require_user(request, db)
+    
+    user = require_user_ui(request, db)
+    if isinstance(user, RedirectResponse):
+        return user
 
     pkg = db.query(Package).filter(Package.package_id == package_id).first()
     if not pkg:
@@ -2625,7 +2891,13 @@ from typing import Optional, List
 
 @router.get("/package/{package_id}/edit", response_class=HTMLResponse)
 def package_edit_page(request: Request, package_id: int, db: Session = Depends(get_db)):
-    user = require_user(request, db)
+
+    user = require_user_ui(request, db)
+    if isinstance(user, RedirectResponse):
+        return user
+
+    
+    
 
     pkg = db.query(Package).filter(Package.package_id == package_id).first()
     if not pkg:
@@ -2686,7 +2958,8 @@ def package_edit_page(request: Request, package_id: int, db: Session = Depends(g
     flashes = pop_flashes(request)
 
     return templates.TemplateResponse(
-        "package/edit.html",
+        
+        "package/new.html",  # ✅ SAME TEMPLATE AS ADD
         {
             "request": request,
             "title": "Edit Package",
@@ -2728,21 +3001,35 @@ def package_edit_submit(
     package_class: str = Form(""),
     travel_month: str = Form(""),
     travel_year: str = Form(""),
-    airline_ids: Optional[List[int]] = Form(None),
+    date_type: str = Form("tentative"),
+    airline_ids: List[int] = Form(default=[]),
+
 
     onward_date: str = Form(""),
     onward_type: str = Form(""),
     onward_via: str = Form(""),
     onward_airline: str = Form(""),
+    onward_airline_iata: str = Form(""),
+    onward_airline_icao: str = Form(""),
 
     return_date: str = Form(""),
     return_type: str = Form(""),
     return_via: str = Form(""),
     return_airline: str = Form(""),
+    return_airline_iata: str = Form(""),
+    return_airline_icao: str = Form(""),
+
+    tentative_airline: str = Form(""),
+    tentative_airline_iata: str = Form(""),
+    tentative_airline_icao: str = Form(""),
 
     mecca_check_in: str = Form(""),
     mecca_check_out: str = Form(""),
     mecca_hotel: str = Form(""),
+    mecca_hotel_uid: str = Form(""),
+    mecca_nights: str = Form(""),
+
+
     mecca_link: str = Form(""),
     mecca_distance_m: str = Form(""),
     mecca_distance_text: str = Form(""),
@@ -2750,6 +3037,9 @@ def package_edit_submit(
     med_check_in: str = Form(""),
     med_check_out: str = Form(""),
     med_hotel: str = Form(""),
+    med_hotel_uid: str = Form(""),
+    med_nights: str = Form(""),
+
     med_link: str = Form(""),
     med_distance_m: str = Form(""),
     med_distance_text: str = Form(""),
@@ -2782,8 +3072,16 @@ def package_edit_submit(
     csrf_token: str = Form(...),
     db: Session = Depends(get_db),
 ):
+
+    print("RAW tentative_airline:", repr(tentative_airline))
+    print("RAW tentative_airline_iata:", repr(tentative_airline_iata))
+    print("RAW tentative_airline_icao:", repr(tentative_airline_icao))
+
     require_csrf(request, csrf_token)
-    user = require_user(request, db)
+
+    user = require_user_ui(request, db)
+    if isinstance(user, RedirectResponse):
+        return user
 
     pkg = db.query(Package).filter(Package.package_id == package_id).first()
     if not pkg:
@@ -2822,6 +3120,8 @@ def package_edit_submit(
     if t_raw not in {"haj", "umrah"}:
         flash(request, "Select package type: Haj or Umrah.", "error")
         return RedirectResponse(url=f"/package/{package_id}/edit", status_code=303)
+
+
     pkg.package_type = t_raw
 
     pkg.package_name = (package_name or "").strip()
@@ -2845,6 +3145,12 @@ def package_edit_submit(
         s = (s or "").strip()
         return int(s) if s.isdigit() else None
 
+    print("RAW travel_month:", repr(travel_month))
+    print("RAW travel_year :", repr(travel_year))   
+
+    print("RAW onward_via:", repr(onward_via))
+    print("RAW return_via:", repr(return_via))
+
     tm = _to_int_or_none(travel_month)
     ty = _to_int_or_none(travel_year)
 
@@ -2856,8 +3162,29 @@ def package_edit_submit(
         flash(request, "Travel year must be 2026 or later.", "error")
         return RedirectResponse(url=f"/package/{package_id}/edit", status_code=303)
 
-    pkg.travel_month = tm
-    pkg.travel_year = ty
+    
+
+    # ✅ 1. Normalize date_type
+
+    dt = (date_type or "tentative").strip().lower()
+    dt = dt if dt in ("tentative", "exact") else "tentative"
+    
+    # ✅ 2. Store it
+    pkg.date_type = dt
+
+    # ✅ 3. Save tentative fields ONLY when saving tentative mode
+    if dt == "tentative":
+        pkg.travel_month = tm
+        pkg.travel_year = ty
+        pkg.tentative_airline = tentative_airline or None
+        pkg.tentative_airline_iata = tentative_airline_iata or None
+        pkg.tentative_airline_icao = tentative_airline_icao or None
+
+    
+    
+
+
+
 
     # ----------------------------
     # Airlines (reset + insert)
@@ -2870,32 +3197,83 @@ def package_edit_submit(
         for aid in unique_airline_ids:
             db.add(PackageAirline(package_id=pkg.package_id, airline_id=aid))
 
-    # ----------------------------
-    # Flights
-    # ----------------------------
-    onward = db.query(PackageFlight).filter_by(package_id=pkg.package_id, leg="onward").first()
-    if any([onward_date, onward_type, onward_via, onward_airline]):
-        if not onward:
-            onward = PackageFlight(package_id=pkg.package_id, leg="onward")
-            db.add(onward)
-        onward.flight_date = _to_date(onward_date)
-        onward.flight_type = _norm(onward_type) if onward_type in ("direct", "via") else None
-        onward.via_city = _norm(onward_via)
-        onward.airline_name = _norm(onward_airline)
-    elif onward:
-        db.delete(onward)
 
-    ret = db.query(PackageFlight).filter_by(package_id=pkg.package_id, leg="return").first()
-    if any([return_date, return_type, return_via, return_airline]):
-        if not ret:
-            ret = PackageFlight(package_id=pkg.package_id, leg="return")
-            db.add(ret)
-        ret.flight_date = _to_date(return_date)
-        ret.flight_type = _norm(return_type) if return_type in ("direct", "via") else None
-        ret.via_city = _norm(return_via)
-        ret.airline_name = _norm(return_airline)
-    elif ret:
-        db.delete(ret)
+    # ----------------------------
+    # Flights (onward + return)
+    # ----------------------------
+    def upsert_flight(leg: str, d: str, t: str, via: str, airline: str,
+    airline_iata: str,
+    airline_icao: str,):
+        row = db.query(PackageFlight).filter_by(
+            package_id=pkg.package_id,
+            leg=leg
+        ).first()
+
+        has_any = any([
+            (d or "").strip(),
+            (t or "").strip(),
+            (via or "").strip(),
+            (airline or "").strip(),
+            (airline_iata or "").strip(),
+            (airline_icao or "").strip(),
+        ])
+
+        # If nothing provided → delete existing row
+        if not has_any:
+            if row:
+                db.delete(row)
+            return
+
+        # Create if missing
+        if not row:
+            row = PackageFlight(
+                package_id=pkg.package_id,
+                leg=leg
+            )
+            db.add(row)
+
+        row.flight_date = _to_date(d)
+        row.flight_type = _norm(t) if t in ("direct", "via") else None
+
+       
+
+        row.airline_name = _norm(airline)
+        row.airline_iata = _norm(airline_iata)
+        row.airline_icao = _norm(airline_icao)
+
+        if row.flight_type == "via":
+            row.via_city = _norm(via)
+            print(f"✅ {leg} via saved as:", row.via_city)
+        else:
+            row.via_city = None   # ✅ REMOVE via when direct
+            print(f"🧹 {leg} via cleared (direct flight)")
+        
+
+        print(f"✅ SAVED {leg}:", row.airline_name, row.airline_iata, row.airline_icao, row.via_city)
+  
+
+    # Save flights only in exact mode
+    if dt == "exact":
+        upsert_flight(
+            "onward",
+            onward_date,
+            onward_type,
+            onward_via,
+            onward_airline,
+            onward_airline_iata,
+            onward_airline_icao,
+        )
+        upsert_flight(
+            "return",
+            return_date,
+            return_type,
+            return_via,
+            return_airline,
+            return_airline_iata,
+            return_airline_icao,
+        )
+   
+
 
     # ----------------------------
     # Stays
@@ -2912,9 +3290,12 @@ def package_edit_submit(
             link=(link_txt or "").strip() or None,
         )
         return row.id if row else None
+    print("DEBUG ->", mecca_nights, med_nights, mecca_hotel_uid, med_hotel_uid)    
 
-    def upsert_stay(which_city: str, ci: str, co: str, hotel_name_txt: str, hotel_link_txt: str, dist_m: str, dist_txt: str):
+    def upsert_stay(which_city: str, ci: str, co: str, hotel_name_txt: str, hotel_link_txt: str, dist_m: str, dist_txt: str,nights_txt: str,hotel_uid_txt: str):
         stay = db.query(PackageStay).filter_by(package_id=pkg.package_id, city=which_city).first()
+
+        
 
         if any([ci, co, hotel_name_txt, hotel_link_txt, dist_m, dist_txt]):
             if not stay:
@@ -2927,13 +3308,19 @@ def package_edit_submit(
             stay.hotel_link = _norm(hotel_link_txt)
             stay.distance_text = _norm(dist_txt)
             stay.distance_m = int(dist_m) if (dist_m and dist_m.strip().isdigit()) else None
+            
+            stay.hotel_uid = int(hotel_uid_txt) if hotel_uid_txt else None
+            stay.nights = int(nights_txt) if nights_txt else None
 
             stay.hotel_id = resolve_hotel_id_by_name(hotel_name_txt, hotel_link_txt, which_city)
         elif stay:
             db.delete(stay)
 
-    upsert_stay("Mecca", mecca_check_in, mecca_check_out, mecca_hotel, mecca_link, mecca_distance_m, mecca_distance_text)
-    upsert_stay("Medinah", med_check_in, med_check_out, med_hotel, med_link, med_distance_m, med_distance_text)
+    
+
+    upsert_stay("Mecca", mecca_check_in, mecca_check_out, mecca_hotel, mecca_link, mecca_distance_m, mecca_distance_text, mecca_nights, mecca_hotel_uid)
+
+    upsert_stay("Medinah", med_check_in, med_check_out, med_hotel, med_link, med_distance_m, med_distance_text, med_nights, med_hotel_uid)
 
     # ----------------------------
     # Variant prices
@@ -3032,7 +3419,7 @@ def package_edit_submit(
     old_status = (pkg.status or "").lower()
     action = (submit_action or "save").strip().lower()
 
-    if action == "finish":
+    if action == "finish" or action == "publish":  # ⬅️ ADD THIS
         pkg.status = "active"
     elif action == "draft":
         pkg.status = "draft"
@@ -3041,6 +3428,9 @@ def package_edit_submit(
             pkg.status = "active"
 
     db.commit()
+    flash(request, "Package updated successfully", "success")
+    return RedirectResponse(url=f"/package/{package_id}/edit", status_code=303)
+
 
     # messages + redirect
     if action == "finish":
@@ -3065,7 +3455,10 @@ def package_delete(
     db: Session = Depends(get_db),
 ):
     require_csrf(request, csrf_token)
-    user = require_user(request, db)
+    user = require_user_ui(request, db)
+    if isinstance(user, RedirectResponse):
+        return user
+        
     pkg = db.query(Package).filter(Package.package_id == package_id).first()
     if not pkg:
         flash(request, "Package not found", "error")

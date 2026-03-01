@@ -8,7 +8,7 @@ from sqlalchemy import text
 
 from app.core.config import settings
 from app.core.deps import get_db
-from app.db.session import engine
+from app.db.session import engine   
 from app.db.mixins import Base
 import app.db.models 
 # ✅ CRITICAL: load DB models so Base.metadata is populated
@@ -21,6 +21,8 @@ from app.api.v1.auth import router as auth_router
 from app.web.routes import router as ui_router
 from app.web.routes_media import router as media_router
 from app.web.routes_admin import router as admin_router
+
+
 
 import pymysql
 app = FastAPI(title=settings.APP_NAME)

@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 from app.core.deps import get_db
 from app.core.security import decode_token
 from app.db.models.user import User
+from fastapi.responses import RedirectResponse
 
 # Cookie that stores your access token (set in routes with set_access_cookie)
 COOKIE_NAME = "access_token"
@@ -53,14 +54,11 @@ def require_csrf(request: Request, token_from_form: Optional[str]) -> None:
         raise HTTPException(status_code=400, detail="Invalid CSRF token")
 
 # ---- Auth helpers (cookie-based) ----
+
 def get_current_user_from_cookie(
     request: Request,
     db: Session = Depends(get_db),
 ) -> Optional[User]:
-    """
-    Read 'access_token' cookie, decode JWT, and fetch the User.
-    Returns None if missing/invalid.
-    """
     raw = request.cookies.get(COOKIE_NAME)
     if not raw or not raw.startswith("Bearer "):
         return None
@@ -76,16 +74,29 @@ def get_current_user_from_cookie(
 
     return db.get(User, int(user_id))
 
+
 def require_user(
     request: Request,
     db: Session = Depends(get_db),
 ) -> User:
     """
-    Same as get_current_user_from_cookie, but raises 401 if unauthenticated.
-    Use this as a dependency inside protected routes.
+    API-style auth guard (raises 401)
     """
     user = get_current_user_from_cookie(request, db)
     if not user:
-        # Do redirects in the route; here we signal auth failure.
         raise HTTPException(status_code=401, detail="Not authenticated")
+    return user
+
+
+def require_user_ui(
+    request: Request,
+    db: Session = Depends(get_db),
+):
+    """
+    UI-style auth guard (redirects with flash)
+    """
+    user = get_current_user_from_cookie(request, db)
+    if not user:
+        flash(request, "Please login again to continue.", "warning")
+        return RedirectResponse(url="/login", status_code=303)
     return user
