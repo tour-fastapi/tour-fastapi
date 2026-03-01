@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 from app.core.deps import get_db
 from app.core.security import decode_token
 from app.db.models.user import User
+from fastapi.responses import RedirectResponse
 
 # Cookie that stores your access token (set in routes with set_access_cookie)
 COOKIE_NAME = "access_token"

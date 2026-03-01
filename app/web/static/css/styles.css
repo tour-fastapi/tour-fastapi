@@ -955,6 +955,18 @@
   margin-left: 6px;
 }
 
+.package-details__tag{
+  display:inline-block;
+  padding:6px 10px;
+  font-size:12px;
+  font-weight:600;
+  border-radius:9999px;
+  background:#d1fae5;
+  /* emerald-100-ish */
+  color:#047857;
+  /* emerald-700-ish */
+}
+
 /* ============================================================================
    FORM COMPONENTS - UmrahAdvisor Design System
    Semantic form elements with validation states, alerts, and interactions
@@ -7215,12 +7227,12 @@ body {
   display: grid;
 }
 
-.hidden {
-  display: none;
-}
-
 .\!hidden {
   display: none !important;
+}
+
+.hidden {
+  display: none;
 }
 
 .h-10 {

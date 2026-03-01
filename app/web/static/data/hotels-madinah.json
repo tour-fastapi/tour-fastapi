@@ -1,5 +1,6 @@
 [
   {
+    "uid": 1,
     "id": "oberoi-madinah",
     "name": "Oberoi Madinah",
     "distance_km": 0.1,
@@ -7,6 +8,7 @@
     "stars": 5
   },
   {
+    "uid": 2,
     "id": "dar-al-iman-intercontinental",
     "name": "Dar Al Iman InterContinental Madinah",
     "distance_km": 0.15,
@@ -14,6 +16,7 @@
     "stars": 5
   },
   {
+    "uid": 3,
     "id": "pullman-zamzam-madinah",
     "name": "Pullman ZamZam Madinah",
     "distance_km": 0.2,
@@ -21,6 +24,7 @@
     "stars": 5
   },
   {
+    "uid": 4,
     "id": "movenpick-hotel-madinah",
     "name": "Mövenpick Hotel Madinah",
     "distance_km": 0.25,
@@ -28,6 +32,7 @@
     "stars": 5
   },
   {
+    "uid": 5,
     "id": "anjum-hotel-madinah",
     "name": "Anjum Hotel Madinah",
     "distance_km": 0.3,
@@ -35,6 +40,7 @@
     "stars": 4
   },
   {
+    "uid": 6,
     "id": "al-aqeeq-hotel",
     "name": "Al Aqeeq Hotel",
     "distance_km": 0.35,
@@ -42,6 +48,7 @@
     "stars": 4
   },
   {
+    "uid": 7,
     "id": "dar-al-eiman-grand-hotel",
     "name": "Dar Al Eiman Grand Hotel",
     "distance_km": 0.4,
@@ -49,6 +56,7 @@
     "stars": 5
   },
   {
+    "uid": 8,
     "id": "shaza-al-madina",
     "name": "Shaza Al Madina",
     "distance_km": 0.45,
@@ -56,6 +64,7 @@
     "stars": 5
   },
   {
+    "uid": 9,
     "id": "crowne-plaza-madinah",
     "name": "Crowne Plaza Madinah",
     "distance_km": 0.5,
@@ -63,6 +72,7 @@
     "stars": 5
   },
   {
+    "uid": 10,
     "id": "al-haram-hotel",
     "name": "Al Haram Hotel",
     "distance_km": 0.6,
@@ -70,6 +80,7 @@
     "stars": 4
   },
   {
+    "uid": 11,
     "id": "elaf-al-mashaer-hotel",
     "name": "Elaf Al Mashaer Hotel",
     "distance_km": 0.55,
@@ -77,6 +88,7 @@
     "stars": 4
   },
   {
+    "uid": 12,
     "id": "madinah-hilton",
     "name": "Madinah Hilton",
     "distance_km": 0.7,
@@ -84,6 +96,7 @@
     "stars": 5
   },
   {
+    "uid": 13,
     "id": "dar-al-taqwa-hotel",
     "name": "Dar Al Taqwa Hotel",
     "distance_km": 0.75,
@@ -91,6 +104,7 @@
     "stars": 4
   },
   {
+    "uid": 14,
     "id": "anwar-al-madinah-movenpick",
     "name": "Anwar Al Madinah Mövenpick Hotel",
     "distance_km": 0.8,
@@ -98,6 +112,7 @@
     "stars": 5
   },
   {
+    "uid": 15,
     "id": "al-madinah-harmony-hotel",
     "name": "Al Madinah Harmony Hotel",
     "distance_km": 0.9,

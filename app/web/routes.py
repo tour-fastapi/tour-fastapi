@@ -102,7 +102,7 @@ async def add_city(request: Request):
     except Exception as e:
         return JSONResponse(status_code=500, content={"detail": str(e)})
 
-@router.get("/logout")
+@router.post("/logout")
 def logout(request: Request):
     # Clear session completely
     request.session.clear()
@@ -852,10 +852,11 @@ def verify_resend(request: Request, csrf_token: str = Form(...), db: Session = D
 def dashboard_agency(request: Request, registration_id: int, db: Session = Depends(get_db)):
     
 
-    user_or_redirect = require_user(request, db)
-    if not isinstance(user_or_redirect, dict) and hasattr(user_or_redirect, "status_code"):
-        return user_or_redirect
-    user = user_or_redirect
+    user = require_user_ui(request, db)
+    if isinstance(user, RedirectResponse):
+        return user
+
+    
     flashes = pop_flashes(request)
 
     set_active_agency(request, registration_id)
@@ -928,7 +929,11 @@ def dashboard_agency(request: Request, registration_id: int, db: Session = Depen
 
 @router.get("/inquiries", response_class=HTMLResponse)
 def inquiries_list(request: Request, db: Session = Depends(get_db)):
-    user = require_user(request, db)
+    
+    user = require_user_ui(request, db)
+    if isinstance(user, RedirectResponse):
+        return user
+    
     flashes = pop_flashes(request)
 
     active_id = get_active_agency_id(request)
@@ -966,7 +971,9 @@ def inquiries_list(request: Request, db: Session = Depends(get_db)):
 
 @router.get("/inquiries/{inquiry_id}", response_class=HTMLResponse)
 def inquiries_detail(inquiry_id: int, request: Request, db: Session = Depends(get_db)):
-    user = require_user(request, db)
+    user = require_user_ui(request, db)
+    if isinstance(user, RedirectResponse):
+        return user
     flashes = pop_flashes(request)
 
     active_id = get_active_agency_id(request)
@@ -1010,7 +1017,9 @@ def inquiries_detail(inquiry_id: int, request: Request, db: Session = Depends(ge
 @router.post("/inquiries/mark-all-seen")
 def inquiries_mark_all_seen(request: Request, csrf_token: str = Form(...), db: Session = Depends(get_db)):
     require_csrf(request, csrf_token)
-    user = require_user(request, db)
+    user = require_user_ui(request, db)
+    if isinstance(user, RedirectResponse):
+        return user
 
     active_id = get_active_agency_id(request)
     if not active_id:
@@ -1031,7 +1040,11 @@ def inquiries_mark_all_seen(request: Request, csrf_token: str = Form(...), db: S
 
 @router.get("/select-agency", response_class=HTMLResponse)
 def select_agency_page(request: Request, db: Session = Depends(get_db)):
-    user = require_user(request, db)
+    
+    user = require_user_ui(request, db)
+    if isinstance(user, RedirectResponse):
+        return user
+
     flashes = pop_flashes(request)
     agencies = (
         db.query(Agency)
@@ -1068,7 +1081,10 @@ def select_agency_submit(
     db: Session = Depends(get_db),
 ):
     require_csrf(request, csrf_token)
-    user = require_user(request, db)
+
+    user = require_user_ui(request, db)
+    if isinstance(user, RedirectResponse):
+        return user
 
     agency = (
         db.query(Agency)
@@ -1094,7 +1110,9 @@ def agency_new_page(
     request: Request,
     db: Session = Depends(get_db),
 ):
-    user = require_user(request, db)
+    user = require_user_ui(request, db)
+    if isinstance(user, RedirectResponse):
+        return user
 
     existing = db.query(Agency).filter(Agency.user_id == user.id).count()
     if existing >= 1:
@@ -1157,7 +1175,10 @@ def agency_new_submit(
     db: Session = Depends(get_db),
 ):
     require_csrf(request, csrf_token)
-    user = require_user(request, db)
+    
+    user = require_user_ui(request, db)
+    if isinstance(user, RedirectResponse):
+        return user
 
     # ---- tiny local helpers (no imports from routes_media to avoid ImportError) ----
     MEDIA_ROOT = Path("media").resolve()
@@ -1323,7 +1344,9 @@ def agency_edit_page(
     registration_id: int,
     db: Session = Depends(get_db),
 ):
-    user = require_user(request, db)
+    user = require_user_ui(request, db)
+    if isinstance(user, RedirectResponse):
+        return user
 
     agency = (
         db.query(Agency)
@@ -1389,8 +1412,10 @@ async def agency_edit_submit(
     db: Session = Depends(get_db),
 ):
     require_csrf(request, csrf_token)
-    user = require_user(request, db)
-
+    
+    user = require_user_ui(request, db)
+    if isinstance(user, RedirectResponse):
+        return user
     
 
     def _to_int_or_none(s: str) -> Optional[int]:
@@ -1571,7 +1596,11 @@ def agency_delete_submit(
     db: Session = Depends(get_db),
 ):
     require_csrf(request, csrf_token)
-    user = require_user(request, db)
+
+    user = require_user_ui(request, db)
+    if isinstance(user, RedirectResponse):
+        return user
+
     agency = (
         db.query(Agency)
         .filter(Agency.registration_id == registration_id, Agency.user_id == user.id)
@@ -1585,6 +1614,7 @@ def agency_delete_submit(
     db.delete(agency)
     db.commit()
     flash(request, "Agency deleted", "success")
+    print("DELETE HIT")
     return RedirectResponse(url="/select-agency", status_code=303)
 
 
@@ -1877,6 +1907,26 @@ def package_detail(package_id: int, request: Request, db: Session = Depends(get_
     csrf_token = get_csrf_token(request)
     captcha_tag = f"pkg-inq:{pkg.package_id}"
 
+    def load_hotels(path: str) -> list[dict]:
+        p = Path(path)
+        if not p.exists():
+            return []
+        return json.loads(p.read_text(encoding="utf-8"))
+
+    makkah_hotels = load_hotels("app/web/static/data/hotels-makkah.json")
+    madinah_hotels = load_hotels("app/web/static/data/hotels-madinah.json")
+
+    def find_by_uid(hotels: list[dict], uid: int | None) -> dict | None:
+        if uid is None:
+            return None
+        for h in hotels:
+            if h.get("uid") == uid:
+                return h
+        return None
+
+    mecca_hotel = find_by_uid(makkah_hotels, mecca.hotel_uid if mecca else None)
+    med_hotel   = find_by_uid(madinah_hotels, med.hotel_uid if med else None)
+
     return render(
         "public/package_detail.html",
         request,
@@ -1912,6 +1962,11 @@ def package_detail(package_id: int, request: Request, db: Session = Depends(get_
             # ✅ NEW: lists used by basic / premium / premium_aurora templates
             "mecca_similar_hotels": mecca_similar_hotels,
             "med_similar_hotels":   med_similar_hotels,
+            # ✅ add these (for nights + later meta)
+            "mecca": mecca,
+            "med": med,
+            "mecca_hotel": mecca_hotel,
+            "med_hotel": med_hotel,
             **currency_ctx,
             
 
@@ -2007,8 +2062,11 @@ def package_new_page(
     request: Request,
     agency_id: int = Query(...),
     db: Session = Depends(get_db),
+    
 ):
-    user = require_user(request, db)
+    user = require_user_ui(request, db)
+    if isinstance(user, RedirectResponse):
+        return user
 
     from app.db.models.hotel import Hotel
 
@@ -2128,6 +2186,8 @@ def package_new_submit(
     mecca_check_in: str = Form(""),
     mecca_check_out: str = Form(""),
     mecca_hotel: str = Form(""),
+    mecca_hotel_uid: str = Form(""),
+    mecca_nights: str = Form(""),
     mecca_link: str = Form(""),
     mecca_distance_m: str = Form(""),
     mecca_distance_text: str = Form(""),
@@ -2135,12 +2195,16 @@ def package_new_submit(
     med_check_in: str = Form(""),
     med_check_out: str = Form(""),
     med_hotel: str = Form(""),
+    med_hotel_uid: str = Form(""),
+    med_nights: str = Form(""),
+
     med_link: str = Form(""),
     med_distance_m: str = Form(""),
     med_distance_text: str = Form(""),
     mecca_similar: Optional[str] = Form(None),
     medinah_similar: Optional[str] = Form(None),
 
+    
 
 
     incl_meals_enabled: Optional[str] = Form(None),
@@ -2179,12 +2243,15 @@ def package_new_submit(
 
     
 ):
-    print("RAW tentative_airline:", repr(tentative_airline)),
-    print("RAW tentative_airline_iata:", repr(tentative_airline_iata)),
-    print("RAW tentative_airline_icao:", repr(tentative_airline_icao)),
+    print("RAW tentative_airline:", repr(tentative_airline))
+    print("RAW tentative_airline_iata:", repr(tentative_airline_iata))
+    print("RAW tentative_airline_icao:", repr(tentative_airline_icao))
 
     require_csrf(request, csrf_token)
-    user = require_user(request, db)
+
+    user = require_user_ui(request, db)
+    if isinstance(user, RedirectResponse):
+        return user
 
     ALLOWED_BANNERS = {
         "dynamic-tawaf-at-night.jpg",
@@ -2516,6 +2583,8 @@ def package_new_submit(
             distance_m=mecca_distance_m_val,
             hotel_id=mecca_hotel_id,
             similar_hotel_ids=similar_ids,
+            hotel_uid=int(mecca_hotel_uid) if mecca_hotel_uid else None,
+            nights=int(mecca_nights) if mecca_nights else None,
         )
         db.add(mecca_stay)
 
@@ -2544,6 +2613,8 @@ def package_new_submit(
             distance_m=med_distance_m_val,
             hotel_id=med_hotel_id,
             similar_hotel_ids=similar_ids,
+            hotel_uid=int(med_hotel_uid) if med_hotel_uid else None,
+            nights=int(med_nights) if med_nights else None,
         )
         db.add(med_stay)
 
@@ -2644,7 +2715,10 @@ def package_set_status(
     db: Session = Depends(get_db),
 ):
     require_csrf(request, csrf_token)
-    user = require_user(request, db)
+    
+    user = require_user_ui(request, db)
+    if isinstance(user, RedirectResponse):
+        return user
 
     pkg = db.query(Package).filter(Package.package_id == package_id).first()
     if not pkg:
@@ -2817,7 +2891,13 @@ from typing import Optional, List
 
 @router.get("/package/{package_id}/edit", response_class=HTMLResponse)
 def package_edit_page(request: Request, package_id: int, db: Session = Depends(get_db)):
-    user = require_user(request, db)
+
+    user = require_user_ui(request, db)
+    if isinstance(user, RedirectResponse):
+        return user
+
+    
+    
 
     pkg = db.query(Package).filter(Package.package_id == package_id).first()
     if not pkg:
@@ -2946,6 +3026,10 @@ def package_edit_submit(
     mecca_check_in: str = Form(""),
     mecca_check_out: str = Form(""),
     mecca_hotel: str = Form(""),
+    mecca_hotel_uid: str = Form(""),
+    mecca_nights: str = Form(""),
+
+
     mecca_link: str = Form(""),
     mecca_distance_m: str = Form(""),
     mecca_distance_text: str = Form(""),
@@ -2953,6 +3037,9 @@ def package_edit_submit(
     med_check_in: str = Form(""),
     med_check_out: str = Form(""),
     med_hotel: str = Form(""),
+    med_hotel_uid: str = Form(""),
+    med_nights: str = Form(""),
+
     med_link: str = Form(""),
     med_distance_m: str = Form(""),
     med_distance_text: str = Form(""),
@@ -2991,7 +3078,10 @@ def package_edit_submit(
     print("RAW tentative_airline_icao:", repr(tentative_airline_icao))
 
     require_csrf(request, csrf_token)
-    user = require_user(request, db)
+
+    user = require_user_ui(request, db)
+    if isinstance(user, RedirectResponse):
+        return user
 
     pkg = db.query(Package).filter(Package.package_id == package_id).first()
     if not pkg:
@@ -3200,9 +3290,12 @@ def package_edit_submit(
             link=(link_txt or "").strip() or None,
         )
         return row.id if row else None
+    print("DEBUG ->", mecca_nights, med_nights, mecca_hotel_uid, med_hotel_uid)    
 
-    def upsert_stay(which_city: str, ci: str, co: str, hotel_name_txt: str, hotel_link_txt: str, dist_m: str, dist_txt: str):
+    def upsert_stay(which_city: str, ci: str, co: str, hotel_name_txt: str, hotel_link_txt: str, dist_m: str, dist_txt: str,nights_txt: str,hotel_uid_txt: str):
         stay = db.query(PackageStay).filter_by(package_id=pkg.package_id, city=which_city).first()
+
+        
 
         if any([ci, co, hotel_name_txt, hotel_link_txt, dist_m, dist_txt]):
             if not stay:
@@ -3215,13 +3308,19 @@ def package_edit_submit(
             stay.hotel_link = _norm(hotel_link_txt)
             stay.distance_text = _norm(dist_txt)
             stay.distance_m = int(dist_m) if (dist_m and dist_m.strip().isdigit()) else None
+            
+            stay.hotel_uid = int(hotel_uid_txt) if hotel_uid_txt else None
+            stay.nights = int(nights_txt) if nights_txt else None
 
             stay.hotel_id = resolve_hotel_id_by_name(hotel_name_txt, hotel_link_txt, which_city)
         elif stay:
             db.delete(stay)
 
-    upsert_stay("Mecca", mecca_check_in, mecca_check_out, mecca_hotel, mecca_link, mecca_distance_m, mecca_distance_text)
-    upsert_stay("Medinah", med_check_in, med_check_out, med_hotel, med_link, med_distance_m, med_distance_text)
+    
+
+    upsert_stay("Mecca", mecca_check_in, mecca_check_out, mecca_hotel, mecca_link, mecca_distance_m, mecca_distance_text, mecca_nights, mecca_hotel_uid)
+
+    upsert_stay("Medinah", med_check_in, med_check_out, med_hotel, med_link, med_distance_m, med_distance_text, med_nights, med_hotel_uid)
 
     # ----------------------------
     # Variant prices
@@ -3356,7 +3455,10 @@ def package_delete(
     db: Session = Depends(get_db),
 ):
     require_csrf(request, csrf_token)
-    user = require_user(request, db)
+    user = require_user_ui(request, db)
+    if isinstance(user, RedirectResponse):
+        return user
+        
     pkg = db.query(Package).filter(Package.package_id == package_id).first()
     if not pkg:
         flash(request, "Package not found", "error")

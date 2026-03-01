@@ -510,7 +510,7 @@
       <!-- Hidden inputs to store hotel data -->
       <!-- Hidden inputs - CHECK THESE IDs! -->
     <input type="hidden" name="mecca_hotel" id="meccaHotelName" value="{{ mecca.hotel_name if mecca else '' }}">
-    <input type="hidden" name="mecca_hotel_id" id="meccaHotelId" value="{{ mecca.hotel_id if mecca else '' }}">
+    <input type="hidden" name="mecca_hotel_uid" id="meccaHotelId" value="{{ mecca.hotel_uid if mecca else '' }}">
     <input type="hidden" name="mecca_distance_km" id="meccaDistanceKm" value="{{ mecca.distance_km if mecca else '' }}">
     <input type="hidden" name="mecca_walking_minutes" id="meccaWalkingMinutes" value="{{ mecca.walking_minutes if mecca else '' }}">
     <input type="hidden" name="mecca_stars" id="meccaStars" value="{{ mecca.stars if mecca else '' }}">
@@ -551,6 +551,17 @@
           Can't find your hotel? <a href="mailto:ansariparvez@gmail.com?subject=Add Hotel Request - Makkah" class="text-emerald-600 hover:text-emerald-700">Let us know</a>
         </p>
       </div>
+      <div class="mt-4">
+        <label class="form-label">Nights in Mecca</label>
+        <input
+          type="number"
+          min="0"
+          name="mecca_nights"
+          value="{{ mecca.nights if mecca and mecca.nights is not none else '' }}"
+          class="form-input"
+          placeholder="e.g. 4"
+        />
+      </div>
     </div>
 
     <!-- ========== MADINAH HOTEL ========== -->
@@ -560,7 +571,8 @@
       <!-- Hidden inputs to store hotel data -->
        <!-- Hidden inputs - CHECK THESE IDs! -->
   <input type="hidden" name="med_hotel" id="medHotelName" value="{{ med.hotel_name if med else '' }}">
-  <input type="hidden" name="med_hotel_id" id="medHotelId" value="{{ med.hotel_id if med else '' }}">
+  <input type="hidden" name="med_hotel_uid" id="medHotelId" value="{{ med.hotel_uid if med else '' }}">
+  
   <input type="hidden" name="med_distance_km" id="medDistanceKm" value="{{ med.distance_km if med else '' }}">
   <input type="hidden" name="med_walking_minutes" id="medWalkingMinutes" value="{{ med.walking_minutes if med else '' }}">
   <input type="hidden" name="med_stars" id="medStars" value="{{ med.stars if med else '' }}">
@@ -599,6 +611,17 @@
         <p class="text-sm text-gray-500 mt-2">
           Can't find your hotel? <a href="mailto:ansariparvez@gmail.com?subject=Add Hotel Request - Madinah" class="text-emerald-600 hover:text-emerald-700">Let us knows</a>
         </p>
+      </div>
+      <div class="mt-4">
+        <label class="form-label">Nights in Medinah</label>
+        <input
+          type="number"
+          min="0"
+          name="med_nights"
+          value="{{ med.nights if med and med.nights is not none else '' }}"
+          class="form-input"
+          placeholder="e.g. 3"
+        />
       </div>
     </div>
 
@@ -799,11 +822,11 @@
   </form>
 
 </main>
-<script src="/static/js/hotels-autosuggest.js" ></script>
-<script src="/static/js/airline-autosuggest.js" ></script>
 
-<script src="/static/js/package-via-city.js" defer></script>
-<script src="/static/js/package-form.js" ></script>
+<script src="/static/js/hotels-autosuggest.js?v={{ static_version() }}"></script>
+<script src="/static/js/airline-autosuggest.js?v={{ static_version() }}"></script>
+<script src="/static/js/package-via-city.js?v={{ static_version() }}" defer></script>
+<script src="/static/js/package-form.js?v={{ static_version() }}"></script>
 
 
 {% include './partials/_add-city-modal.html' %}

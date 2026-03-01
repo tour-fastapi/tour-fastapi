@@ -8,8 +8,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Fetch both hotel lists
   Promise.all([
-    fetch('/static/data/hotels-makkah.json').then(res => res.json()),
-    fetch('/static/data/hotels-madinah.json').then(res => res.json())
+    fetch('/static/data/hotels-makkah.json?v=${Date.now()}').then(res => res.json()),
+    fetch('/static/data/hotels-madinah.json?v=${Date.now()}').then(res => res.json())
   ]).then(([makkah, madinah]) => {
     makkahHotels = makkah;
     madinahHotels = madinah;
@@ -78,13 +78,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function selectHotel(data, city) {
   console.log(`✅ Selected ${city} hotel:`, data);
+    console.log("UID vs ID:", data.uid, data.id);
   
   // ⬇️ CHANGE THIS LINE - use 'prefix' instead of 'fieldName'
   const prefix = city === 'makkah' ? 'mecca' : 'med';
   
   // Update ALL hidden inputs with correct names
   document.getElementById(`${prefix}HotelName`).value = data.name;
-  document.getElementById(`${prefix}HotelId`).value = data.id;
+  
+  document.getElementById(`${prefix}HotelId`).value = data.uid;
   document.getElementById(`${prefix}DistanceKm`).value = data.distance_km;
   document.getElementById(`${prefix}WalkingMinutes`).value = data.walking_minutes;
   document.getElementById(`${prefix}Stars`).value = data.stars;

@@ -31,6 +31,11 @@ class PackageStay(Base):
     created_at: Mapped[Optional[DateTime]] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     hotel_id = Column(Integer, ForeignKey("hotels.id"), nullable=True)
+    hotel_slug: Mapped[Optional[str]] = mapped_column(String(200))
     similar_hotel_ids = Column(Text, nullable=True)
+
+    # inside class PackageStay(Base):
+    hotel_uid = Column(Integer, nullable=True)
+    nights = Column(Integer, nullable=True)
 
     package = relationship("Package", back_populates="stays")

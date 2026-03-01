@@ -1,5 +1,6 @@
 [
   {
+    "uid": 1,
     "id": "fairmont-makkah-clock-royal-tower",
     "name": "Fairmont Makkah Clock Royal Tower",
     "distance_km": 0.1,
@@ -7,6 +8,7 @@
     "stars": 5
   },
   {
+    "uid": 2,
     "id": "swissotel-makkah",
     "name": "Swissôtel Makkah",
     "distance_km": 0.2,
@@ -14,6 +16,7 @@
     "stars": 5
   },
   {
+    "uid": 3,
     "id": "hilton-suites-makkah",
     "name": "Hilton Suites Makkah",
     "distance_km": 0.3,
@@ -21,6 +24,7 @@
     "stars": 5
   },
   {
+    "uid": 4,
     "id": "pullman-zamzam-makkah",
     "name": "Pullman ZamZam Makkah",
     "distance_km": 0.15,
@@ -28,6 +32,7 @@
     "stars": 5
   },
   {
+    "uid": 5,
     "id": "raffles-makkah-palace",
     "name": "Raffles Makkah Palace",
     "distance_km": 0.2,
@@ -35,6 +40,7 @@
     "stars": 5
   },
   {
+    "uid": 6,
     "id": "conrad-makkah",
     "name": "Conrad Makkah",
     "distance_km": 0.25,
@@ -42,6 +48,7 @@
     "stars": 5
   },
   {
+    "uid": 7,
     "id": "movenpick-hotel-makkah",
     "name": "Mövenpick Hotel & Residence Hajar Tower Makkah",
     "distance_km": 0.3,
@@ -49,6 +56,7 @@
     "stars": 5
   },
   {
+    "uid": 8,
     "id": "dar-al-eiman-royal-hotel",
     "name": "Dar Al Eiman Royal Hotel",
     "distance_km": 0.4,
@@ -56,6 +64,7 @@
     "stars": 5
   },
   {
+    "uid": 9,
     "id": "elaf-kinda-hotel",
     "name": "Elaf Kinda Hotel",
     "distance_km": 0.5,
@@ -63,6 +72,7 @@
     "stars": 4
   },
   {
+    "uid": 10,
     "id": "anjum-hotel-makkah",
     "name": "Anjum Hotel Makkah",
     "distance_km": 0.6,
@@ -70,6 +80,7 @@
     "stars": 4
   },
   {
+    "uid": 11,
     "id": "al-shohada-hotel",
     "name": "Al Shohada Hotel",
     "distance_km": 0.7,
@@ -77,6 +88,7 @@
     "stars": 4
   },
   {
+    "uid": 12,
     "id": "makkah-towers",
     "name": "Makkah Towers",
     "distance_km": 0.35,
@@ -84,6 +96,7 @@
     "stars": 4
   },
   {
+    "uid": 13,
     "id": "sheraton-makkah-jabal-al-kaaba",
     "name": "Sheraton Makkah Jabal Al Kaaba Hotel",
     "distance_km": 0.8,
@@ -91,6 +104,7 @@
     "stars": 5
   },
   {
+    "uid": 14,
     "id": "al-safwah-royale-orchid",
     "name": "Al Safwah Royale Orchid Hotel",
     "distance_km": 0.45,
@@ -98,6 +112,7 @@
     "stars": 4
   },
   {
+    "uid": 15,
     "id": "intercontinental-dar-al-tawhid",
     "name": "InterContinental Dar Al Tawhid Makkah",
     "distance_km": 0.9,

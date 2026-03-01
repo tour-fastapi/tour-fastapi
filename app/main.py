@@ -8,7 +8,7 @@ from sqlalchemy import text
 
 from app.core.config import settings
 from app.core.deps import get_db
-from app.db.session import engine
+from app.db.session import engine   
 from app.db.mixins import Base
 import app.db.models 
 # ✅ CRITICAL: load DB models so Base.metadata is populated

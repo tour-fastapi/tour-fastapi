@@ -54,12 +54,13 @@
             {% if pkg.package_class %}
               <span class="package-banner__meta-badge">{{ pkg.package_class|title }}</span>
             {% endif %}
-
+            {% if pkg.days %}
             <span class="package-banner__meta-separator">•</span>
             <span class="package-banner__meta-badge">
               <i data-lucide="calendar"></i>
               {{ pkg.days }} Days
             </span>
+            {% endif %}
 
             {% if onward_text %}
               <span class="package-banner__meta-separator">•</span>
@@ -305,29 +306,66 @@
       <div class="package-details__grid package-details__grid--two-col">
         <!-- Makkah -->
         <div class="package-details__card">
-          <div class="package-details__label">MAKKAH</div>
+          <div class="package-details__label">
+            MAKKAH
+            {% if mecca and mecca.nights %}
+            <span class="package-details__tag">{{ med.nights }} Nights</span>
+              
+            </span>
+                
+              {% endif %}
+          </div>
           <div class="package-details__card-content">
-            <div class="package-details__icon-box">
+            <div class="package-details__icon-box is-hidden">
               <i data-lucide="home" class="package-details__icon"></i>
             </div>
             <div class="package-details__card-info">
               <div class="package-details__card-title">{{ mecca_hotel_name or '—' }}</div>
-              <div class="package-details__card-meta">10 Nights</div>
-              <div class="package-details__card-meta">{{ mecca_distance_label }}</div>
+              
+              {% if mecca_hotel %}
+                <div class="package-details__card-meta">
+                  <div class="hotel-stars">{{ "★" * mecca_hotel.stars }}</div>
+                  <div class="hotel-info">
+                    <span class="hotel-distance">{{ mecca_hotel.distance_km }}km</span> •
+                    <span class="hotel-walking"> {{ mecca_hotel.walking_minutes }} min walk</span>
+                  </div>
+                </div>
+                
+              {% else %}
+                <div class="package-details__card-meta">—</div>
+              {% endif %}
             </div>
           </div>
         </div>
         <!-- Madinah -->
         <div class="package-details__card">
-          <div class="package-details__label">MADINAH</div>
+          <div class="package-details__label">
+            MADINAH
+            {% if med and med.nights %}
+            <span class="package-details__tag">{{ med.nights }} Nights</span>
+              
+            </span>
+            {% endif %}
+          </div>
           <div class="package-details__card-content">
-            <div class="package-details__icon-box">
+            <div class="package-details__icon-box is-hidden">
               <i data-lucide="home" class="package-details__icon"></i>
             </div>
             <div class="package-details__card-info">
               <div class="package-details__card-title">{{ med_hotel_name or '—' }}</div>
-              <div class="package-details__card-meta">5 Nights</div>
-              <div class="package-details__card-meta">{{ med_distance_label }}</div>
+             
+              {% if med_hotel %}
+                <div class="package-details__card-meta">
+                  <div class="hotel-stars">{{ "★" * med_hotel.stars }}</div>
+                  <div class="hotel-info">
+                    <span class="hotel-distance">{{ med_hotel.distance_km }}km</span> •
+                    <span class="hotel-walking"> {{ med_hotel.walking_minutes }} min walk</span>
+                  </div>
+                </div>
+                
+              {% else %}
+                <div class="package-details__card-meta">—</div>
+              {% endif %}
             </div>
           </div>
         </div>
@@ -365,7 +403,7 @@
     {% endif %}
 
     <!-- Pricing - Children Section -->
-    <section class="package-details__section">
+    <section class="package-details__section is-hidden">
       <h2 class="package-details__heading">Pricing - Children</h2>
       
       <div class="package-details__pricing-card package-details__pricing-card--complex">
@@ -523,7 +561,7 @@
     </section>
 
     <!-- Itinerary Section -->
-    <section class="package-details__section">
+    <section class="package-details__section is-hidden">
       <h2 class="package-details__heading">Day-by-Day Itinerary</h2>
       
       <div class="package-details__itinerary">
@@ -586,7 +624,7 @@
     </section>
 
     <!-- Terms & Conditions Section -->
-    <section class="package-details__section">
+    <section class="package-details__section is-hidden">
       <h2 class="package-details__heading">Terms & Conditions</h2>
       
       <div class="package-details__terms">
