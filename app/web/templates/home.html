@@ -3,224 +3,130 @@
 {% block content %}
 
 <!-- ============================================================================
-     HOMEPAGE
-     Main landing page with hero, stats, tabs, and dual audience content
+     FOR OPERATORS - Operator Signup Landing Page
+     Conversion-focused landing page to attract tour operators
      ============================================================================ -->
 
-<!-- Hero Section - Edge to Edge with Image -->
-
-<section class="hero">
-  <!-- Background Image -->
-  <div class="hero__image" style="background-image: url('https://images.unsplash.com/photo-1591604129939-f1efa4d9f7fa?w=1600&q=80');"></div>
-  
-  <!-- Black Gradient Overlay -->
-  <div class="hero__overlay"></div>
-
-  <!-- Hero Content -->
-  <div class="hero__content">
-    <h1 class="hero__title">
-      Your Gateway to Umrah Excellence
+<!-- Hero Section -->
+<section class="operator-hero">
+  <div class="operator-hero__container">
+    <!-- Badge -->
+    <div class="operator-hero__badge">
+      <span class="operator-hero__badge-pulse"></span>
+      No. 1 Umrah Directory Platform
+      </div>
+    
+    <!-- Title -->
+    <h1 class="operator-hero__title">
+      Get Discovered by<br />
+      Umrah Pilgrims Worldwide
     </h1>
-    <p class="hero__subtitle">
-      Connecting pilgrims with trusted operators worldwide
+    
+    <!-- Subtitle -->
+    <p class="operator-hero__subtitle">
+      Join the leading directory for Umrah tour operators. Get free lifetime listing, attract more leads, and grow your business.
+    </p>
+
+    <!-- CTA Button -->
+    <a href="#signup" class="operator-hero__cta">
+      Sign Up for Free 1 Year Plus Plan
+      <!-- Arrow Right Icon (SVG) -->
+      <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+        <path d="M5 12h14m-7-7l7 7-7 7"/>
+      </svg>
+    </a>
+
+    <!-- Sub CTA Text -->
+    <p class="operator-hero__subcta">
+      No credit card required • Free directory forever • Premium features included
     </p>
   </div>
 </section>
-  <section class="home__container">
-  <!-- Stats Bar - Glassmorphic -->
-  {% if metrics %}
-  <section class="stats-bar">
-    <div class="stats-bar__container">
-      
-      <div class="stats-bar__item">
-        <div class="stats-bar__value">{{ metrics.cities }}+</div>
-        <div class="stats-bar__label">Cities</div>
-      </div>
-      
-      <div class="stats-bar__item stats-bar__item--bordered">
-        <div class="stats-bar__value">{{ metrics.agencies }}+</div>
-        <div class="stats-bar__label">Registered Operators</div>
-      </div>
-      
-      <div class="stats-bar__item">
-        <div class="stats-bar__value">{{ metrics.packages }}+</div>
-        <div class="stats-bar__label">Packages Listed</div>
-      </div>
-       <div class="stats-bar__item is-hidden">
-        <div class="stats-bar__value">{{ metrics.inquiries }}+</div>
-        <div class="stats-bar__label">Leads Generated</div>
-      </div>
-      
-    </div>
-  </section>
-  {% endif %}
 
-  <!-- Tab Switcher - Segmented Control -->
-  <section class="tab-switcher">
-    <div class="tab-switcher__container">
-      
-      <button 
-        class="tab-switcher__button tab-switcher__button--active" 
-        data-tab="pilgrim"
-        id="tab-btn-pilgrim"
-      >
-        <!-- Package Icon (SVG) -->
-        <svg class="tab-switcher__icon" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-          <path d="M20 7h-9M14 17H5m14-8v11a2 2 0 01-2 2H7a2 2 0 01-2-2V8m16-1a2 2 0 00-2-2h-5M7 7V5a2 2 0 012-2h1"/>
-        </svg>
-        <span class="tab-switcher__label">Pilgrims</span>
-      </button>
-      
-      <button 
-        class="tab-switcher__button" 
-        data-tab="operator"
-        id="tab-btn-operator"
-      >
-        <!-- Building Icon (SVG) -->
-        <svg class="tab-switcher__icon" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-          <path d="M3 21h18M9 8h10M10 11h7M10 14h7M10 17h7M3 3h6v18H3V3z"/>
-        </svg>
-        <span class="tab-switcher__label">Tour Operators</span>
-      </button>
-      
-    </div>
-  </section>
-
-  <!-- Tab Content - Pilgrim View -->
-  <section class="tab-content" id="tab-content-pilgrim" data-active="true">
+<!-- Benefits Section -->
+<section class="operator-benefits">
+  <div class="operator-benefits__container">
+    <h2 class="operator-benefits__title">Why Operators Choose UmrahAdvisor</h2>
     
-    <!-- Header -->
-    <div class="tab-content__header">
-      <h2 class="tab-content__title">Find Your Perfect Umrah Package</h2>
-      <p class="tab-content__description">
-        Compare packages, read reviews, and book with confidence from verified operators worldwide.
-      </p>
-    </div>
-
-    <!-- Features Grid - Horizontal Scroll on Mobile -->
-    <div class="features-grid">
-      
-      <!-- Feature 1 -->
-      <div class="feature-card">
-        <div class="feature-card__content">
-          <div class="feature-card__icon">
-            <!-- Search Icon (SVG) -->
-            <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-              <circle cx="11" cy="11" r="8"/>
-              <path d="M21 21l-4.35-4.35"/>
-            </svg>
-          </div>
-          <h3 class="feature-card__title">Easy Search & Filter</h3>
-          <p class="feature-card__description">
-            Find packages by budget, duration, hotel ratings, departure city, and travel dates.
-          </p>
-        </div>
-      </div>
-      
-      <!-- Feature 2 -->
-      <div class="feature-card">
-        <div class="feature-card__content">
-          <div class="feature-card__icon">
-            <!-- Shield Icon (SVG) -->
-            <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-            </svg>
-          </div>
-          <h3 class="feature-card__title">Verified Operators</h3>
-          <p class="feature-card__description">
-            All operators are verified with real reviews from pilgrims who traveled with them.
-          </p>
-        </div>
-      </div>
-      
-      <!-- Feature 3 -->
-      <div class="feature-card">
-        <div class="feature-card__content">
-          <div class="feature-card__icon">
-            <!-- Star Icon (SVG) -->
-            <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-            </svg>
-          </div>
-          <h3 class="feature-card__title">Compare & Save</h3>
-          <p class="feature-card__description">
-            Compare packages side-by-side and get the best value for your sacred journey.
-          </p>
-        </div>
-      </div>
-      
-    </div>
-
-    <!-- How It Works -->
-    <div class="how-it-works">
-      <h3 class="how-it-works__title">How It Works</h3>
-      <div class="how-it-works__grid">
-        
-        <!-- Step 1 -->
-        <div class="how-it-works__step">
-          <div class="how-it-works__number">1</div>
-          <h4 class="how-it-works__step-title">Search Packages</h4>
-          <p class="how-it-works__step-description">
-            Browse hundreds of packages from verified operators
-          </p>
-        </div>
-        
-        <!-- Step 2 -->
-        <div class="how-it-works__step">
-          <div class="how-it-works__number">2</div>
-          <h4 class="how-it-works__step-title">Compare & Choose</h4>
-          <p class="how-it-works__step-description">
-            Read reviews, compare prices and select your ideal package
-          </p>
-        </div>
-        
-        <!-- Step 3 -->
-        <div class="how-it-works__step">
-          <div class="how-it-works__number">3</div>
-          <h4 class="how-it-works__step-title">Book Directly</h4>
-          <p class="how-it-works__step-description">
-            Contact the operator and book your spiritual journey
-          </p>
-        </div>
-        
-      </div>
-    </div>
-
-    <!-- Pilgrim CTA -->
-    <div class="cta-section">
-      <a href="/packages" class="cta-button">
-        <!-- Search Icon (SVG) -->
-        <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-          <circle cx="11" cy="11" r="8"/>
-          <path d="M21 21l-4.35-4.35"/>
-        </svg>
-        Start Exploring Packages
-        <!-- Arrow Right Icon (SVG) -->
-        <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-          <path d="M5 12h14m-7-7l7 7-7 7"/>
-        </svg>
-      </a>
-    </div>
-    
-  </section>
-
-  <!-- Tab Content - Operator View -->
-  <section class="tab-content" id="tab-content-operator" data-active="false">
-    
-    <!-- Header -->
-    <div class="tab-content__header">
-      <h2 class="tab-content__title">Grow Your Umrah Business</h2>
-      <p class="tab-content__description">
-        Join hundreds of operators who trust us to connect with pilgrims worldwide.
-      </p>
-    </div>
-
-    <!-- Benefits Grid - 2 Columns -->
-    <div class="benefits-grid">
+    <div class="operator-benefits__grid">
       
       <!-- Benefit 1 -->
-      <div class="benefit-card">
-        <div class="benefit-card__icon">
+      <div class="operator-benefit-card">
+        <div class="operator-benefit-card__icon">
+          <!-- Search Icon (SVG) -->
+          <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+            <circle cx="11" cy="11" r="8"/>
+            <path d="M21 21l-4.35-4.35"/>
+          </svg>
+        </div>
+        <h3 class="operator-benefit-card__title">Get Discovered</h3>
+        <p class="operator-benefit-card__description">
+          Thousands of pilgrims searching for trusted Umrah operators find you instantly.
+        </p>
+      </div>
+
+      <!-- Benefit 2 -->
+      <div class="operator-benefit-card">
+        <div class="operator-benefit-card__icon">
+          <!-- Trending Up Icon (SVG) -->
+          <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+            <polyline points="17 6 23 6 23 12"/>
+          </svg>
+        </div>
+        <h3 class="operator-benefit-card__title">Get More Leads</h3>
+        <p class="operator-benefit-card__description">
+          Receive qualified inquiries directly from interested customers every day.
+        </p>
+      </div>
+
+      <!-- Benefit 3 -->
+      <div class="operator-benefit-card">
+        <div class="operator-benefit-card__icon">
+          <!-- Sparkles Icon (SVG) -->
+          <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+            <path d="M12 3l1.09 3.26L16.5 7.35l-3.26 1.09L12 12l-1.09-3.26L7.5 7.65l3.26-1.09L12 3z"/>
+            <path d="M19 10l.54 1.63L21.17 12.63l-1.63.54L19 15l-.54-1.63L16.83 12.83l1.63-.54L19 10z"/>
+          </svg>
+        </div>
+        <h3 class="operator-benefit-card__title">Free Lifetime Listing</h3>
+        <p class="operator-benefit-card__description">
+          Never pay a penny. Your operator profile stays live forever, completely free.
+        </p>
+      </div>
+
+      <!-- Benefit 4 -->
+      <div class="operator-benefit-card">
+        <div class="operator-benefit-card__icon">
+          <!-- Megaphone Icon (SVG) -->
+          <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+            <path d="M3 11l18-6v14L3 13v-2z"/>
+            <path d="M11.6 16.8a3 3 0 11-5.8-1.6"/>
+          </svg>
+        </div>
+        <h3 class="operator-benefit-card__title">Marketing Tools</h3>
+        <p class="operator-benefit-card__description">
+          Showcase your packages beautifully with photos, itineraries, and pricing.
+        </p>
+      </div>
+
+      <!-- Benefit 5 -->
+      <div class="operator-benefit-card">
+        <div class="operator-benefit-card__icon">
+          <!-- Message Square Icon (SVG) -->
+          <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+            <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+          </svg>
+        </div>
+        <h3 class="operator-benefit-card__title">Direct Enquiries</h3>
+        <p class="operator-benefit-card__description">
+          Get customer inquiries sent straight to you—no middleman, no commissions.
+        </p>
+      </div>
+
+      <!-- Benefit 6 -->
+      <div class="operator-benefit-card">
+        <div class="operator-benefit-card__icon">
           <!-- Users Icon (SVG) -->
           <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
             <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
@@ -228,201 +134,185 @@
             <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
           </svg>
         </div>
-        <div>
-          <h3 class="benefit-card__title">Reach More Pilgrims</h3>
-          <p class="benefit-card__description">
-            Get discovered by thousands of travelers actively searching for Umrah packages every month.
-          </p>
-        </div>
+        <h3 class="operator-benefit-card__title">Build Your Brand</h3>
+        <p class="operator-benefit-card__description">
+          Professional operator profile with reviews, ratings, and complete package showcase.
+        </p>
       </div>
-      
-      <!-- Benefit 2 -->
-      <div class="benefit-card">
-        <div class="benefit-card__icon">
-          <!-- Trending Up Icon (SVG) -->
-          <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
-            <polyline points="17 6 23 6 23 12"/>
-          </svg>
-        </div>
-        <div>
-          <h3 class="benefit-card__title">Increase Bookings</h3>
-          <p class="benefit-card__description">
-            Showcase your packages to a targeted audience ready to book their spiritual journey.
-          </p>
-        </div>
-      </div>
-      
-      <!-- Benefit 3 -->
-      <div class="benefit-card">
-        <div class="benefit-card__icon">
-          <!-- Globe Icon (SVG) -->
-          <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-            <circle cx="12" cy="12" r="10"/>
-            <line x1="2" y1="12" x2="22" y2="12"/>
-            <path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/>
-          </svg>
-        </div>
-        <div>
-          <h3 class="benefit-card__title">Global Presence</h3>
-          <p class="benefit-card__description">
-            Expand beyond your local market and connect with pilgrims from around the world.
-          </p>
-        </div>
-      </div>
-      
-      <!-- Benefit 4 -->
-      <div class="benefit-card">
-        <div class="benefit-card__icon">
-          <!-- Shield Icon (SVG) -->
-          <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-          </svg>
-        </div>
-        <div>
-          <h3 class="benefit-card__title">Build Trust & Credibility</h3>
-          <p class="benefit-card__description">
-            Verified badge, customer reviews, and detailed profiles help build your reputation.
-          </p>
-        </div>
-      </div>
-      
-    </div>
 
-    <!-- Operator Features List - Green Gradient Box -->
-    <div class="features-box">
-      <h3 class="features-box__title">What's Included in Your Profile</h3>
-      <div class="features-box__grid">
-        
-        <div class="features-box__item">
-          <!-- Check Circle Icon (SVG) -->
-          <svg class="features-box__icon" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-            <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
-            <polyline points="22 4 12 14.01 9 11.01"/>
-          </svg>
-          <span class="features-box__text">Dedicated operator profile page</span>
-        </div>
-        
-        <div class="features-box__item">
-          <svg class="features-box__icon" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-            <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
-            <polyline points="22 4 12 14.01 9 11.01"/>
-          </svg>
-          <span class="features-box__text">Unlimited package listings</span>
-        </div>
-        
-        <div class="features-box__item">
-          <svg class="features-box__icon" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-            <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
-            <polyline points="22 4 12 14.01 9 11.01"/>
-          </svg>
-          <span class="features-box__text">Lead management dashboard</span>
-        </div>
-        
-        <div class="features-box__item">
-          <svg class="features-box__icon" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-            <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
-            <polyline points="22 4 12 14.01 9 11.01"/>
-          </svg>
-          <span class="features-box__text">Customer review system</span>
-        </div>
-        
-        <div class="features-box__item">
-          <svg class="features-box__icon" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-            <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
-            <polyline points="22 4 12 14.01 9 11.01"/>
-          </svg>
-          <span class="features-box__text">Analytics and insights</span>
-        </div>
-        
-        <div class="features-box__item">
-          <svg class="features-box__icon" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-            <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
-            <polyline points="22 4 12 14.01 9 11.01"/>
-          </svg>
-          <span class="features-box__text">Priority customer support</span>
-        </div>
-        
-      </div>
     </div>
+  </div>
+</section>
 
-    <!-- Operator CTA -->
-    <div class="cta-section">
-      <a href="/register" class="cta-button">
-        <!-- Building Icon (SVG) -->
-        <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-          <path d="M3 21h18M9 8h10M10 11h7M10 14h7M10 17h7M3 3h6v18H3V3z"/>
+
+
+<!-- What's Included Section -->
+<section class="operator-included">
+  <div class="operator-included__container">
+    <h2 class="operator-included__title">Everything You Need to Succeed</h2>
+    
+    <div class="operator-included__list">
+      
+      <div class="operator-included__item">
+        <!-- Check Circle Icon (SVG) -->
+        <svg class="operator-included__icon" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+          <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
+          <polyline points="22 4 12 14.01 9 11.01"/>
         </svg>
-        Sign Up as Operator
+        <span class="operator-included__text">Unlimited package listings with photos and details</span>
+      </div>
+
+      <div class="operator-included__item">
+        <svg class="operator-included__icon" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+          <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
+          <polyline points="22 4 12 14.01 9 11.01"/>
+        </svg>
+        <span class="operator-included__text">Professional operator profile page</span>
+      </div>
+
+      <div class="operator-included__item">
+        <svg class="operator-included__icon" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+          <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
+          <polyline points="22 4 12 14.01 9 11.01"/>
+        </svg>
+        <span class="operator-included__text">Direct customer inquiry management</span>
+      </div>
+
+      <div class="operator-included__item">
+        <svg class="operator-included__icon" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+          <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
+          <polyline points="22 4 12 14.01 9 11.01"/>
+        </svg>
+        <span class="operator-included__text">Real-time analytics and insights</span>
+      </div>
+
+      <div class="operator-included__item">
+        <svg class="operator-included__icon" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+          <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
+          <polyline points="22 4 12 14.01 9 11.01"/>
+        </svg>
+        <span class="operator-included__text">Mobile-optimized for customers on the go</span>
+      </div>
+
+      <div class="operator-included__item">
+        <svg class="operator-included__icon" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+          <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
+          <polyline points="22 4 12 14.01 9 11.01"/>
+        </svg>
+        <span class="operator-included__text">SEO-optimized to rank higher on Google</span>
+      </div>
+
+      <div class="operator-included__item">
+        <svg class="operator-included__icon" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+          <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
+          <polyline points="22 4 12 14.01 9 11.01"/>
+        </svg>
+        <span class="operator-included__text">Dedicated customer support</span>
+      </div>
+
+      <div class="operator-included__item">
+        <svg class="operator-included__icon" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+          <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
+          <polyline points="22 4 12 14.01 9 11.01"/>
+        </svg>
+        <span class="operator-included__text">Future AI-powered recommendations (coming soon)</span>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- How It Works Section -->
+<section class="operator-steps">
+  <div class="operator-steps__container">
+    <h2 class="operator-steps__title">Get Started in 3 Simple Steps</h2>
+    
+    <div class="operator-steps__grid">
+      
+      <!-- Step 1 -->
+      <div class="operator-step">
+        <div class="operator-step__number">1</div>
+        <h3 class="operator-step__title">Sign Up Free</h3>
+        <p class="operator-step__description">
+          Create your operator account in under 2 minutes. No credit card required.
+        </p>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="operator-step">
+        <div class="operator-step__number">2</div>
+        <h3 class="operator-step__title">Create Your Profile</h3>
+        <p class="operator-step__description">
+          Add your company details, upload packages, and customize your profile.
+        </p>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="operator-step">
+        <div class="operator-step__number">3</div>
+        <h3 class="operator-step__title">Start Getting Leads</h3>
+        <p class="operator-step__description">
+          Go live and watch inquiries roll in from pilgrims ready to book.
+        </p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- Final CTA Section -->
+<section class="operator-final-cta" id="signup">
+  <div class="operator-final-cta__container">
+    <div class="operator-final-cta__card">
+      <h2 class="operator-final-cta__title">
+        Ready to Grow Your Business?
+      </h2>
+      <p class="operator-final-cta__subtitle">
+        Join hundreds of operators already getting leads through UmrahAdvisor
+      </p>
+      
+      <a href="/register" class="operator-final-cta__button">
+        Sign Up for Free 1 Year Plus Plan
         <!-- Arrow Right Icon (SVG) -->
         <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
           <path d="M5 12h14m-7-7l7 7-7 7"/>
         </svg>
       </a>
-      <p class="cta-subtext">
-        Free 30-day trial • No credit card required
+
+      <p class="operator-final-cta__subtext">
+        100% Free • No Hidden Fees • Cancel Anytime (But You Won't Want To)
       </p>
     </div>
-    
-  </section>
-  </section>
+  </div>
+</section>
 
-
-
+<!-- Smooth Scroll for Anchor Links -->
 <script>
-  /**
- * Tab Switcher - Minimal Vanilla JavaScript
- * Toggles between Pilgrim and Operator content on homepage
- */
-
-(function() {
-  'use strict';
-  
-  // Get all tab buttons
-  const tabButtons = document.querySelectorAll('[data-tab]');
-  
-  // Get all tab content sections
-  const tabContents = {
-    pilgrim: document.getElementById('tab-content-pilgrim'),
-    operator: document.getElementById('tab-content-operator')
-  };
-  
-  // Function to switch tabs
-  function switchTab(tabName) {
-    // Update buttons
-    tabButtons.forEach(function(button) {
-      const buttonTab = button.getAttribute('data-tab');
-      
-      if (buttonTab === tabName) {
-        button.classList.add('tab-switcher__button--active');
-      } else {
-        button.classList.remove('tab-switcher__button--active');
-      }
-    });
+  (function() {
+    'use strict';
     
-    // Update content visibility
-    if (tabContents.pilgrim && tabContents.operator) {
-      if (tabName === 'pilgrim') {
-        tabContents.pilgrim.setAttribute('data-active', 'true');
-        tabContents.operator.setAttribute('data-active', 'false');
-      } else if (tabName === 'operator') {
-        tabContents.pilgrim.setAttribute('data-active', 'false');
-        tabContents.operator.setAttribute('data-active', 'true');
-      }
-    }
-  }
-  
-  // Add click event listeners to all tab buttons
-  tabButtons.forEach(function(button) {
-    button.addEventListener('click', function() {
-      const tabName = this.getAttribute('data-tab');
-      switchTab(tabName);
+    // Get all anchor links that start with #
+    const anchorLinks = document.querySelectorAll('a[href^="#"]');
+    
+    anchorLinks.forEach(function(link) {
+      link.addEventListener('click', function(e) {
+        const targetId = this.getAttribute('href');
+        
+        // Skip if it's just #
+        if (targetId === '#') return;
+        
+        const targetElement = document.querySelector(targetId);
+        
+        if (targetElement) {
+          e.preventDefault();
+          targetElement.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+          });
+        }
+      });
     });
-  });
-  
-  // Initialize - Set pilgrim as default active tab
-  switchTab('pilgrim');
-  
-})();
+  })();
 </script>
+
 {% endblock %}
