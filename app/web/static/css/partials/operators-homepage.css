@@ -1,0 +1,351 @@
+/* ============================================================================
+   FOR OPERATORS - Operator landing page specific styles
+   ============================================================================ */
+
+@layer components {
+
+  /* Hero Section */
+  .operator-hero {
+    @apply py-12 px-4;
+  }
+
+  @media (min-width: 768px) {
+    .operator-hero {
+      @apply py-20;
+    }
+  }
+
+  .operator-hero__container {
+    @apply max-w-4xl mx-auto text-center;
+  }
+
+  .operator-hero__badge {
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm mb-6;
+    background: hsl(var(--primary) / 0.1);
+    color: hsl(var(--primary));
+    font-weight: 500;
+  }
+
+  .operator-hero__badge-pulse {
+    @apply w-2 h-2 rounded-full;
+    background: hsl(var(--primary));
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.5;
+    }
+  }
+
+  .operator-hero__title {
+    @apply mb-6;
+    font-size: clamp(2rem, 5vw, 3.75rem);
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    color: hsl(var(--fg));
+  }
+
+  .operator-hero__subtitle {
+    @apply mb-8 max-w-2xl mx-auto;
+    font-size: clamp(1rem, 2vw, 1.25rem);
+    color: hsl(var(--muted));
+    line-height: 1.6;
+  }
+
+  .operator-hero__cta {
+    @apply inline-flex items-center gap-2 px-8 py-4 rounded-xl transition-all no-underline;
+    background: hsl(var(--primary));
+    color: white;
+    font-size: clamp(0.875rem, 2vw, 1.125rem);
+    font-weight: 600;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    text-decoration: none;
+  }
+
+  .operator-hero__cta:hover {
+    transform: scale(1.05);
+    background: hsl(var(--primary));
+  }
+
+  .operator-hero__cta svg {
+    @apply w-5 h-5;
+  }
+
+  .operator-hero__subcta {
+    @apply mt-4 text-sm;
+    color: hsl(var(--muted));
+  }
+
+  /* Benefits Section */
+  .operator-benefits {
+    @apply py-12 px-4;
+  }
+
+  @media (min-width: 768px) {
+    .operator-benefits {
+      @apply py-16;
+    }
+  }
+
+  .operator-benefits__container {
+    @apply max-w-5xl mx-auto;
+  }
+
+  .operator-benefits__title {
+    @apply text-center mb-12;
+    font-size: clamp(1.5rem, 3vw, 1.875rem);
+    font-weight: 700;
+    color: hsl(var(--fg));
+  }
+
+  .operator-benefits__grid {
+    @apply grid grid-cols-1 gap-6;
+  }
+
+  @media (min-width: 640px) {
+    .operator-benefits__grid {
+      @apply grid-cols-2;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .operator-benefits__grid {
+      @apply grid-cols-3;
+    }
+  }
+
+  .operator-benefit-card {
+    @apply p-6 rounded-2xl border-2 transition-all;
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+    border-color: hsl(var(--primary) / 0.1);
+  }
+
+  .operator-benefit-card:hover {
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    border-color: hsl(var(--primary) / 0.3);
+  }
+
+  .operator-benefit-card__icon {
+    @apply w-14 h-14 rounded-xl flex items-center justify-center mb-4;
+    background: hsl(var(--primary) / 0.1);
+    color: hsl(var(--primary));
+  }
+
+  .operator-benefit-card__icon svg {
+    @apply w-7 h-7;
+  }
+
+  .operator-benefit-card__title {
+    @apply text-xl mb-2;
+    font-weight: 700;
+    color: hsl(var(--fg));
+  }
+
+  .operator-benefit-card__description {
+    color: hsl(var(--muted));
+    line-height: 1.6;
+  }
+
+  /* Plus Plan Promo Section */
+  .operator-promo {
+    @apply py-12 px-4;
+  }
+
+  @media (min-width: 768px) {
+    .operator-promo {
+      @apply py-16;
+    }
+  }
+
+  .operator-promo__container {
+    @apply max-w-3xl mx-auto;
+  }
+
+  .operator-promo__card {
+    @apply p-8 rounded-3xl border-2 shadow-xl;
+    background: white;
+    border-color: hsl(var(--primary) / 0.2);
+  }
+
+  @media (min-width: 768px) {
+    .operator-promo__card {
+      @apply p-10;
+    }
+  }
+
+  .operator-promo__image {
+    @apply w-full max-w-2xl mx-auto rounded-2xl;
+  }
+
+  /* What's Included Section */
+  .operator-included {
+    @apply py-12 px-4;
+  }
+
+  @media (min-width: 768px) {
+    .operator-included {
+      @apply py-16;
+    }
+  }
+
+  .operator-included__container {
+    @apply max-w-3xl mx-auto;
+  }
+
+  .operator-included__title {
+    @apply text-center mb-8;
+    font-size: clamp(1.5rem, 3vw, 1.875rem);
+    font-weight: 700;
+    color: hsl(var(--fg));
+  }
+
+  .operator-included__list {
+    @apply p-8 rounded-2xl border-2 space-y-4;
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+    border-color: hsl(var(--border));
+  }
+
+  .operator-included__item {
+    @apply flex items-start gap-3;
+  }
+
+  .operator-included__icon {
+    @apply w-6 h-6 flex-shrink-0;
+    margin-top: 2px;
+    color: hsl(var(--primary));
+  }
+
+  .operator-included__text {
+    color: hsl(var(--muted));
+    line-height: 1.6;
+  }
+
+  /* How It Works Section */
+  .operator-steps {
+    @apply py-12 px-4 rounded-3xl my-12;
+    background: linear-gradient(135deg, hsl(var(--primary) / 0.05) 0%, hsl(174, 100%, 91%) 100%);
+  }
+
+  @media (min-width: 768px) {
+    .operator-steps {
+      @apply py-16;
+    }
+  }
+
+  .operator-steps__container {
+    @apply max-w-4xl mx-auto;
+  }
+
+  .operator-steps__title {
+    @apply text-center mb-12;
+    font-size: clamp(1.5rem, 3vw, 1.875rem);
+    font-weight: 700;
+    color: hsl(var(--fg));
+  }
+
+  .operator-steps__grid {
+    @apply space-y-8;
+  }
+
+  @media (min-width: 768px) {
+    .operator-steps__grid {
+      @apply space-y-0 grid grid-cols-3 gap-8;
+    }
+  }
+
+  .operator-step {
+    @apply flex items-start gap-4;
+  }
+
+  @media (min-width: 768px) {
+    .operator-step {
+      @apply flex-col items-center text-center;
+    }
+  }
+
+  .operator-step__number {
+    @apply w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 text-xl;
+    background: hsl(var(--primary));
+    color: white;
+    font-weight: 700;
+  }
+
+  .operator-step__title {
+    @apply text-xl mb-2;
+    font-weight: 700;
+    color: hsl(var(--fg));
+  }
+
+  .operator-step__description {
+    color: hsl(var(--muted));
+    line-height: 1.6;
+  }
+
+  /* Final CTA Section */
+  .operator-final-cta {
+    @apply py-12 px-4;
+  }
+
+  @media (min-width: 768px) {
+    .operator-final-cta {
+      @apply py-20;
+    }
+  }
+
+  .operator-final-cta__container {
+    @apply max-w-3xl mx-auto text-center;
+  }
+
+  .operator-final-cta__card {
+    @apply p-8 rounded-3xl shadow-2xl text-white;
+    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(174, 62%, 40%) 100%);
+  }
+
+  @media (min-width: 768px) {
+    .operator-final-cta__card {
+      @apply p-12;
+    }
+  }
+
+  .operator-final-cta__title {
+    @apply mb-4;
+    font-size: clamp(1.5rem, 4vw, 2.25rem);
+    font-weight: 700;
+  }
+
+  .operator-final-cta__subtitle {
+    @apply mb-8 text-lg;
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  .operator-final-cta__button {
+    @apply inline-flex items-center gap-2 px-8 py-4 rounded-xl transition-all no-underline;
+    background: white;
+    color: hsl(var(--primary));
+    font-size: clamp(0.875rem, 2vw, 1.125rem);
+    font-weight: 600;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    text-decoration: none;
+  }
+
+  .operator-final-cta__button:hover {
+    transform: scale(1.05);
+    background: rgba(255, 255, 255, 0.95);
+  }
+
+  .operator-final-cta__button svg {
+    @apply w-5 h-5;
+  }
+
+  .operator-final-cta__subtext {
+    @apply mt-6 text-sm;
+    color: rgba(255, 255, 255, 0.8);
+  }
+}

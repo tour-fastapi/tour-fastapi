@@ -25,6 +25,7 @@
 @import "./partials/popover.css";
 @import "./partials/package-banner-selector.css";
 @import "./partials/admin.css";
+@import "./partials/operators-homepage.css";
 
 @tailwind base;
 
