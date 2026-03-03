@@ -229,17 +229,7 @@ CURRENCY_SYMBOLS = {
     "AED": "AED",     # or "د.إ" if your font supports it
 }
 
-@router.get("/")
-def home(request: Request):
-    
 
-    return templates.TemplateResponse(
-        "base.html",
-        {
-            "request": request,
-            
-        }
-    )
 
 def get_currency_ctx_for_agency(agency: Agency | None) -> dict:
     """
